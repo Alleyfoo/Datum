@@ -1,0 +1,8 @@
+[project]
+name = "babel-tower"
+version = "0.0.1"
+description = "A governed analysis system: many sources and roles, one shared record, reached through MCP."
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
