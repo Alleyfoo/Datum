@@ -62,6 +62,7 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 | Read | 20 | sibling-repo rules and code to read and port (R1–R20) |
 | Code | 24 | defined here, to build (C1–C24), including 4 defects from the lab |
 | Plan | 19 | decisions still open (P1–P19) |
+| Bugs | 5 | four open (B1–B4, one confirmed by probe), one fixed (B5) without a regression test |
 
 **Next up, in order.** The intake chain comes first because everything else depends on it:
 
