@@ -3,6 +3,14 @@ name = "babel-tower"
 version = "0.0.1"
 description = "A governed analysis system: many sources and roles, one shared record, reached through MCP."
 requires-python = ">=3.11"
+dependencies = [
+    # Excel reader and writer, pinned (build-plan G7, owner answer Q3): staging reads in
+    # read-only mode, and the synthetic stock export is written with it.
+    "openpyxl==3.1.5",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

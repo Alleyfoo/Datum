@@ -1,0 +1,2 @@
+# Workbooks are evidence: never convert their bytes.
+*.xlsx binary

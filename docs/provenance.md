@@ -7,6 +7,7 @@ Every ported file or value records its origin, so the lab's frozen evidence stay
 | `domains/spare_parts/world.py` `snapshot()` | Predictive-Spare-Parts-Lab `desk/data.py` at `a8843ea` | Customers, machines, parts, substitutes, stock, bill of materials and open purchase orders copied as values. Counts checked by `tests/test_spare_parts_world.py`. Date fixed at 2026-10-02, as in the desk. |
 | `domains/spare_parts/world.py` `generate_history()` | New | Requests, deliveries and stock movements generated from a seed. Not in the lab. |
 | `babel/schema/registry.py` | New | Field and cleaning rules. The lab's `desk/source_contract.py` holds the workbook rules that will be generalised later (phase 3). |
+| `domains/spare_parts/exports.py` | `mcp-messy-data` `fixtures/synthetic/make_fixtures.py` at `3e9a092` | Adapted, not copied: the plain openpyxl workbook building (a `Workbook`, a titled sheet, appended rows) is kept; the content is this company's stock at the end of a week, replayed back from today through the ledger. Document and zip entry times are fixed so the bytes repeat. `tests/fixtures/stock_export_2026-08-21*.xlsx` are its output for seed 2026. |
 
 Lab revision used as the reference for this port: `fa3836f` (HEAD at the time of the port).
 
