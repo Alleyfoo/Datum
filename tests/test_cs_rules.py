@@ -8,13 +8,15 @@ The rule tests below are the lab's own (its tests/test_desk.py), run against the
 """
 
 import difflib
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
 
 from cs_briefs import GOLDEN, briefs
 from domains.spare_parts import tools
-from domains.spare_parts.data import demo
+from domains.spare_parts.data import BomLine, Customer, Machine, Part, ServiceData, demo
+from domains.spare_parts.world import AS_OF
 
 LAB = Path(__file__).parent / "golden" / "cs" / "lab_reference"
 BRIEF_NAMES = sorted(path.stem for path in LAB.glob("*.txt") if path.stem != "checks")
@@ -168,3 +170,63 @@ def test_every_question_keeps_other_customers_confidential():
         assert "Power plant customer" in brief.confidential, name
         assert "FR-01" in brief.confidential, name
         assert "Sawmill customer" not in brief.confidential and "BC-01" not in brief.confidential, name
+
+
+# -- substitute stock is checked for conflicts (backlog C13) ----------------------------
+
+
+def _substitute_world() -> ServiceData:
+    """Two Finnish customers. M-1 needs 2 x P-1, and no P-1 is held anywhere; the approved
+    substitute P-2 has exactly 2 in FI, and M-2's planned replacement of 2 x P-2, served from FI,
+    falls due in 10 days (Mon 2026-10-12)."""
+    customers = {"C-1": Customer("C-1", "Customer one", "Site one", "Finland"),
+                 "C-2": Customer("C-2", "Customer two", "Site two", "Finland")}
+    machines = {m.machine_id: m for m in (
+        Machine("M-1", "C-1", "Line one", "Belt conveyor", "Area", "A", 0, 0, 1, 1),
+        Machine("M-2", "C-2", "Line two", "Belt conveyor", "Area", "B", 0, 0, 1, 1))}
+    parts = {p.part_no: p for p in (
+        Part("P-1", "Bearing", "Bearing", True, 7, 24, ("P-2",)),
+        Part("P-2", "Bearing, alternative make", "Bearing", True, 10, 24, ("P-1",)))}
+    interval = timedelta(days=round(24 * 30.4))
+    bom = [BomLine("M-1", "P-1", 2, True, AS_OF - timedelta(days=100)),
+           BomLine("M-2", "P-2", 2, True, AS_OF + timedelta(days=10) - interval)]
+    return ServiceData(customers, machines, parts, {("P-2", "FI"): 2}, bom)
+
+
+def test_planned_service_does_not_take_a_substitute_another_customer_needs():
+    # the lab never weighed a substitute's stock, so its plan was the substitute, leaving M-2 short
+    brief = tools.availability(_substitute_world(), "M-1", "P-1", "planned")
+    [text] = facts_of(brief, "recommended_plan")
+    assert text == (
+        "RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned "
+        "need short): new supplier order, arrives Fri 2026-10-09. The faster option (approved substitute P-2 "
+        "from FI stock, available today (Fri 2026-10-02)) is not used because it would leave FI short for "
+        "planned needs.")
+
+
+def test_a_breakdown_that_takes_a_needed_substitute_restocks_the_substitute():
+    brief = tools.availability(_substitute_world(), "M-1", "P-1", "breakdown")
+    [text] = facts_of(brief, "recommended_plan")
+    assert text == (
+        "RECOMMENDED PLAN (company rule for a breakdown: fastest option): approved substitute P-2 from FI "
+        "stock, available today (Fri 2026-10-02). Because this leaves FI short for planned needs, also order "
+        "2 pcs of P-2 today to restock FI; with the 10-day lead time they arrive Mon 2026-10-12.")
+
+
+def test_the_substitute_conflict_is_stated_as_a_fact():
+    brief = tools.availability(_substitute_world(), "M-1", "P-1", "breakdown")
+    assert facts_of(brief, "conflicts") == [
+        "No warehouse holds a full set of 2 pcs, so no stock conflict arises.",
+        "CONFLICT: taking 2 pcs of approved substitute P-2 from FI leaves 0 there, but M-2 (Customer two, "
+        "2 pcs due Mon 2026-10-12) is served from FI: a shortfall of 2 pcs within 60 days.",
+    ]
+
+
+def test_a_substitute_nobody_else_needs_leaves_the_lab_text_unchanged():
+    # no machine has SP-1311 on its parts list, so taking it starves nobody: the lab's plan stands
+    brief = tools.availability(DATA, "BC-03", "SP-1301", "planned")
+    assert "Option 2: approved substitute SP-1311 from FI stock, available today (Fri 2026-10-02)." in \
+        facts_of(brief, "fastest_supply")
+    assert not any("substitute" in text for text in facts_of(brief, "conflicts"))
+    assert facts_of(brief, "recommended_plan")[0].endswith("): approved substitute SP-1311 from FI stock, "
+                                                           "available today (Fri 2026-10-02).")

@@ -170,10 +170,16 @@ class Option(NamedTuple):
     text: str
     #: the warehouse whose stock this option uses up, if any
     draws_from: Optional[str] = None
+    #: the part whose stock it uses up, when that is an approved substitute and not the part asked about
+    part_no: Optional[str] = None
 
 
 def _options(data: ServiceData, part_no: str, customer_id: str, qty: int) -> List[Option]:
-    """Ways to get ``qty`` to this customer, earliest first. All dates computed here."""
+    """Ways to get ``qty`` to this customer, earliest first. All dates computed here.
+
+    A substitute's option draws on the home warehouse's stock of the substitute, so it is checked
+    for conflicts like any other stock (backlog C13); the lab left it unchecked.
+    """
     home = home_warehouse(data, customer_id)
     other = next(w for w in WAREHOUSES if w != home)
     options: List[Option] = []
@@ -184,7 +190,8 @@ def _options(data: ServiceData, part_no: str, customer_id: str, qty: int) -> Lis
         options.append(Option(arrive, f"transfer from {other} stock, {TRANSFER_DAYS} days, arrives {_d(arrive)}", other))
     for sub in data.parts[part_no].substitutes:
         if data.on_hand(sub, home) >= qty:
-            options.append(Option(AS_OF, f"approved substitute {sub} from {home} stock, available today ({_d(AS_OF)})"))
+            options.append(Option(AS_OF, f"approved substitute {sub} from {home} stock, available today ({_d(AS_OF)})",
+                                  home, sub))
     for o in data.incoming:
         if o.part_no == part_no and o.qty >= qty and o.due >= AS_OF:
             arrive = o.due + timedelta(days=0 if o.warehouse == home else TRANSFER_DAYS)
@@ -212,7 +219,42 @@ def conflicts(data: ServiceData, part_no: str, machine_id: str, qty: int,
 
     Computed here, not left to the expert: a small model will not reliably connect
     "stock in Sweden" with "a Swedish customer is due today".
+
+    The part's own stock is stated warehouse by warehouse, as the lab does. An approved
+    substitute's stock in the home warehouse is checked too (backlog C13): a substitute whose
+    use would starve planned needs adds a CONFLICT line; one that starves nobody adds nothing,
+    so the facts stay the lab's wherever nothing competes for the substitute.
     """
+    return (_own_conflicts(data, part_no, machine_id, qty, horizon_days)
+            + _substitute_conflicts(data, part_no, machine_id, qty, horizon_days))
+
+
+def _starved(data: ServiceData, served) -> str:
+    """The planned needs that would go short, as the lab names them in a CONFLICT line."""
+    return ", ".join(f"{b.machine_id} ({data.customers[data.machines[b.machine_id].customer_id].name}, "
+                     f"{b.qty_installed} pcs due {_d(when)})" for when, b in served)
+
+
+def _substitute_conflicts(data: ServiceData, part_no: str, machine_id: str, qty: int,
+                          horizon_days: int) -> List[Fact]:
+    home = home_warehouse(data, data.machines[machine_id].customer_id)
+    facts = []
+    for sub in data.parts[part_no].substitutes:
+        have = data.on_hand(sub, home)
+        if have < qty:
+            continue
+        short, served = _shortfall(data, sub, machine_id, qty, home, horizon_days)
+        if short:
+            facts.append(Fact("conflicts",
+                              f"CONFLICT: taking {qty} pcs of approved substitute {sub} from {home} leaves "
+                              f"{have - qty} there, but {_starved(data, served)} "
+                              f"{'is' if len(served) == 1 else 'are'} served from {home}: a shortfall of "
+                              f"{short} pcs within {horizon_days} days."))
+    return facts
+
+
+def _own_conflicts(data: ServiceData, part_no: str, machine_id: str, qty: int,
+                   horizon_days: int) -> List[Fact]:
     if not data.parts[part_no].service_interval_months:
         return [Fact("conflicts", "No planned replacements to conflict with; the part is replaced on failure.")]
     facts = []
@@ -222,8 +264,7 @@ def conflicts(data: ServiceData, part_no: str, machine_id: str, qty: int,
             continue
         short, served = _shortfall(data, part_no, machine_id, qty, w, horizon_days)
         if short:
-            who = ", ".join(f"{b.machine_id} ({data.customers[data.machines[b.machine_id].customer_id].name}, "
-                            f"{b.qty_installed} pcs due {_d(when)})" for when, b in served)
+            who = _starved(data, served)
             facts.append(Fact("conflicts",
                               f"CONFLICT: taking {qty} pcs from {w} leaves {have - qty} there, but {who} "
                               f"{'is' if len(served) == 1 else 'are'} served from {w}: a shortfall of "
@@ -251,23 +292,26 @@ def recommended_plan(data: ServiceData, machine_id: str, part_no: str, qty: int,
     breakdown: the earliest option; if it starves another warehouse's planned
                needs, also order replacement stock for that warehouse today.
     planned:   the earliest option that starves nobody.
+
+    An approved substitute's option is weighed against the planned needs for the substitute
+    (backlog C13), and a breakdown that takes it restocks the substitute, with its own lead time.
     """
     m = data.machines[machine_id]
     options = _options(data, part_no, m.customer_id, qty)
-    lead = data.parts[part_no].lead_time_days
-    restock_eta = AS_OF + timedelta(days=lead)
 
     def short(o: Option) -> int:
-        return _shortfall(data, part_no, machine_id, qty, o.draws_from)[0] if o.draws_from else 0
+        return _shortfall(data, o.part_no or part_no, machine_id, qty, o.draws_from)[0] if o.draws_from else 0
 
     if situation == "breakdown":
         chosen = options[0]
         text = f"RECOMMENDED PLAN (company rule for a breakdown: fastest option): {chosen.text}."
         gap = short(chosen)
         if gap:
+            lead = data.parts[chosen.part_no or part_no].lead_time_days
+            which = f" of {chosen.part_no}" if chosen.part_no else ""
             text += (f" Because this leaves {chosen.draws_from} short for planned needs, also order "
-                     f"{gap} pcs today to restock {chosen.draws_from}; with the {lead}-day lead time they "
-                     f"arrive {_d(restock_eta)}.")
+                     f"{gap} pcs{which} today to restock {chosen.draws_from}; with the {lead}-day lead time they "
+                     f"arrive {_d(AS_OF + timedelta(days=lead))}.")
         return [Fact("recommended_plan", text)]
 
     chosen = next(o for o in options if not short(o))
