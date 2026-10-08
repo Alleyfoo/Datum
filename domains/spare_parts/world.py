@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import random
 from datetime import date, timedelta
-from typing import Dict, List
+from typing import Dict, Iterable, List, Sequence, Tuple
 
 from babel.schema import Refusal
 
@@ -155,19 +155,23 @@ def snapshot() -> Dict[str, List[dict]]:
     }
 
 
-def generate_history(tables: Dict[str, List[dict]], seed: int = SEED) -> Dict[str, List[dict]]:
-    """Requests, deliveries and stock movements for the past year, from one seed.
+StockLine = Tuple[str, str]  # (part_no, warehouse)
+Receipts = Dict[StockLine, Sequence[Tuple[date, int]]]  # the (day, qty) receipts offered to each line
 
-    Requests are drawn forward in time. Each stock line is then replayed backwards from
-    today's on-hand quantity: issues add stock back, receipts are only added where the
-    balance can cover them, so the opening balance can never go negative.
+
+def draw(tables: Dict[str, List[dict]], seed: int = SEED) -> Tuple[List[dict], Receipts]:
+    """Everything the seed decides: the year's requests, and the receipts offered to each stock line.
+
+    Requests are drawn forward in time and numbered in date order. Each carries the warehouse
+    that issues it (None when backordered); the request table has no warehouse, so
+    generate_history() drops it there. Receipts are (day, qty), drawn per stock line in line order.
     """
     rng = random.Random(seed)
     start = AS_OF - timedelta(days=HISTORY_DAYS)
     parts = {r["part_no"]: r for r in tables["part"]}
-    stock = {(r["part_no"], r["warehouse"]): r["on_hand"] for r in tables["stock_level"]}
+    stock = {(r["part_no"], r["warehouse"]) for r in tables["stock_level"]}
 
-    raw_requests = []
+    requests = []
     for line in tables["bom_line"]:
         part = parts[line["part_no"]]
         interval = part["service_interval_months"]
@@ -179,37 +183,52 @@ def generate_history(tables: Dict[str, List[dict]], seed: int = SEED) -> Dict[st
             day = start + timedelta(days=month * 30 + rng.randrange(30))
             qty = rng.randint(1, max(1, min(line["qty_installed"], 4)))
             warehouse = next((wh for wh in ("FI", "SE") if (line["part_no"], wh) in stock), None)
-            raw_requests.append({
+            requests.append({
                 "machine_id": line["machine_id"], "part_no": line["part_no"], "qty": qty,
                 "requested_on": day, "reason": "planned" if planned else "breakdown",
                 "status": "fulfilled" if warehouse else "backordered", "warehouse": warehouse,
             })
+    requests.sort(key=lambda r: (r["requested_on"], r["machine_id"], r["part_no"]))
+    for n, r in enumerate(requests, start=1):
+        r["request_id"] = f"RQ-{n:04d}"
 
-    raw_requests.sort(key=lambda r: (r["requested_on"], r["machine_id"], r["part_no"]))
-    requests = []
-    for n, r in enumerate(raw_requests, start=1):
-        requests.append({k: v for k, v in r.items() if k != "warehouse"} | {"request_id": f"RQ-{n:04d}"})
+    receipts = {}
+    for line in sorted(stock):
+        offered = []
+        day = start + timedelta(days=rng.randrange(15, 45))
+        while day < AS_OF:
+            offered.append((day, rng.randint(2, 12)))
+            day += timedelta(days=rng.randrange(40, 70))
+        receipts[line] = offered
+    return requests, receipts
 
+
+def ledger(stock: Dict[StockLine, int], requests: Iterable[dict], receipts: Receipts) -> Tuple[List[dict], List[dict]]:
+    """Deliveries and stock movements: each stock line replayed backwards from today's on hand.
+
+    Issues add stock back, and a receipt is kept as a delivery only where the balance can cover
+    it, so the opening balance can never go negative. Every movement names its source by id: an
+    issue carries the id of the request it fills, read from the request itself, so the link does
+    not depend on the order of the requests or on any object's identity. No randomness: the same
+    input gives the same ledger.
+    """
+    requests = list(requests)
     deliveries: List[dict] = []
     movements: List[dict] = []
     for (part_no, wh), on_hand in sorted(stock.items()):
-        issues = [(r["requested_on"], -r["qty"], r) for r in raw_requests
+        issued = [r for r in requests
                   if r["status"] == "fulfilled" and r["part_no"] == part_no and r["warehouse"] == wh]
-        receipts = []
-        day = start + timedelta(days=rng.randrange(15, 45))
-        while day < AS_OF:
-            receipts.append((day, rng.randint(2, 12), None))
-            day += timedelta(days=rng.randrange(40, 70))
+        movements += [{"part_no": part_no, "warehouse": wh, "qty": -r["qty"], "kind": "issue",
+                       "occurred_on": r["requested_on"], "source": r["request_id"]} for r in issued]
+        offered = list(receipts.get((part_no, wh), ()))
         # forward, a receipt lands before an issue on the same day; walking back, the issue comes first
-        timeline = sorted(issues + [(d, q, None) for d, q, _ in receipts],
+        timeline = sorted([(r["requested_on"], -r["qty"]) for r in issued] + offered,
                           key=lambda e: (e[0], e[1] < 0), reverse=True)
 
         balance = on_hand
-        for day, qty, req in timeline:
+        for day, qty in timeline:
             if qty < 0:
                 balance += -qty  # walking back in time, an issue had taken stock out
-                movements.append({"part_no": part_no, "warehouse": wh, "qty": qty, "kind": "issue",
-                                  "occurred_on": day, "source": req})
             elif balance - qty >= 0:
                 balance -= qty  # walking back, a receipt had put stock in
                 movements.append({"part_no": part_no, "warehouse": wh, "qty": qty, "kind": "receipt",
@@ -221,23 +240,34 @@ def generate_history(tables: Dict[str, List[dict]], seed: int = SEED) -> Dict[st
     for n, d in enumerate(deliveries, start=1):
         d["delivery_id"] = f"DL-{n:04d}"
 
-    request_ids = {id(raw): req["request_id"] for raw, req in zip(raw_requests, requests)}
-    movements.sort(key=lambda m: (m["occurred_on"], m["part_no"], m["warehouse"], m["kind"] == "issue"))
+    # issues of one line on one day are ordered by their request ids, so no list order decides a movement id
+    movements.sort(key=lambda m: (m["occurred_on"], m["part_no"], m["warehouse"], m["kind"] == "issue",
+                                  m["source"] or ""))
     delivery_by_key = {}
     for d in deliveries:
         delivery_by_key.setdefault((d["part_no"], d["warehouse"], d["delivered_on"]), d["delivery_id"])
     rows = []
     for n, m in enumerate(movements, start=1):
-        source = m["source"]
         if m["kind"] == "issue":
-            source_id = request_ids[id(source)]
+            source_id = m["source"]
         else:
             source_id = delivery_by_key[(m["part_no"], m["warehouse"], m["occurred_on"])]
         rows.append({"movement_id": f"MV-{n:05d}", "part_no": m["part_no"], "warehouse": m["warehouse"],
                      "qty": m["qty"], "kind": m["kind"], "occurred_on": m["occurred_on"],
                      "source": source_id})
+    return deliveries, rows
 
-    return {"request": requests, "delivery": deliveries, "stock_movement": rows}
+
+def generate_history(tables: Dict[str, List[dict]], seed: int = SEED) -> Dict[str, List[dict]]:
+    """Requests, deliveries and stock movements for the past year, from one seed.
+
+    draw() makes every random choice; ledger() replays each stock line from today's on hand.
+    """
+    requests, receipts = draw(tables, seed)
+    stock = {(r["part_no"], r["warehouse"]): r["on_hand"] for r in tables["stock_level"]}
+    deliveries, movements = ledger(stock, requests, receipts)
+    return {"request": [{k: v for k, v in r.items() if k != "warehouse"} for r in requests],
+            "delivery": deliveries, "stock_movement": movements}
 
 
 def build(seed: int = SEED) -> Dict[str, List[dict]]:

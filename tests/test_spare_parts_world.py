@@ -1,11 +1,12 @@
 import copy
-from datetime import timedelta
+import random
+from datetime import date, timedelta
 
 import pytest
 
 from domains.spare_parts import build
 from domains.spare_parts import world as world_module
-from domains.spare_parts.world import AS_OF, HISTORY_DAYS, conservation, generate_history, snapshot
+from domains.spare_parts.world import AS_OF, HISTORY_DAYS, conservation, draw, generate_history, ledger, snapshot
 
 
 @pytest.fixture(scope="module")
@@ -100,6 +101,39 @@ def test_same_day_receipt_and_issue_replays_without_going_negative():
     assert conservation({**company, **history}) == []
     kinds_that_day = [m["kind"] for m in moves if m["occurred_on"] == day]
     assert kinds_that_day == sorted(kinds_that_day, key=lambda k: k == "issue")
+
+
+def _stock(tables):
+    return {(r["part_no"], r["warehouse"]): r["on_hand"] for r in tables["stock_level"]}
+
+
+def test_each_issue_points_to_its_own_request_whatever_the_order_of_the_requests():
+    # B2: the link was found by id() of the request dict and the order of two lists; it is now the request's id
+    tables = snapshot()
+    requests, receipts = draw(tables)
+    expected = ledger(_stock(tables), requests, receipts)
+    for seed in (1, 2, 3):
+        shuffled = copy.deepcopy(requests)
+        random.Random(seed).shuffle(shuffled)
+        assert ledger(_stock(tables), shuffled, receipts) == expected
+    by_id = {r["request_id"]: r for r in requests}
+    issues = [m for m in expected[1] if m["kind"] == "issue"]
+    assert len({m["source"] for m in issues}) == len(issues) == sum(r["status"] == "fulfilled" for r in requests)
+    for m in issues:
+        r = by_id[m["source"]]
+        assert (r["status"], r["part_no"], r["warehouse"], -r["qty"], r["requested_on"]) == (
+            "fulfilled", m["part_no"], m["warehouse"], m["qty"], m["occurred_on"])
+
+
+def test_two_requests_on_one_line_and_day_keep_their_own_issues_in_either_order():
+    day = date(2026, 6, 1)
+    small = {"request_id": "RQ-0001", "machine_id": "M-1", "part_no": "SP-X", "qty": 1, "requested_on": day,
+             "reason": "breakdown", "status": "fulfilled", "warehouse": "FI"}
+    large = dict(small, request_id="RQ-0002", machine_id="M-2", qty=3)
+    for order in ([small, large], [large, small]):
+        _, movements = ledger({("SP-X", "FI"): 5}, order, {})
+        assert [(m["movement_id"], m["source"], m["qty"]) for m in movements] == [
+            ("MV-00001", "RQ-0001", -1), ("MV-00002", "RQ-0002", -3)]
 
 
 def _build_on(monkeypatch, held, history=None):
