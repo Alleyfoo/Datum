@@ -240,3 +240,22 @@ what agreement.
 **Correction to the earlier summary.** glm-5.3-flash was the only model to pass the bar. The 9B passed 2 of 3
 runs, which is below the bar, so it did not qualify. "Only one that could run it" is accurate for the bar; "the
 9B cannot run it at all" is not.
+
+## 16. The model must be a confirmed, secured tool
+
+| ID | Answer | What it means |
+|---|---|---|
+| R-secure | Confirmed and secured | The manager's model must be a tool whose data handling is confirmed in writing: no training on our data, no retention beyond the request, and a stated hosting route. Local models are out of the design (section 15). |
+| R-gate | Check before any run with real data | Before a model receives real company data, its written policy must cover the exact route the request takes, not only the vendor's general policy. |
+
+**What is known now (2026-10).** Ollama's privacy policy (updated March 2026) says cloud-hosted models process prompts
+only transiently, do not use them for training, and minimise retention ([source](https://registry.ollama.ai/privacy)).
+Its cloud page says partners are held to no logging, no training and zero retention ([source](https://standardcompute.com/providers/ollama)).
+A search summary found no official statement on whether models hosted by third parties see or keep prompts. That
+gap is exactly the route question above.
+
+**Not yet confirmed for `glm-5.3-flash:cloud`:** which company runs the model, and whether that company's terms
+match Ollama's. Until this is confirmed, the manager runs on synthetic data only.
+
+**Next step:** confirm the hosting route and terms for glm-5.3-flash. If they do not meet the bar, choose a provider
+that offers a signed data processing agreement with documented zero retention, and rerun the evaluation on that model.
