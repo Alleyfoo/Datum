@@ -7,17 +7,19 @@ golden/views/*.txt holds the port's own output, written by scripts/regen_golden.
 only read it: a missing or stale golden fails, it is never written here.
 """
 
+import ast
 import difflib
 import json
 import os
 import re
 import subprocess
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
 
-from domains.spare_parts import build, views
+from domains.spare_parts import build, tools, views
 from domains.spare_parts.data import demo, from_tables
 from view_screens import EMOJI_CUSTOMER, screens, service_data_text
 
@@ -153,3 +155,51 @@ def test_emoji_are_off_by_default_and_on_for_one_customer(port):
     assert _emoji(on) == sorted(views.EMOJI.values())  # every mark is shown, in the legend at least
     marks = str.maketrans({views.EMOJI[status]: views.MARK[status] for status in views.EMOJI})
     assert on.translate(marks) == views.plant_view(data, EMOJI_CUSTOMER)  # only the marks change
+
+
+#: all the views and the rule they read may import: text formatting, dates as values, the company
+ALLOWED_IMPORTS = {
+    "__future__": None, "json": None, "string": None, "typing": None,
+    "datetime": {"date", "timedelta"},
+    "pathlib": {"Path"},  # the widget's template, read from beside the module
+    ".data": None, ".tools": None, ".world": {"AS_OF"},
+}
+#: a clock, chance, or a way around the import list
+FORBIDDEN_NAMES = {"now", "today", "utcnow", "time", "time_ns", "monotonic", "perf_counter",
+                   "random", "randint", "randrange", "choice", "shuffle", "urandom", "uuid1", "uuid4",
+                   "__import__", "import_module", "eval", "exec"}
+
+
+@pytest.mark.parametrize("module", [views, tools], ids=["views", "tools"])
+def test_the_views_read_no_clock_randomness_or_model(module):
+    """A model client, a clock or a random source needs an import outside this list, or a name in
+    FORBIDDEN_NAMES. The company's own seeded history is built before the views see it."""
+    tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                assert ALLOWED_IMPORTS.get(alias.name, ()) is None, f"import {alias.name}"
+        elif isinstance(node, ast.ImportFrom):
+            source = "." * node.level + (node.module or "")
+            assert source in ALLOWED_IMPORTS, f"from {source} import ..."
+            names = {alias.name for alias in node.names}
+            allowed = ALLOWED_IMPORTS[source]
+            assert allowed is None or names <= allowed, f"from {source} import {sorted(names - allowed)}"
+    used = {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)}
+    used |= {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    assert not used & FORBIDDEN_NAMES, sorted(used & FORBIDDEN_NAMES)
+
+
+def test_the_date_comes_from_AS_OF(monkeypatch):
+    data = demo()
+    assert "due 2026-11-02" in views.machine_card(data, "BC-01")  # SP-1301, as of 2026-10-02
+    monkeypatch.setattr(views, "AS_OF", date(2026, 11, 10))
+    assert views.plant_view(data, "C-100").splitlines()[0].endswith("Tue 2026-11-10")
+    assert "overdue since 2026-11-02" in views.machine_card(data, "BC-01")
+
+
+def test_the_weekday_is_named_without_the_locale():
+    monday = date(2026, 10, 5)
+    assert [views._day(monday + timedelta(days=n)) for n in range(7)] == [
+        "Mon 2026-10-05", "Tue 2026-10-06", "Wed 2026-10-07", "Thu 2026-10-08",
+        "Fri 2026-10-09", "Sat 2026-10-10", "Sun 2026-10-11"]
