@@ -184,7 +184,8 @@ def view(store: Store, number: int, offset: int = 0, limit: int = PAGE) -> dict:
     return {"item": item, "questions": questions[offset:offset + limit], "offset": offset,
             "total": len(questions), "next_offset": offset + limit if offset + limit < len(questions) else None,
             "open_questions": [q for q in questions if q["status"] == "open"],
-            "answered_questions": [q for q in questions if q["status"] == "answered"]}
+            "answered_questions": [q for q in questions if q["status"] == "answered"],
+            "decisions": [store.get(n) for n in item["data"].get("decisions", [])]}
 
 
 # -- text --------------------------------------------------------------------------------
@@ -273,20 +274,29 @@ def view_text(page: dict) -> str:
     person = [(name, f"{fact['text']}, answered by {fact['by']}") for name, fact in data["person"].items()]
     out += ["", lines_text(person, "From the person") if person else "From the person: nothing yet"]
     shown = page["questions"]
-    if shown:
-        first, last = page["offset"] + 1, page["offset"] + len(shown)
-        out += ["", f"Questions {first}-{last} of {page['total']}"
-                + (f" (next page from {page['next_offset'] + 1})" if page["next_offset"] is not None else "")]
-        out += [_question_line(q) for q in shown]
+    if not page["total"]:
+        out += ["", "Questions: none asked yet"]
     else:
-        out += ["", f"Questions: none on this page ({page['total']} in all)"]
-    waiting = page["open_questions"]
-    out.append(f"Open questions, of all {page['total']}: "
-               + (", ".join(f"{q['n']} ({q['ask']})" for q in waiting) if waiting else "none"))
+        if shown:
+            first, last = page["offset"] + 1, page["offset"] + len(shown)
+            out += ["", f"Questions {first}-{last} of {page['total']}"
+                    + (f" (next page from {page['next_offset'] + 1})" if page["next_offset"] is not None else "")]
+            out += [_question_line(q) for q in shown]
+        else:
+            out += ["", f"Questions: none on this page ({page['total']} in all)"]
+        waiting = page["open_questions"]
+        out.append(f"Open questions, of all {page['total']}: "
+                   + (", ".join(f"{q['n']} ({q['ask']})" for q in waiting) if waiting else "none"))
     ran = data["checks"]
     out.append("Checks: " + (f"{len(ran)} run; the last " + ("passed" if ran[-1]["ok"] else "failed")
                              if ran else "none run"))
-    out.append("Reply: " + _approval(item))
+    decided = page.get("decisions") or []
+    if decided and not data.get("proposal"):
+        last = decided[-1]
+        out.append(f"Reply: {last['data']['decision']} by {last['data']['approver']} "
+                   f"(decision #{last['number']}): {last['data']['reason']}")
+    else:
+        out.append("Reply: " + _approval(item))
     return "\n".join(out)
 
 

@@ -116,7 +116,19 @@ def test_a_proposed_reply_waits_for_an_approver_and_nothing_is_sent(store):
     assert not any("sent" in e["action"] for e in store.journal())
     assert _code(queue.approve, store, number, "ville", "fine") == "role_missing"
     assert _code(queue.approve, store, number, "anna", " ") == "invalid_argument"
+    assert "Reply: the reply waits in the approval queue" in cons.view_text(cons.view(store, number))
     assert queue.approve(store, number, "anna", "Checked against the facts")["status"] == "done"
+    card = cons.view_text(cons.view(store, number))
+    assert card.splitlines()[0] == f"#{number} consultation · closed"
+    [decision] = store.documents_about(number, "decision")
+    assert card.splitlines()[-1] == f"Reply: approved by anna (decision #{decision['number']}): Checked against the facts"
+
+
+def test_a_consultation_with_no_questions_says_so(store):
+    card = cons.view_text(cons.view(store, _start(store)))
+    assert card.splitlines()[2:] == ["", "From the person: nothing yet", "", "Questions: none asked yet",
+                                     "Checks: none run", "Reply: nothing queued yet: propose_reply queues the "
+                                     "reply for an approver, a named person with the approver role. Nothing is sent"]
 
 
 def test_the_receipt_says_what_was_asked_run_applied_checked_not_known_and_who_approves(store):
