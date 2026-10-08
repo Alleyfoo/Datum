@@ -59,26 +59,25 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 
 | Category | Count | What it means |
 |---|---|---|
-| Done | 6 | schema registry (D1); synthetic company and ledger (D2); staging, assumption, mapping and reference rules read (R1, R2, R4, R5) |
-| Read | 16 | sibling-repo rules and code to read and port (R3, R6–R20) |
-| Code | 24 | defined here, to build (C1–C24), including 4 defects from the lab |
-| Plan | 19 | decisions still open (P1–P19) |
+| Done | 17 | schema registry (D1); synthetic company and ledger (D2); staging, assumption, versioning, mapping and reference rules read (R1–R5); the intake chain C1–C9 and the synthetic stock export (C25), on branch `build/intake-chain` |
+| Read | 15 | sibling-repo rules and code to read and port (R6–R20; R15 partly read) |
+| Code | 16 | defined here, to build (C10–C24, and the folder watcher C3b), including 4 defects from the lab |
+| Plan | 23 | decisions (P1–P23): P1, P12 and P13 answered, P7 answered for schemas; P20–P23 raised by the intake build |
 | Bugs | 5 | three fixed (B1, B4, and B5 with its regression test); two latent, open (B2, B3) |
 | Research | 1 | the import research pass: done, see [research/import.md](research/import.md) |
 
-**Next up.** The build starts from [build-plan.md](build-plan.md): the owner confirms gaps G1 to G12 first, and the defect fixes (B1, B4, B5) can start at once. The intake chain comes next:
+**Next up.** The intake chain runs end to end on synthetic data: a file is preserved, staged,
+tried against its company's schema and routed to a ticket; a new schema version passes the
+create-schema gate only through a named approver; an approver admits a fitting file. What it
+needs from the owner, in [backlog.md](backlog.md#plan-needs-a-decision-or-design-first):
 
-1. Read the staging and preserve rules (R1, R2, R4, R5), then build the inbox preserve and
-   staging step (C1, C2).
-2. Build the folder hook and the strict trial (C3, C4).
-3. Extend the case store into the ticket spine (R15, C5), then the approval queue (C6) and the
-   three dispositions (C7).
-4. Run the import research pass (`build-plan.md` section 5) before C4 and C8 are designed.
-5. Decide the open items the intake chain needs: P1 (file identity), P2 (ticket grouping),
-   P7 (who approves). These block C4 and C8.
+1. P23: whether the gate's regression check covers header names. As written it refuses any
+   renamed header once a file was accepted, which blocks demo step 3.
+2. P20 (formula cells), P21 (whitespace in headers), P22 (lease length).
+3. Then the folder watcher (C3b), the module registry (C10) and customer establishment (C11).
 
-**Blocked on decisions:** the wrong-file check (P1), the create-schema approver rule (P7), the
-collector (P9), the identity items (P6, environment unknown), and the first real export (P17, P16).
+**Blocked on decisions:** the renamed-header path (P23), the collector (P9), the identity items
+(P6, environment unknown), and the first real export (P17, P16).
 
 ## Phases (each ends with something you can show)
 

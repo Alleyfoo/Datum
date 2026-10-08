@@ -30,6 +30,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | C3 | Hook, manual trigger: preserve, stage, try against the company's schemas, verify, open the ticket (the folder watcher stays planned) | `babel/intake/hook.py` | `2d783e3` |
 | R3 | Versioned schemas, N+1 never rewrites N: rule read for C9 | [provenance.md](provenance.md#rules-read-read-items) | `1f30ed0` |
 | C9 | Schema versioning per company and file kind: N+1 never rewrites N, status only forward, one active version | `babel/intake/schemas.py` | `1f30ed0` |
+| C8 | Create-schema gate: full rule list on the ticket, the drafted file passes, no regression, a named approver with a reason (the drafter may confirm, Q7); agent names refused; nothing activates by timeout or hook | `babel/intake/schemas.py` (`confirm`, `refuse`) | `0e52240` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -58,7 +59,6 @@ Each ported file records its origin in [provenance.md](provenance.md).
 | ID | Item | Depends on | Spec |
 |---|---|---|---|
 | C3b | Folder hook: wait for a complete file (polling with a stability window, G6), then call the manual trigger (C3) | C3 | [intake.md](intake.md#what-happens-to-an-arriving-file); planned only (owner answer Q2) |
-| C8 | Create-schema gate: draft, regression check, full rule listing, a non-drafter confirms | R3, C7 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C10 | Module registry: contract, approver, limitations, failures | R9 | [intake.md](intake.md#modules) |
 | C11 | Establishment ticket flow for a new company (separate process) | C5, C10 | [intake.md](intake.md#establishing-a-customer-separate-process) |
 | C12 | Role tool lists per role, with a server-side check on every call | P6 | P6 below |
@@ -99,18 +99,18 @@ found, so it can be reproduced before it is fixed.
 
 | ID | Question | Why it matters | Owner question |
 |---|---|---|---|
-| P1 | What is a file's identity for the wrong-file check: sender, export header, or both, per source? | The wrong-file check cannot be built without it | Which identity does each real source carry? |
+| P1 | What is a file's identity for the wrong-file check: sender, export header, or both, per source? **Answered (build-plan Q5):** the file's headers must match the schema of the company it is filed under; sender identity is not used. Built in C4 (`wrong_file`) | The wrong-file check cannot be built without it | Answered |
 | P2 | Ticket grouping: one per arrival, or one per customer per collector run | Without a rule the queue floods | Which does a service person want to see? |
 | P3 | OCR engine and which document kinds it covers | PDFs and scans cannot be imported without it. Prefer a local, self-hosted tool, per the owner's convention | Which document kinds come first? |
 | P4 | Forecast methods per demand group, and the evaluation rule | The per-group decision is made; the methods are not | Which groups, which methods? |
 | P5 | Anomaly thresholds: what is unusual enough to open an analysis ticket | Drives C15 | What is the threshold, per part and per customer? |
 | P6 | Identity-scoped access. Demo: two Subroutine roles (approver, worker). Real environment: still open. | Blocks C24 and real-environment access only | Which environment will this run in? |
-| P7 | Who approves a new customer folder and a new schema: one person or two | Sets the approver rule in C8 and C11 | Same person or two? |
+| P7 | Who approves a new customer folder and a new schema: one person or two. **Answered for schemas (build-plan Q7):** the confirmer may be the drafter; the gate needs a named person and a reason. Built in C8. The customer folder (C11) is not built | Sets the approver rule in C8 and C11 | Answered for C8; C11 open |
 | P8 | Customer layout: pilot size, shared part numbers, who reads a folder | Decides whether the item master is one table | See [customer-layout.md](customer-layout.md#open-questions-for-the-owner) |
 | P9 | Mailbox collector: which account, what it may read, what it may write | Mail is the first collector | Which mailbox, which folder? |
 | P10 | Tolerance for "fits" | Zero is the rule now | Later, after real files exist |
 | P11 | Demo hosting: the repository is private and the public demo needs a public repo | Blocks step 7 | Public demo or private demo? |
-| P12 | Ticket model: copy Subroutine's concepts, or use Subroutine as the backend (see build-plan G10) | Shapes C5 | Copy or use? |
+| P12 | Ticket model: copy Subroutine's concepts, or use Subroutine as the backend. **Decided (build-plan G10): copy**, into our own SQLite store. Built in C5 | Shapes C5 | Answered |
 | P13 | Python version. **Decided by the owner (build-plan Q10): target 3.11**; `pyproject.toml` now says `>=3.11` | Affects tooling only | Answered |
 | P14 | Unit conversion scope | Units are recorded, not converted | Which conversions are needed? |
 | P15 | Exception types: agree the list, owner and decision for each | Defines the first cases | See [positioning.md](positioning.md#exception-types-initial-list-to-be-agreed) |
@@ -121,3 +121,4 @@ found, so it can be reproduced before it is fixed.
 | P20 | May a formula cell's cached value count as the cell's value in the trial? Staging keeps both the formula and the cached value; the trial refuses formula cells for now (C4, rule R6). Evidence in [research/import.md](research/import.md#3-how-are-formula-cells-and-cached-values-handled-when-software-produces-the-file) | A stock export with formulas would never fit | Accept cached values, or keep refusing? |
 | P21 | Is whitespace inside a header significant? The trial compares headers exactly, as the lab does; mcp-messy-data normalises whitespace. See [research/import.md](research/import.md#2-what-minimum-header-declaration-tells-one-file-kind-from-another-without-values) | A trailing space in a header makes a structural change | Exact, or whitespace-normalised? |
 | P22 | Lease length for a claim. A placeholder of 30 minutes is in `babel/record/store.py` (C5); neither source states one | How soon an abandoned ticket can be taken | Which length, after real use? |
+| P23 | Does the gate's "every accepted file still passes" apply to the header names? As written (and built, C8), a new version that renames a header is refused once any file with the old header was accepted, so the demo's renamed column (demo step 3) can never become a new version. Options: keep it (a rename is a new file kind); check accepted files only against the value rules, column by column in the declared order; or check only files accepted under the same header list | Blocks demo step 3 | Which reading is meant? |
