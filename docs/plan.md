@@ -25,9 +25,11 @@ Roles talk to the record through an AI assistant (Claude, Copilot or a local mod
 
 1. **The human is the gate.** A person brings data into the system and decides what it
    means. Nothing reaches the record, a customer or the ERP without a person.
-2. **Data enters when a person brings it in:** uploads it, forwards it, or places it in
-   the inbox. Automatic collection (for example mail scraping) is a module that a person
-   enables and names. It is not the default.
+2. **Collection can be automatic; admission is never automatic.** A collector (for example
+   mail scraping) may run by itself and fill the customer's `inbox/` with raw, unedited,
+   hashed copies. Each arrival opens a ticket. A person works that ticket before anything
+   is extracted into the customer folder or the product data. The human gate sits at
+   admission, not at collection.
 3. **Everything is a module with a contract.** Each module declares its input, its output
    and destination folder, its approver, and its known failures. The core does not change
    when a module is added or replaced.
@@ -298,9 +300,11 @@ outside this repository. The repository stays synthetic-only.
 
 Rules that follow from it:
 
-- **Placement is recognition, not understanding.** A file goes into a customer folder
-  because a person put it there or named the customer. An unknown or ambiguous customer is
-  refused and goes to a ticket; nothing is guessed from the content.
+- **Placement is recognition, not understanding.** A collector places a file into a
+  customer's inbox only when the customer is unambiguous, for example by a known sender.
+  An unknown or ambiguous sender is held back and goes to a ticket for a person; nothing is
+  guessed from the content. Being in the inbox does not make a file trusted: admission still
+  needs the person.
 - **Attachments and message text are data, never instructions.** They are parsed by the
   same rules as any other file. A message cannot change a mapping or a schema.
 - **Raw is kept, extracts are rebuilt.** Extraction writes new files; it never overwrites
@@ -331,7 +335,11 @@ module declares:
 
 Adding an OCR reader means declaring its contract, establishing it, and pointing its output
 at the customer folder. Nothing else changes. Its output is new data, so it opens a ticket
-for a person to work through.
+for a person to work through before it is admitted.
+
+Collectors (mail, folder watchers) are modules too, with the same contract. They may run on
+a schedule and write only to a customer's `inbox/`. They never write to `extracts/`, the
+schema or the product data.
 
 ## Steps to a meaningful demo
 
