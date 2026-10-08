@@ -19,7 +19,7 @@ import pytest
 
 from domains.spare_parts import build, views
 from domains.spare_parts.data import demo, from_tables
-from view_screens import screens, service_data_text
+from view_screens import EMOJI_CUSTOMER, screens, service_data_text
 
 TESTS = Path(__file__).parent
 ROOT = TESTS.parent
@@ -136,3 +136,20 @@ def test_two_processes_give_identical_text(port):
     """Different hash seeds: no view may depend on the order of a set or of string hashes."""
     first, second = _screens_in_a_new_process("1"), _screens_in_a_new_process("2")
     assert first == second == port
+
+
+def _emoji(text: str) -> list:
+    return sorted({ch for ch in text if ch in views.EMOJI.values() or ord(ch) >= 0x1F000})
+
+
+def test_emoji_are_off_by_default_and_on_for_one_customer(port):
+    data = demo()
+    assert all(views.plant_view(data, c) == views.plant_view(data, c, emoji=False) for c in data.customers)
+    assert all(views.machine_card(data, m) == views.machine_card(data, m, emoji=False) for m in data.machines)
+    assert {name: _emoji(text) for name, text in port.items()
+            if not name.endswith("_emoji") and _emoji(text)} == {}
+
+    on = views.plant_view(data, EMOJI_CUSTOMER, emoji=True)
+    assert _emoji(on) == sorted(views.EMOJI.values())  # every mark is shown, in the legend at least
+    marks = str.maketrans({views.EMOJI[status]: views.MARK[status] for status in views.EMOJI})
+    assert on.translate(marks) == views.plant_view(data, EMOJI_CUSTOMER)  # only the marks change
