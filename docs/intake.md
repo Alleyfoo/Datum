@@ -182,11 +182,18 @@ held files are listed on the establishment ticket.
 Cleaning sits between Reveal and the trial. It is not part of staging, and it is not hidden in
 the schema check.
 
+- **First, a formula cell is calculated (owner answer P20).** Its value is the value the file saved
+  for it (the cached value the spreadsheet program calculated), with that value's own type, and it
+  is then cleaned and tried like any other value. Staging keeps the formula and the saved value;
+  the formula stays beside the row, and the change is recorded against the cell. Nothing here
+  calculates a formula: a formula the file saved no value for has no value, and the trial refuses
+  it with its own reason, even where the field may be empty. Whether a saved value counts when the
+  workbook marks it as not current is open (P24).
 - **Default for every text cell and every header: trim leading and trailing whitespace.** The
   owner decided this for all sources.
 - **Other transformations are declared per field in the schema:** case (for example, upper case
   for a part number), format (for example, a date pattern), units. A field with no declaration
-  gets only the default.
+  gets only the defaults (the calculation and the trim).
 - **Every change is recorded** against its cell: the original text, the transformed text and the
   rule that made the change. Raw and staging are not changed.
 - **The trial runs on cleaned values.** The zero-refusal rule applies after cleaning.

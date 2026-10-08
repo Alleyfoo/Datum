@@ -306,3 +306,8 @@ that offers a signed data processing agreement with documented zero retention, a
 | Q-rename | Now | Done: the GitHub repository is `Alleyfoo/Datum`, still private. The local folder keeps its name. |
 | Q-publish | No decision | Public repository or recordings for the job posts is still open. |
 | P20 | Calculate, then process | A formula cell's value is calculated first, and the value is then processed like any other value. Formula cells are no longer refused. |
+
+**Status:** built on branch `build/round-four`, not merged: the one-day lease (P22, `ca0d13b`), the ledger
+ids (B2 `61fde1a`, B3 `9e6ddd9`), the menu letters past z (B6 `f9f102b`) and formula cells taken as the value
+the file saved for them (P20, `447946c`). Building P20 raised one question for the owner, P24 in
+[backlog.md](backlog.md): whether a saved formula value counts when the workbook marks it as not current.
