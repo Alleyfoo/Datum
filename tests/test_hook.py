@@ -149,7 +149,9 @@ def test_two_kinds_with_the_same_headers_cannot_be_told_apart(data_root, store):
 def test_a_schema_that_refuses_an_accepted_file_is_reported_as_a_schema_defect(data_root, store, tmp_path):
     first = hook.trigger(data_root, "C-100", EXPORT, store=store, schemas=_with(V1))
     dispositions.admit(store, first.ticket, "anna", "fits")
-    strict = Versioned("C-100", "stock_export", 2, HeaderSchema("Stock", 1, STOCK.columns[:3] + (
+    # A provider serving another declaration under the version the file was accepted with. The
+    # store's versions never change, so only another provider (or a changed trial) can do this.
+    strict = Versioned("C-100", "stock_export", 1, HeaderSchema("Stock", 1, STOCK.columns[:3] + (
         Column("On hand", "bool"),) + STOCK.columns[4:]))
     later = stock_export(tmp_path / "stock_export_2026-08-28.xlsx", week_ending=date(2026, 8, 28))
     arrival = hook.trigger(data_root, "C-100", later, store=store, schemas=_with(strict))

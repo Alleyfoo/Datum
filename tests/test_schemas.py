@@ -94,12 +94,12 @@ def test_a_version_is_never_rewritten_never_deleted_and_moves_only_forward(data_
     assert (active.file_kind, active.version, active.schema) == ("stock_export", 1, STOCK)
 
 
-def test_drafting_needs_the_claim_a_worker_and_a_plain_file_kind(data_root, store):
+def test_drafting_needs_the_claim_a_role_and_a_plain_file_kind(data_root, store):
     arrival = hook.trigger(data_root, "C-100", EXPORT, store=store)
     assert _code(schemas.draft, store, arrival.ticket, "ville", "stock_export", STOCK, "draft") == "claim_required"
-    store.claim(arrival.ticket, "anna")
-    assert _code(schemas.draft, store, arrival.ticket, "anna", "stock_export", STOCK, "draft") == "role_missing"
-    store.release(arrival.ticket, "anna")
+    store.claim(arrival.ticket, "hook")  # a service account holds no role
+    assert _code(schemas.draft, store, arrival.ticket, "hook", "stock_export", STOCK, "draft") == "role_missing"
+    store.release(arrival.ticket, "hook")
     store.claim(arrival.ticket, "ville")
     assert _code(schemas.draft, store, arrival.ticket, "ville", "Stock Export", STOCK, "draft") == "invalid_argument"
     assert schemas.versions(store, "C-100", "stock_export") == []

@@ -55,8 +55,9 @@ def test_a_new_kind_of_file_becomes_a_schema_and_then_an_accepted_file(data_root
     assert (version["status"], version["decided_by"], version["reason"]) == (
         "active", "anna", "These are the ERP stock export's headers")
     [confirmed] = store.documents_about(arrival.ticket, "decision")
-    assert confirmed["data"]["gate"] == {"rules_on_ticket": True, "drafted_from": arrival.source_id,
-                                         "drafted_from_refusals": 0, "accepted_files_checked": []}
+    gate = confirmed["data"]["gate"]
+    assert (gate["rules_on_ticket"], gate["drafted_from"], gate["drafted_from_refusals"]) == (
+        True, arrival.source_id, 0)
     [waiting] = queue.pending(store)
     assert (waiting["action"], waiting["proposed_by"]) == ("import", "anna")
 
@@ -99,17 +100,13 @@ def test_the_gate_refuses_a_draft_whose_rules_are_not_on_the_ticket(data_root, s
     assert schemas.active(store, "C-100") == []
 
 
-def test_a_renamed_header_cannot_pass_while_an_accepted_file_has_the_old_one(data_root, store):
-    # P23: as written, the gate's regression check refuses any header change once a file is accepted
-    first = _admitted_v1(data_root, store)
+def test_a_draft_for_a_renamed_header_can_be_refused(data_root, store):
+    _admitted_v1(data_root, store)
     variant = _drafted(data_root, store, path=VARIANT)
-    with pytest.raises(RecordError) as error:
-        schemas.confirm(store, data_root, variant.ticket, "anna", "Same column, new name")
-    assert error.value.code == "regression"
-    assert f"1 accepted file(s) do not pass schema stock_export v2: {first.source_id}" in str(error.value)
+    assert (variant.outcome, variant.schema_version) == ("structural_change", 1)
     assert [v["status"] for v in schemas.versions(store, "C-100", "stock_export")] == ["active", "draft"]
 
-    item = schemas.refuse(store, variant.ticket, "anna", "Waiting for the owner's rule on renamed headers")
+    item = schemas.refuse(store, variant.ticket, "anna", "Not this week: the ERP change is not announced yet")
     assert item["status"] == "open"
     assert [v["status"] for v in schemas.versions(store, "C-100", "stock_export")] == ["active", "rejected"]
 
