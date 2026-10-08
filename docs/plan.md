@@ -63,7 +63,7 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 | Read | 20 | sibling-repo rules and code to read and port (R1–R20) |
 | Code | 24 | defined here, to build (C1–C24), including 4 defects from the lab |
 | Plan | 19 | decisions still open (P1–P19) |
-| Bugs | 5 | four open (B1–B4, one confirmed by probe), one fixed (B5) without a regression test |
+| Bugs | 5 | three fixed (B1, B4, and B5 with its regression test); two latent, open (B2, B3) |
 | Research | 1 | the import research pass, before the trial and the create-schema gate are designed |
 
 **Next up.** The build starts from [build-plan.md](build-plan.md): the owner confirms gaps G1 to G12 first, and the defect fixes (B1, B4, B5) can start at once. The intake chain comes next:
