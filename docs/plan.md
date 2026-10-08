@@ -132,8 +132,8 @@ Decided by the owner, 2026-10-08:
 - **The old repositories stay frozen.** Their data is imported with provenance; their code is not extended.
 - **Round three:** the schema-defect check uses the same version only; one file kind per company for now,
   with the model open to more; folder access comes from the host system; every action is logged with its
-  actor and kept. Subroutine is not the ticket backend (its concepts stay), and its role model is removed: roles come
-  from the Windows profile. See build-plan.md section 9.
+  actor and kept. Subroutine is not the ticket backend (its concepts stay), and its role model is removed: for now
+  everyone is a manager; the log records who did what, and real restrictions wait for a real environment. See build-plan.md section 9.
 - **Tickets are modelled on Subroutine** (`github.com/simonholliday/subroutine`): one numbering
   scheme, decisions as documents, `blocks`, leases on claims, attributed journal. Whether to use
   it as the backend is open (build-plan G10).

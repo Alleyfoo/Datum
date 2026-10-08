@@ -147,7 +147,11 @@ drafting), the cleaning stage with its trim default, and demo step 3 as a test.
 | R3-2b | Subroutine is not the tool | Subroutine is built for software development, not daily product handling. Its concepts stay as the ticket model, but it is not the backend. Who defines the worker and approver roles now needs a decision (see below). |
 | R3-3 | Log everything | Every action is logged with the actor, the time, the action and the before and after values. Logs are append-only and kept. Refused work is kept too. Logs contain personal data (names), so access and retention rules are needed before real data arrives. |
 
-**Roles, decided:** roles come from the Windows profile. A manager gets manager access, and so on.
+**Roles, decided:** for now, everyone has the manager role. The system does not enforce worker or approver
+restrictions yet; every action is still logged with the actor, so the record shows who did what. Real
+restrictions come when a real environment is known, from the Windows profile.
+
+Previous wording, kept for reference: roles come from the Windows profile. A manager gets manager access, and so on.
 The approver and worker roles are mapped from the profile. Subroutine's role model is removed from the
 design. A stricter role model may be needed later for regulated goods (for example medicines or
 chemicals); it is not needed for spare parts or furniture.
