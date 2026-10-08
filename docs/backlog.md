@@ -12,10 +12,12 @@ Status of the whole board is summarised in [plan.md](plan.md).
 
 ## Done
 
-| ID | Item | Where |
-|---|---|---|
-| D1 | Schema registry: fields, types, keys, row-level refusal, reference checks | `babel/schema/` |
-| D2 | Synthetic spare-parts company with a year of history; stock ledger replays to today | `domains/spare_parts/` |
+| ID | Item | Where | Commit |
+|---|---|---|---|
+| D1 | Schema registry: fields, types, keys, row-level refusal, reference checks | `babel/schema/` | `fcee815` |
+| D2 | Synthetic spare-parts company with a year of history; stock ledger replays to today | `domains/spare_parts/` | `0f48e76` |
+| D3 | The desk's data (`ServiceData`) read from the company tables; the lab's desk views captured once as reference text | `domains/spare_parts/data.py`, `tests/golden/views/lab_reference/` | `7181e03`, `0c7c97c`, `3813802` |
+| D4 | The desk's text views ported with the lab's exact text: line and machine status, countries, companies, plant view, machine card, menu tree, text menu, widget. Golden files written only by `scripts/regen_golden.py`; tested for identical text across calls and processes, emoji off by default, and no model, randomness or clock (the date is `AS_OF`) | `domains/spare_parts/views.py`, `tools.py`, `tests/golden/views/` | `1c4b4a7`, `1fba3c4`, `420c3ca`, `0761f71`, `53157b3`, `8217786` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -38,7 +40,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | R15 | Case store, evidence, typed findings, claims | Predictive-Spare-Parts-Lab `desk/cases.py`, `case_evidence.py`, `evidence_intake.py` |
 | R16 | Bounded workbook reading, recognition, refusal, provenance | Predictive-Spare-Parts-Lab `desk/source_contract.py`, `source_publication.py` |
 | R17 | Answer checks | Predictive-Spare-Parts-Lab `desk/expert.py` |
-| R18 | Availability, lead time, service plan rules; menus | Predictive-Spare-Parts-Lab `desk/tools.py`, `views.py`, `mcp_server.py` |
+| R18 | Availability, lead time, service plan rules; menus. Partly read: `desk/views.py` and `due_date` from `tools.py` at `fa3836f`, ported in D4; the rest of `tools.py` and `mcp_server.py` not yet | Predictive-Spare-Parts-Lab `desk/tools.py`, `views.py`, `mcp_server.py` |
 | R19 | TSB and Croston methods, as-of features | Predictive-Spare-Parts-Lab `predictive_lab/intermittent.py`, `temporal.py` |
 | R20 | Coverage map and proposals with audit log | Spare-Parts-Readiness |
 

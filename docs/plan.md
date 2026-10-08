@@ -64,11 +64,11 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 
 | Category | Count | What it means |
 |---|---|---|
-| Done | 2 | schema registry (D1); synthetic company and ledger (D2) |
-| Read | 20 | sibling-repo rules and code to read and port (R1–R20) |
+| Done | 4 | schema registry (D1); synthetic company and ledger (D2); the desk's data read from the tables (D3) and its text views ported with golden files (D4), on branch `build/views-golden-2` |
+| Read | 20 | sibling-repo rules and code to read and port (R1–R20; R18 partly read) |
 | Code | 24 | defined here, to build (C1–C24), including 4 defects from the lab |
 | Plan | 19 | decisions still open (P1–P19) |
-| Bugs | 5 | four open (B1–B4, one confirmed by probe), one fixed (B5) without a regression test |
+| Bugs | 6 | five open (B1–B4 and B6, one confirmed by probe), one fixed (B5) without a regression test |
 | Research | 1 | the import research pass, before the trial and the create-schema gate are designed |
 
 **Next up.** The build starts from [build-plan.md](build-plan.md): the owner confirms gaps G1 to G12 first, and the defect fixes (B1, B4, B5) can start at once. The intake chain comes next:
