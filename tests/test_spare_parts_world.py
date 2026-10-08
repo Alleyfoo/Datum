@@ -1,8 +1,10 @@
+import copy
 from datetime import timedelta
 
 import pytest
 
 from domains.spare_parts import build
+from domains.spare_parts import world as world_module
 from domains.spare_parts.world import AS_OF, HISTORY_DAYS, conservation, snapshot
 
 
@@ -64,7 +66,35 @@ def test_a_broken_ledger_is_caught(world):
     assert conservation(broken)
 
 
-def test_snapshot_is_not_mutated_by_build():
-    before = snapshot()
-    build()
-    assert snapshot() == before
+def _build_on(monkeypatch, held, history=None):
+    """Run build() on one snapshot object the test keeps hold of."""
+    monkeypatch.setattr(world_module, "snapshot", lambda: held)
+    if history is not None:
+        monkeypatch.setattr(world_module, "generate_history", history)
+    return world_module.build()
+
+
+def _changed_tables(held, before):
+    return sorted(name for name in before if held.get(name) != before[name])
+
+
+def test_snapshot_is_not_mutated_by_build(monkeypatch):
+    held = snapshot()
+    before = copy.deepcopy(held)
+    _build_on(monkeypatch, held)
+    assert _changed_tables(held, before) == []
+    # build adds the generated history to its working tables and nothing else
+    assert set(held) - set(before) == {"request", "delivery", "stock_movement"}
+
+
+def test_the_snapshot_check_catches_a_mutation(monkeypatch):
+    real_history = world_module.generate_history
+
+    def mutating_history(tables, seed):
+        tables["part"][0]["lead_time_days"] += 1
+        return real_history(tables, seed)
+
+    held = snapshot()
+    before = copy.deepcopy(held)
+    _build_on(monkeypatch, held, history=mutating_history)
+    assert _changed_tables(held, before) == ["part"]
