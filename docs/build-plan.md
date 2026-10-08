@@ -96,7 +96,7 @@ In order of how many items they unblock: G3 (state), G1 (canonical versus custom
 G9 (file kinds), G4 (identity), G2 (port, not extend), G6 and G7 (hook and reader), G10 (ticket
 fields). Each is a yes, a change, or a different answer.
 
-## 6. Owner answers (recorded 2026-10-08)
+## 8. Owner answers (recorded 2026-10-08)
 
 | ID | Answer | What it means for the build |
 |---|---|---|

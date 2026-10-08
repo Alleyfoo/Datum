@@ -124,8 +124,9 @@ Decided by the owner, 2026-10-08:
 - **Email is out of scope** until a real mailbox exists.
 - **Merge** to `main` happens once the owner agrees the idea is settled.
 - **The create-schema gate is strict:** a draft becomes active only when the file it came from
-  passes with zero refusals, earlier files still pass, the full rule list is on the ticket, and a
-  person who did not draft it confirms.
+  passes with zero refusals after cleaning, the full rule list is on the ticket, and a named person
+  confirms it with a reason; the drafter may confirm. Files accepted under earlier versions keep
+  their versions and are not checked against the new one.
 - **Collection can be automatic; admission is never automatic.**
 - **Schema means the headers of a file kind.** Mapping a header to its meaning is a separate stage.
 - **The old repositories stay frozen.** Their data is imported with provenance; their code is not extended.
@@ -157,7 +158,8 @@ Decided by the owner, 2026-10-08:
   assistant proposes values; a person approves them.
 
 Proposed, awaiting the owner's confirmation: the customer folder layout in
-[customer-layout.md](customer-layout.md). Answers recorded in [build-plan.md](build-plan.md) section 6.
+[customer-layout.md](customer-layout.md). Answers recorded in [build-plan.md](build-plan.md): the first
+round in section 8, the second round in section 7.
 
 ## Defects to fix while porting
 
