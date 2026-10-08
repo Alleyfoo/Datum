@@ -23,6 +23,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | C25 | Synthetic weekly stock export and renamed-header variant, from a seed | `domains/spare_parts/exports.py`, `tests/fixtures/` | `f37d29d` |
 | C1 | Inbox preserve: hash, read-only copy, content-derived id, append-only ledger | `babel/intake/inbox.py` | `de3d592` |
 | C2 | Staging: text cells with type codes, no coercion, row provenance, fingerprint, verify | `babel/intake/staging.py` | `ef55cb0` |
+| C5 | Ticket spine on the Subroutine model: one number space, documents, `blocks`, leases, attributed append-only journal, roles | `babel/record/store.py` | `ad403b5` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -53,7 +54,6 @@ Each ported file records its origin in [provenance.md](provenance.md).
 |---|---|---|---|
 | C3 | Folder hook: wait for complete file, hash check, open ticket, run trial | C1, C2 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C4 | Trial: strict fit (zero refusals), per-cell results, failure classes 2–4 | C2, R4 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
-| C5 | Ticket spine: one ticket type with status, owner, history, extended from `desk/cases.py` | R15 | [plan.md](plan.md#decisions-made) |
 | C6 | Approval queue inside the ticket flow (replaces the command-line review script) | C5 | [demo.md](demo.md) |
 | C7 | Dispositions: import, create schema, drop; each writes its own record | C5, C4 | [intake.md](intake.md#dispositions) |
 | C8 | Create-schema gate: draft, regression check, full rule listing, a non-drafter confirms | R3, C7 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
