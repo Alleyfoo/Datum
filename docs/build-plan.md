@@ -276,3 +276,12 @@ that offers a signed data processing agreement with documented zero retention, a
 | X-sched | Not yet | The twice-daily timed run is not set up. Next step only when the owner asks. |
 | X-safe | Trusted | The owner accepts Claude's stated data-safety terms. This replaces the open route check in section 16 for Claude, on the owner's decision. The basis is the vendor's stated terms, not an audit done here. |
 | X-bench | A benchmark only | The synthetic feed gives a simple benchmark. Synthetic data cannot supply the range of real cases the manager needs, so the evaluation does not prove production readiness. More real cases are needed before relying on it. |
+
+## 19. A real import example, for later
+
+| ID | Answer | What it means |
+|---|---|---|
+| RD-1 | Real example exists | `messy-data.xlsx` in `mcp-messy-data` is real import data. It is kept for a later run. |
+| RD-2 | Finish everything first | No real-data run until the build and the demo are finished. |
+| RD-3 | Stays out of this repository | The file is not copied into Babel-Tower and is not read by the build. Any later run uses a copy kept outside the repositories, chosen by the owner. |
+| RD-4 | Flag: the sibling repo tracks it | `mcp-messy-data` tracks `messy-data.xlsx`, `answers.xlsx` and several fixtures in git, although its README says no real source data is committed. Whether that is a problem depends on what the file contains; the owner should check it. The sibling repo is not edited. |
