@@ -7,8 +7,9 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
 - a comment records what happened; comments and every state change are journal entries, and
   the journal is append-only (enforced by the database, not only by this code);
 - a `blocks` link keeps a task out of the ready list until its blocker is done;
-- a claim is a lease: it runs out by itself, every write by its holder renews it, finishing
-  releases it, and a holder whose lease ran out must claim again.
+- a claim is a lease: it runs out by itself, one day after its holder's last write (owner answer
+  P22, build-plan section 20), every write by its holder renews it, finishing releases it, and a
+  holder whose lease ran out must claim again.
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -34,7 +35,7 @@ USER_KINDS = ("person", "agent", "service")
 TASK_STATUSES = ("open", "in_progress", "needs_input", "done")
 DOCUMENT_TYPES = ("decision", "finding")
 LINK_TYPES = ("blocks", "about")
-LEASE = timedelta(minutes=30)  # placeholder, not tuned
+LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to P22 (build-plan section 20)
 SYSTEM = "system"
 #: words that make a name agent-like; such a name is never accepted as an approver
 AGENT_WORDS = {"agent", "assistant", "llm", "system", "mcp", "claude", "bot", "gpt", "chatgpt",

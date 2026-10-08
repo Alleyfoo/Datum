@@ -97,6 +97,22 @@ def test_a_holder_whose_lease_ran_out_must_claim_again(store, clock):
     assert store.set_status(task, "ville", "in_progress")["status"] == "in_progress"
 
 
+@pytest.mark.parametrize("last_write", ["claim", "comment"])
+def test_a_lease_runs_for_one_day_from_the_holders_last_write(store, clock, last_write):
+    # P22, the owner's answer (build-plan section 20): one day
+    task = store.add_task("hook", "A file arrived")
+    store.claim(task, "ville")
+    if last_write == "comment":
+        clock.advance(hours=10)
+        store.comment(task, "ville", "Half way through the rows.")  # the day starts again here
+    clock.advance(hours=23)  # 23 hours without a write: still held
+    assert store.get(task)["lease_active"]
+    assert _code(store.claim, task, "pia") == "claim_conflict"
+    clock.advance(hours=2)  # 25 hours without a write: run out
+    assert not store.get(task)["lease_active"]
+    assert store.claim(task, "pia")["claimed_by"] == "pia"
+
+
 def test_a_change_needs_the_claim(store):
     task = store.add_task("hook", "A file arrived")
     assert _code(store.set_status, task, "ville", "in_progress") == "claim_required"
