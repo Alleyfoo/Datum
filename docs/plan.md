@@ -352,7 +352,22 @@ schema or the product data.
 ### What happens to an arriving file
 
 A file that arrives for a known customer goes into that customer's `inbox/` and opens a
-ticket. The ticket asks the person to choose one of three dispositions:
+ticket. A folder hook detects the arrival: a trigger module that fires when a file is
+created in an `inbox/` folder and does nothing else. On each arrival the hook:
+
+1. waits until the file is complete (a partly written file is not processed);
+2. hashes the file and checks the hash against the inbox ledger, so a repeated file is
+   linked to its first arrival, not imported twice;
+3. opens the ticket;
+4. starts a **staged** import: parse and validate into a staging area, to pre-fill what each
+   disposition would do. Staging writes nothing to `extracts/`, the schema or product data.
+
+The hook does not admit anything. Admission is the person's choice of disposition on the
+ticket, so the hook can be fully automatic without moving the human gate. The hook never
+fires on `extracts/`, `schema/` or `product-data/`, which avoids loops. It runs under its own
+named identity with the rights of an inbox writer (see item 17).
+
+The ticket asks the person to choose one of three dispositions:
 
 - **Import.** The file's content already fits an approved schema for this customer. The
   content is extracted (through an OCR or parsing module if it is a scan or a PDF) into
