@@ -128,6 +128,10 @@ Decided by the owner, 2026-10-08:
 - **Roles come from Subroutine.** Two roles for the demo: *approver* (manager: confirms schemas,
   decides dispositions and admissions) and *worker* (processes tickets and drafts). Role
   assignment in Subroutine is the demo's access model; a real environment's identity is still open.
+- **Origin is not an input.** The system does not need to know whether a file was dragged or
+  pushed into a folder. The process is the same either way. The schema decides validity: a file
+  that passes is ready for the person to admit; a file that does not pass opens a ticket with the
+  verified reason.
 - **Sender identity is optional.** A file can be dragged into a customer folder with no sender
   known. The process is the same either way: the trial, the ticket and the disposition do not
   depend on where the file came from. The sender is recorded when it exists.

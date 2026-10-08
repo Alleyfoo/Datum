@@ -73,7 +73,11 @@ schema or the product data.
 
 A file that arrives for a known customer goes into that customer's `inbox/` and opens a
 ticket. The file may arrive by a collector or be dragged into the folder by a person. The process is
-the same either way: the sender is recorded if it is known, and it is not needed for the trial. A folder hook detects the arrival: a trigger module that fires when a file is
+the same either way: the sender is recorded if it is known, and it is not needed for the trial.
+
+The system does not need to know how the file got there. The schema alone decides whether the data is
+valid. A valid file goes to the person for admission. An invalid file opens a ticket, and the reason
+is verified before the ticket states it. A folder hook detects the arrival: a trigger module that fires when a file is
 created in an `inbox/` folder and does nothing else. On each arrival the hook:
 
 1. waits until the file is complete (a partly written file is not processed);
