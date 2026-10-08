@@ -1,4 +1,6 @@
-# Plan
+# Plan: Datum (working name)
+
+The repository is still named Babel-Tower. The product name is Datum: a reference point that every measurement is taken from.
 
 Status: agreed direction, 2026-10-07. Phase 1 built on 2026-10-08. Everything else is
 planned, and the board below says which parts are read, coded or still to decide.
@@ -48,6 +50,9 @@ with origins recorded, rather than merging the labs.
    See [positioning.md](positioning.md).
 7. **Preserve, reveal, define, then map.** Raw evidence is never changed, staging decides no
    meaning, and meaning is defined by a named person. See [intake.md](intake.md).
+9. **Data is the map of the environment.** One record holds the measured territory. Each role
+   draws its own map of it for its use case. Every map is a view of the same record, not a copy,
+   and it states its datum: the as-of time, the source, and what is not known.
 8. **Minimum allowed access, per identity (open).** Each user and each background job should get
    the fewest rights it needs, checked on every call. The environment is not known yet, so this
    is a principle, not a design (P6).
