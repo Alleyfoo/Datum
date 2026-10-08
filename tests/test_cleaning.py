@@ -140,10 +140,12 @@ def test_a_field_declares_case_or_nothing_and_the_rule_list_shows_it():
     assert HeaderSchema.from_dict(upper.to_dict()) == upper
     assert upper.to_dict()["columns"][0]["case"] == "upper"
     assert "case" not in STOCK.to_dict()["columns"][0]  # an undeclared field's declaration is unchanged
-    assert [rule_id for rule_id, _ in STOCK.cleaning_rules()] == ["T1"]
+    defaults = [rule_id for rule_id, _ in STOCK.cleaning_rules()]  # what every source gets
+    assert defaults[-1] == "T1" and STOCK.transforms() == []
     rules = dict(upper.cleaning_rules())
-    assert list(rules) == ["T1", "T2"] and "upper case" in rules["T2"] and '"Item"' in rules["T2"]
-    assert upper.rule_text().startswith("T1  ") and "\nT2  " in upper.rule_text() and "\nR1  " in upper.rule_text()
+    assert list(rules) == defaults + ["T2"] and "upper case" in rules["T2"] and '"Item"' in rules["T2"]
+    text = upper.rule_text()
+    assert text.startswith(defaults[0] + "  ") and "\nT2  " in text and text.index("\nT2  ") < text.index("\nR1  ")
     for bad in (Column("Item", "text", case="title"), Column("Item", "int", case="upper"), Column(" Item", "text")):
         with pytest.raises(HeaderError):
             HeaderSchema("Stock", 1, (bad,))

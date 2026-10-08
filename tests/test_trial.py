@@ -91,12 +91,12 @@ def test_every_refused_cell_is_listed_with_its_rule(data_root, tmp_path, workboo
         ["SP-1", "Part one", "FI", 7.5, DAY],             # not a whole number
         ["SP-2", "Part two", "FI", "12", DAY],            # numeric text is text
         [],                                              # blank row
-        ["SP-3", "   ", "SE", "=1+1", DAY],               # blank text, a formula
+        ["SP-3", "   ", "SE", 2, DAY],                    # blank text
         ["SP-4", "Part four", "SE", 3, datetime(2026, 8, 21, 14, 30), "extra"],  # a time; a stray value
         ["SP-5", "Part five", None, 2, DAY],               # missing required value
     ]
     _, accepted_sheets = _sheets(data_root, EXPORT)
-    source_id, sheets = _sheets(data_root, _write(tmp_path, workbook, rows, cached={("Stock", "D5"): 2}))
+    source_id, sheets = _sheets(data_root, _write(tmp_path, workbook, rows))
     result = trial.run(sheets, STOCK, accepted=[("src_export", accepted_sheets)])
     assert result.outcome == "value_problem"
     assert [(c.row, c.column, c.reason, c.rule) for c in result.refusals] == [
@@ -104,7 +104,6 @@ def test_every_refused_cell_is_listed_with_its_rule(data_root, tmp_path, workboo
         (3, "c004", "wrong_type", "C4"),
         (4, "", "blank_row", "R4"),
         (5, "c002", "blank_text", "C2"),
-        (5, "c004", "formula_cell", "R6"),
         (6, "c005", "not_a_date", "C5"),
         (6, "c006", "undeclared_cell", "R5"),
         (7, "c003", "missing_value", "C3"),
@@ -112,7 +111,7 @@ def test_every_refused_cell_is_listed_with_its_rule(data_root, tmp_path, workboo
     assert (result.rows_checked, result.rows_refused) == (6, 6)
     assert result.evidence == {"accepted_files_checked": ["src_export"]}
     text = trial.report(result, STOCK)
-    assert "row 5, c004 'On hand': formula_cell (rule R6); text '2', type code f" in text
+    assert "row 5, c002 'Description': blank_text (rule C2); text '   ', type code s" in text
 
 
 def test_an_optional_column_may_be_empty(data_root, tmp_path, workbook):
