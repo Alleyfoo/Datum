@@ -38,5 +38,9 @@ kept outside the lab repository (no writes there) and its output goes to `grades
 
 ## Decision rule
 
-- Pass: the bar met in at least 4 of 5 runs, and no ticket failing the evidence check in more than one run.
+(Amended once, before the first Claude run, to match the L3-2 bar exactly: the earlier wording of the failing-check
+limit was wrong.)
+
+- Pass: the bar met in at least 4 of 5 runs. Per run, the bar is: at least two level-3 tickets found, E1 found and
+  checked, and at most one ticket failing the evidence check (the L3-2 candidacy bar, as written there).
 - Fail: otherwise. A fail is reported as a fail, with the grades.
