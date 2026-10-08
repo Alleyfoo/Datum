@@ -98,12 +98,12 @@ def things(data: ServiceData) -> List[Thing]:
 def matches(data: ServiceData, text: str) -> List[Thing]:
     """What a search finds. An id typed exactly is one match by definition; otherwise every word of
     the text must appear in a thing's id, name, description or site, in any case."""
-    query = text.strip().lower()
-    exact = [t for t in things(data) if t.key.lower() == query]
+    query, every = text.strip().lower(), things(data)
+    exact = [t for t in every if t.key.lower() == query]
     if exact:
         return exact
     words = query.split()
-    return [t for t in things(data) if words and all(w in t.words for w in words)]
+    return [t for t in every if words and all(w in t.words for w in words)]
 
 
 def _row(n: int, thing: Thing) -> str:
@@ -113,6 +113,16 @@ def _row(n: int, thing: Thing) -> str:
         return f"{n:>2}  {thing.kind:<9}{thing.key:<9}{thing.name}"
     name = thing.name if len(thing.name) <= 26 else thing.name[:25] + "…"
     return f"{n:>2}  {thing.kind:<9}{thing.key:<9}{name:<27}{thing.owner:<23}{thing.mark}".rstrip()
+
+
+def _due_note(data: ServiceData, line) -> str:
+    """A line's due date as the machine card states it: overdue, due within the horizon, or nothing."""
+    when = due_date(data, line)
+    if when is None:
+        return ""
+    if when < AS_OF:
+        return f"overdue since {when.isoformat()}"
+    return f"due {when.isoformat()}" if (when - AS_OF).days <= tools.HORIZON_DAYS else ""
 
 
 def part_card(data: ServiceData, part_no: str) -> str:
@@ -129,11 +139,8 @@ def part_card(data: ServiceData, part_no: str) -> str:
              "", f"{'#':>2}  {'MACHINE':<9}{'CUSTOMER':<22}{'INST':>4}  DUE"]
     used = [b for b in data.bom if b.part_no == part_no]
     for i, b in enumerate(used, 1):
-        when = due_date(data, b)
-        note = ("" if when is None else f"overdue since {when.isoformat()}" if when < AS_OF
-                else f"due {when.isoformat()}" if (when - AS_OF).days <= 90 else "")
         customer = data.customers[data.machines[b.machine_id].customer_id].name
-        lines.append(f"{i:>2}  {b.machine_id:<9}{customer:<22}{b.qty_installed:>4}  {note}".rstrip())
+        lines.append(f"{i:>2}  {b.machine_id:<9}{customer:<22}{b.qty_installed:>4}  {_due_note(data, b)}".rstrip())
     if not used:
         lines.append("    no machine has this part on its parts list")
     return "\n".join(lines)
