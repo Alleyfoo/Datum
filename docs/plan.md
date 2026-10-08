@@ -1,6 +1,7 @@
 # Plan
 
-Status: agreed direction, 2026-10-07. Nothing built yet.
+Status: agreed direction, 2026-10-07. Phase 1 built on 2026-10-08 (schema registry and
+the synthetic company, see `docs/provenance.md`). Everything else is planned.
 
 ## What this is
 
@@ -81,16 +82,26 @@ Shop-flow) would need it unchanged, it is core.
 | Predictive-Spare-Parts-Lab `predictive_lab/intermittent.py`, `temporal.py` | TSB/Croston, as-of features | `babel/analytics` |
 | Spare-Parts-Readiness | coverage map | `domains/spare_parts` view |
 | Learning Lab | observe → propose mapping → person confirms | `babel/intake` |
-| Governed Data Lab, Shop-flow | recognition (0/1/many), establishment, refusal, evidence kinds | rules re-implemented in the core |
+| Shop-flow `docs/adr/0019` (Decision 4), `0021`, `shopflow/worklist.py` | close-of-day worklist: what needs attention, with the evidence on each line | `babel/record` (worklist over cases, not a separate dashboard) |
+| Shop-flow `docs/adr/0019` (role table, Decision 1) | four roles: human, modelling LLM (temporary), established worker, supervisory LLM outside the flow; success = the model can leave the recurring path | role definitions in `babel/mcp` and the domain pack |
+| Shop-flow `docs/adr/0020`, `shopflow/established.py` | sender recognition as routing; unknown sources refused as an output; establishment needs a named approver and recorded limitations | `babel/intake` (registration with approver) |
+| Shop-flow `docs/adr/0014`, `0015` | evidence packet: the reasoner reads a vetted product, never the ledger | case evidence in `babel/record` |
+| Governed Data Lab `ARCHITECTURE.md` (A1-1, A1-3) | Case ≠ Worker; 0/1/many applicability, only a unique match runs | `babel/intake` bindings and `babel/record` |
+| Governed Data Lab `src/execution/` | deterministic execution with no LLM reachable | core rule, tested |
+| Shopflow-furniture `mcp_server.py` | tiers declared in the MCP protocol | `babel/mcp` |
+| Learning Lab | unknown path: observe, propose, human confirms, then the source is established | `babel/intake` establishment session |
+| Governed Data Lab, Shop-flow | recognition (0/1/many), establishment, refusal, evidence kinds | the rules above, re-implemented in the core |
 
-Every ported file records its origin commit in `docs/provenance.md`.
+Every ported file records its origin commit in `docs/provenance.md`. Before a piece is
+built again, check whether a sibling repository already has it (the list above). Most of
+the operational pattern (worklists, refusal, establishment, evidence) already exists there.
 
 ## Phases (each ends with something you can show)
 
-1. **Core schema and one synthetic world.** Schema registry in the core; the spare-parts
-   pack declares its entities and generates one company: the desk's readable
-   customers, machines and parts, plus event history (requests, deliveries, stock
-   movements) for analytics.
+1. **Core schema and one synthetic world.** Done 2026-10-08: schema registry in the core;
+   the spare-parts pack declares its entities and generates one company: the desk's
+   readable customers, machines and parts, plus a year of event history (requests,
+   deliveries, stock movements) as a ledger that replays to today's stock.
 2. **Customer-service slice end to end.** Record, checks and the desk rules ported onto
    the schema; MCP tools for that role. Demo: plant map + the customer-service
    conversation (replay) + approval queue.
@@ -116,7 +127,9 @@ Every ported file records its origin commit in `docs/provenance.md`.
 
 ## Positioning: where this sits
 
-This system sits beside the ERP (SAP or similar), not in place of it. The ERP is the
+This system sits beside the ERP, not in place of it. The ERP is not yet known; until a real
+connection exists, the stock figures come from an Excel export that other software
+produces, and this system reads that export. The ERP is the
 system of record and does the ordinary work. This system takes the work the ERP's rules
 cannot settle, records it as a case, and keeps it open until a person decides. It does not
 take work away from people; it gives them the facts and the reasoning for the hard cases.
@@ -185,7 +198,8 @@ Fill rate and emergency orders stay as outcomes to watch, not as the product's o
 
 ### Boundary
 
-- Read-only access to the ERP: extracts or views. No write-back.
+- Read-only access to the ERP: extracts or views. No write-back. Until the ERP is known,
+  the interface is the periodic Excel export.
 - A person executes the decision in the ERP and records it in the case with the ERP
   document IDs, so the two systems can be matched.
 - The share of exceptions in real data is the first thing to measure. If it is small, the
@@ -208,8 +222,9 @@ that leaves the company. Nothing below exists in this repository yet.
    command-line script.
 
 **Cleaning with schema (data owner side)**
-4. A schema registry in the core: what an entity is, its fields, units and keys. Today
-   the spare-parts fields are hand-written in the data module.
+4. A schema registry in the core: what an entity is, its fields, units and keys. Done in
+   phase 1 (`babel/schema`). Still open: units are recorded but not converted, and each
+   customer's own schema is not yet separated from the shared one (see the layout below).
 5. Recognising a file by its shape, mapping it to the schema, and refusing what does not
    fit. Exists only for one test workbook. A second format and a person-confirmed mapping
    for unknown changes are missing.
@@ -236,6 +251,50 @@ that leaves the company. Nothing below exists in this repository yet.
 15. A demo surface that shows the flow: plant view, the conversation, the shared ticket,
     the approval queue. The lab's Streamlit demo is a starting point; Babel-Tower has none.
 16. Hosting and a Claude Desktop connection. Last, after the demo works from a clean checkout.
+17. **Minimum allowed access, per identity.** Each user gets the tool list their Windows
+    profile already allows, and the server checks it on every call, not only by hiding
+    tools from the model. A scheduled or background job runs under a named identity with
+    the least rights it needs, and every record names who or what acted. Not built, and
+    none of the sibling repositories has it: they declare tiers, not identities. Note it
+    now so the role design can carry it later.
+
+## Customer data layout (proposed, to confirm)
+
+The owner's working model: each customer has its own folder with its schemas and
+everything else about them. Incoming email is sorted into those folders, and extraction
+writes the parsed data into a shared product-data area. This lives on the local machine,
+outside this repository. The repository stays synthetic-only.
+
+```text
+<data root, outside the repository>/
+  customers/<customer-id>/
+    inbox/       raw messages and attachments, as received; never edited; hashed
+    schema/      this customer's field declarations and mappings, each with its approver
+    extracts/    parsed rows, each pointing back to its source file and row
+    cases/       tickets opened for this customer
+  product-data/  item master and other shared tables, built from confirmed mappings
+```
+
+Rules that follow from it:
+
+- **Routing is recognition, not understanding.** Sender identity decides the customer
+  folder, as in Shop-flow ADR 0020. An unknown sender is refused and goes to a ticket;
+  nothing is guessed from the message body.
+- **Attachments and message text are data, never instructions.** They are parsed by the
+  same rules as any other file. A message cannot change a mapping or a schema.
+- **Raw is kept, extracts are rebuilt.** Extraction writes new files; it never overwrites
+  the inbox or an earlier extract.
+- **Shared product data must not leak customer data.** The item master can be shared;
+  customer names, orders and prices are not. The "confidential names must not leak" check
+  applies to every answer that reads shared tables.
+- **The mailbox account needs minimum access** (see item 17): read the one folder it
+  needs, write nothing to the mail system.
+- **Personal data stays out of the repository**, and out of any demo, until a synthetic
+  replacement exists.
+
+Open questions for the owner: how many customers are expected in the first pilot; whether
+customers share part numbers (if they do, the item master is one table, not one per
+customer); and who may read each customer's folder.
 
 ## Steps to a meaningful demo
 
@@ -274,3 +333,8 @@ Decided by the owner, 2026-10-08:
   choice itself is a recorded, reviewable decision on the ticket.
 - **Sharing:** the code stays private for now. A distilled version (the method, the
   schema and the demo story, without the full code) comes after the build is finished.
+- **Identity-scoped access** is noted as a requirement (item 17), not built now.
+
+Proposed, awaiting the owner's confirmation:
+
+- **Customer folders and shared product data** as laid out above.
