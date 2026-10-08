@@ -18,7 +18,7 @@ confirm before the item they affect is built. Everything else is settled in
 | G7 | Excel reader is not chosen. | **Proposal:** `openpyxl` in read-only mode, pinned to a version. Staging reads cell values and their types, never formulas evaluated by the reader. | C2 |
 | G8 | Synthetic data generators exist. | **Decided:** reuse them. Messy-data `fixtures/synthetic/make_fixtures.py` makes messy workbooks; the lab's `predictive_lab/world.py` pattern (seeded generation) is already followed by D2. C25 adapts the messy-data generator to the weekly stock export and its renamed-column variant. | C25, demo step 3 |
 | G9 | A file kind is not declared: which sheet, which header row, which columns are required. | **Proposal:** a file kind declares sheet name, header row, and required columns, as part of its customer mapping (G1). Without a declared kind there is no trial. | C2, C4 |
-| G10 | Ticket model. The owner points to Subroutine (`github.com/simonholliday/subroutine`) as a similar system. | **Proposal:** model the ticket on Subroutine's concepts: one numbering scheme for tasks and documents; decisions and findings as documents; `blocks` dependencies; claims as leases that expire when the worker stops; an attributed append-only journal; comments record what happened, documents record conclusions. Store in SQLite as Subroutine does. Open question for the owner: use Subroutine itself as the backend, or copy its model. | C5, C6 |
+| G10 | Ticket model. The owner points to Subroutine (`github.com/simonholliday/subroutine`) as a similar system. | **Decided: yes, copy Subroutine's model** into our own SQLite store. One numbering scheme for tasks and documents; decisions and findings as documents; `blocks`; claims as leases that expire when the worker stops; an attributed append-only journal; comments record what happened, documents record conclusions. | C5, C6, P12 |
 | G11 | No test strategy. | **Proposal:** synthetic fixtures committed to the repo; golden files for staging output and trial results; fixed seeds for generated data; a recorded tool-call format (JSON: call, arguments, result) for replays. | all |
 | G12 | Dependencies are not chosen. | **Proposal:** standard library, `openpyxl`, `pytest`, and nothing else until a build item needs it. Each addition is recorded in `pyproject.toml` with a reason. | all |
 
@@ -91,3 +91,33 @@ document.
 In order of how many items they unblock: G3 (state), G1 (canonical versus customer schema),
 G9 (file kinds), G4 (identity), G2 (port, not extend), G6 and G7 (hook and reader), G10 (ticket
 fields). Each is a yes, a change, or a different answer.
+
+## 6. Yes or no
+
+Each question below needs a yes or a no. The recommendation is the answer this plan assumes
+unless you say otherwise. Answers are recorded in [plan.md](plan.md) under "Decisions made".
+
+| ID | Question | Recommended |
+|---|---|---|
+| Q1 | Is the state (tickets, ledger, decisions) kept in SQLite, with raw, staging and extract files on disk? (G3) | Yes |
+| Q2 | Does the folder hook detect new files by polling, using a stable size and time for a short interval, with no OS watcher? (G6) | Yes |
+| Q3 | Is the Excel reader `openpyxl`, in read-only mode and pinned to one version? (G7) | Yes |
+| Q4 | Does every file kind declare its sheet name, header row and required columns before a trial runs? (G9) | Yes |
+| Q5 | For the wrong-file check, is a file's identity its sender (for mail) or its export header (for a spreadsheet)? (P1) | Yes |
+| Q6 | Does each arriving file get its own ticket, with no grouping per collector run for now? (P2) | Yes |
+| Q7 | Must the person who confirms a new schema differ from the person who drafted it? (P7) | Yes |
+| Q8 | Is the mail collector left out of the demo, and built only when a real mailbox is named? (P9) | Yes |
+| Q9 | Does the demo run locally, with the repository kept private? (P11) | Yes |
+| Q10 | Is Python 3.11 the target, as the machine runs it, and `pyproject.toml` changed to match? (P13) | Yes |
+| Q11 | Is unit conversion left out of the demo, with units recorded only? (P14) | Yes |
+| Q12 | Is multi-warehouse kept as a stated limit: stock moves between FI and SE, with no multi-echelon optimisation? (P18) | Yes |
+| Q13 | Is the first desktop connection Claude Desktop only? (P19) | Yes |
+| Q14 | Is the Excel stock export the only ERP input for the demo? (P17) | Yes |
+| Q15 | Is the starting list of five exception types accepted as it stands? (P15) | Yes |
+| Q16 | Is one shared item master used across customers, rather than one per customer? (P8) | Yes |
+| Q17 | Does an order above three times a customer's usual quantity open an analysis ticket, with the threshold tuned later? (P5) | Yes |
+| Q18 | Is identity kept as a design principle, with no identity code built until the environment is known, and the hook and collectors written to need no identity beyond the file system? (P6, G4) | Yes |
+| Q19 | Does the import research pass (section 5) run before the trial and the create-schema gate are designed? | Yes |
+
+Decided already, not a question: Subroutine's model is copied (G10); the old repositories stay
+frozen and their data is imported (G2); the schema means the headers of a file kind (G1).

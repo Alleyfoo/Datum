@@ -119,9 +119,12 @@ Decided by the owner, 2026-10-08:
   scheme, decisions as documents, `blocks`, leases on claims, attributed journal. Whether to use
   it as the backend is open (build-plan G10).
 - **Identity is open** and kept as a design principle until the environment is known.
+- **The system is modular.** It is both a demo that tells the story and the start of real work, so
+  each part is replaceable as the real environment becomes known.
+- **Ticket model is copied from Subroutine** (yes, decided), into our own SQLite store.
 
 Proposed, awaiting the owner's confirmation: the customer folder layout in
-[customer-layout.md](customer-layout.md).
+[customer-layout.md](customer-layout.md). Yes-or-no answers needed: [build-plan.md](build-plan.md) section 6.
 
 ## Defects to fix while porting
 
