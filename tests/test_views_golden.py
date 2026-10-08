@@ -9,7 +9,10 @@ only read it: a missing or stale golden fails, it is never written here.
 
 import difflib
 import json
+import os
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -18,7 +21,9 @@ from domains.spare_parts import build, views
 from domains.spare_parts.data import demo, from_tables
 from view_screens import screens, service_data_text
 
-GOLDEN = Path(__file__).parent / "golden" / "views"
+TESTS = Path(__file__).parent
+ROOT = TESTS.parent
+GOLDEN = TESTS / "golden" / "views"
 GOLDEN_NAMES = sorted(path.stem for path in GOLDEN.glob("*.txt"))
 LAB = GOLDEN / "lab_reference"
 LAB_NAMES = sorted(path.stem for path in LAB.glob("*.txt"))
@@ -97,3 +102,37 @@ def test_the_goldens_cover_every_customer_machine_and_country():
 @pytest.mark.parametrize("name", GOLDEN_NAMES)
 def test_the_port_gives_its_golden_text(port, name):
     _same(_read(GOLDEN / f"{name}.txt"), port[name], f"{name}.txt")
+
+
+CHILD = """
+import json
+import sys
+
+sys.path[:0] = sys.argv[1:3]
+from domains.spare_parts import views
+from domains.spare_parts.data import demo
+from view_screens import screens
+
+sys.stdout.write(json.dumps(screens(views, demo()), ensure_ascii=True))
+"""
+
+
+def _screens_in_a_new_process(hash_seed: str) -> dict:
+    """Every screen, drawn by a fresh interpreter with its own string-hash seed."""
+    env = dict(os.environ, PYTHONHASHSEED=hash_seed)
+    run = subprocess.run([sys.executable, "-c", CHILD, str(ROOT), str(TESTS)],
+                         capture_output=True, text=True, env=env, cwd=ROOT)
+    if run.returncode:
+        pytest.fail(f"the child process failed:\n{run.stderr}", pytrace=False)
+    return json.loads(run.stdout)
+
+
+def test_two_calls_in_one_process_give_identical_text(port):
+    data = demo()
+    assert screens(views, data) == screens(views, data) == port
+
+
+def test_two_processes_give_identical_text(port):
+    """Different hash seeds: no view may depend on the order of a set or of string hashes."""
+    first, second = _screens_in_a_new_process("1"), _screens_in_a_new_process("2")
+    assert first == second == port
