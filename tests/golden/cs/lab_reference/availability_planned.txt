@@ -1,0 +1,1126 @@
+=== BC-01 SP-1001
+QUESTION: Availability of SP-1001 for BC-01: can we supply a full set (18 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-01 Bark conveyor
+PART: SP-1001 Conveyor belt EP630/4, 800 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-01 Bark conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 18 x SP-1001.
+- [machine_context] Last replaced on Wed 2024-04-03.
+- [stock_by_warehouse] SP-1001 Conveyor belt EP630/4, 800 mm, per m: on hand FI 60, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 18 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-13.
+- [incoming_orders] No open purchase orders for SP-1001.
+- [lead_time] Supplier lead time for SP-1001 is 42 days; ordered today it would arrive on Fri 2026-11-13.
+- [substitutes] No approved substitute is recorded for SP-1001.
+- [conflicts] Taking 18 pcs from FI leaves 42 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] SP-1001 is also used on 4 other machines, 2 of them criticality A: BC-03 (Sawmill customer, criticality B, 12 installed), BC-04 (Sawmill customer, criticality B, 9 installed), BC-05 (Sawmill customer, criticality A, 8 installed), BC-12 (Power plant customer, criticality A, 10 installed).
+- [due_soon] No other machine is due to replace SP-1001 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-01 SP-1101
+QUESTION: Availability of SP-1101 for BC-01: can we supply a full set (12 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-01 Bark conveyor
+PART: SP-1101 Carrying idler 3-roll set, 800 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-01 Bark conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 12 x SP-1101.
+- [machine_context] Last replaced on Sat 2025-02-01.
+- [stock_by_warehouse] SP-1101 Carrying idler 3-roll set, 800 mm: on hand FI 18, SE 6.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 12 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-10-16.
+- [incoming_orders] No open purchase orders for SP-1101.
+- [lead_time] Supplier lead time for SP-1101 is 14 days; ordered today it would arrive on Fri 2026-10-16.
+- [substitutes] No approved substitute is recorded for SP-1101.
+- [conflicts] Taking 12 pcs from FI leaves 6 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] No other machine uses SP-1101.
+- [due_soon] No other machine is due to replace SP-1101 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-01 SP-1201
+QUESTION: Availability of SP-1201 for BC-01: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-01 Bark conveyor
+PART: SP-1201 Drive pulley, lagged, 500 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-01 Bark conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1201 and the part is marked critical for this machine.
+- [machine_context] No replacement date is recorded for this part on this machine.
+- [stock_by_warehouse] SP-1201 Drive pulley, lagged, 500 mm: on hand FI 0, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: new supplier order, arrives Fri 2026-12-11.
+- [incoming_orders] No open purchase orders for SP-1201.
+- [lead_time] Supplier lead time for SP-1201 is 70 days; ordered today it would arrive on Fri 2026-12-11.
+- [substitutes] No approved substitute is recorded for SP-1201.
+- [conflicts] No planned replacements to conflict with; the part is replaced on failure.
+- [where_used] No other machine uses SP-1201.
+- [due_soon] SP-1201 is replaced on failure, not on a schedule.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): new supplier order, arrives Fri 2026-12-11.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-01 SP-1301
+QUESTION: Availability of SP-1301 for BC-01: can we supply a full set (4 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-01 Bark conveyor
+PART: SP-1301 Spherical roller bearing 22216
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-01 Bark conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 4 x SP-1301 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Sat 2024-11-02.
+- [stock_by_warehouse] SP-1301 Spherical roller bearing 22216: on hand FI 2, SE 4.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 4 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-10-09.
+- [fastest_supply] Option 3: from purchase order PO-4711, arrives Wed 2026-10-14.
+- [incoming_orders] Purchase order PO-4711: 6 x SP-1301 due in FI on Wed 2026-10-14.
+- [lead_time] Supplier lead time for SP-1301 is 7 days; ordered today it would arrive on Fri 2026-10-09.
+- [substitutes] Approved substitute SP-1311 Spherical roller bearing 22216, alternative make: on hand FI 3, SE 0; not enough for the full set: at most 3 of the 4 pcs needed from one warehouse.
+- [conflicts] CONFLICT: taking 4 pcs from SE leaves 0 there, but FR-01 (Power plant customer, 4 pcs due Fri 2026-10-02) is served from SE: a shortfall of 4 pcs within 60 days.
+- [where_used] SP-1301 is also used on 6 other machines, 5 of them criticality A: BC-02 (Sawmill customer, criticality A, 4 installed), BC-03 (Sawmill customer, criticality B, 2 installed), BC-05 (Sawmill customer, criticality A, 2 installed), FR-01 (Power plant customer, criticality A, 4 installed), BC-11 (Power plant customer, criticality A, 2 installed), CH-03 (Pulp mill customer, criticality A, 2 installed).
+- [due_soon] Planned replacements of SP-1301 on other machines within 60 days need 4 pcs: FR-01 due Fri 2026-10-02 (4 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): new supplier order, arrives Fri 2026-10-09. The faster option (transfer from SE stock, 3 days, arrives Mon 2026-10-05) is not used because it would leave SE short for planned needs.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-01 SP-1401
+QUESTION: Availability of SP-1401 for BC-01: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-01 Bark conveyor
+PART: SP-1401 Primary belt scraper blade, 800 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-01 Bark conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1401.
+- [machine_context] Last replaced on Tue 2026-03-03.
+- [stock_by_warehouse] SP-1401 Primary belt scraper blade, 800 mm: on hand FI 3, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Mon 2026-10-12.
+- [incoming_orders] No open purchase orders for SP-1401.
+- [lead_time] Supplier lead time for SP-1401 is 10 days; ordered today it would arrive on Mon 2026-10-12.
+- [substitutes] No approved substitute is recorded for SP-1401.
+- [conflicts] Taking 1 pcs from FI leaves 2 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] SP-1401 is also used on 1 other machine, 1 of them criticality A: BC-05 (Sawmill customer, criticality A, 1 installed).
+- [due_soon] Planned replacements of SP-1401 on other machines within 60 days need 1 pcs: BC-05 due Fri 2026-10-02 (1 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-01 SP-1501
+QUESTION: Availability of SP-1501 for BC-01: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-01 Bark conveyor
+PART: SP-1501 Helical bevel gearbox, 15 kW
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-01 Bark conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1501 and the part is marked critical for this machine.
+- [machine_context] No replacement date is recorded for this part on this machine.
+- [stock_by_warehouse] SP-1501 Helical bevel gearbox, 15 kW: on hand FI 0, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: new supplier order, arrives Fri 2027-01-08.
+- [incoming_orders] No open purchase orders for SP-1501.
+- [lead_time] Supplier lead time for SP-1501 is 98 days; ordered today it would arrive on Fri 2027-01-08.
+- [substitutes] No approved substitute is recorded for SP-1501.
+- [conflicts] No planned replacements to conflict with; the part is replaced on failure.
+- [where_used] No other machine uses SP-1501.
+- [due_soon] SP-1501 is replaced on failure, not on a schedule.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): new supplier order, arrives Fri 2027-01-08.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== CR-01 SP-1801
+QUESTION: Availability of SP-1801 for CR-01: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: CR-01 Bark crusher
+PART: SP-1801 Crusher hammer set
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] CR-01 Bark crusher is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1801 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Sun 2025-11-02.
+- [stock_by_warehouse] SP-1801 Crusher hammer set: on hand FI 1, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-12-04.
+- [incoming_orders] No open purchase orders for SP-1801.
+- [lead_time] Supplier lead time for SP-1801 is 63 days; ordered today it would arrive on Fri 2026-12-04.
+- [substitutes] No approved substitute is recorded for SP-1801.
+- [conflicts] Taking 1 pcs from FI leaves 0 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] No other machine uses SP-1801.
+- [due_soon] No other machine is due to replace SP-1801 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== CR-01 SP-1303
+QUESTION: Availability of SP-1303 for CR-01: can we supply a full set (2 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: CR-01 Bark crusher
+PART: SP-1303 Spherical roller bearing 22220
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] CR-01 Bark crusher is criticality A (stops production if it stops).
+- [machine_context] It uses 2 x SP-1303 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Sat 2024-08-03.
+- [stock_by_warehouse] SP-1303 Spherical roller bearing 22220: on hand FI 0, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 2 pcs, earliest first:
+- [fastest_supply] Option 1: new supplier order, arrives Fri 2026-10-09.
+- [incoming_orders] No open purchase orders for SP-1303.
+- [lead_time] Supplier lead time for SP-1303 is 7 days; ordered today it would arrive on Fri 2026-10-09.
+- [substitutes] No approved substitute is recorded for SP-1303.
+- [conflicts] No warehouse holds a full set of 2 pcs, so no stock conflict arises.
+- [where_used] No other machine uses SP-1303.
+- [due_soon] No other machine is due to replace SP-1303 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): new supplier order, arrives Fri 2026-10-09.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-02 SP-1002
+QUESTION: Availability of SP-1002 for BC-02: can we supply a full set (14 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-02 Crusher discharge conveyor
+PART: SP-1002 Conveyor belt EP800/4, 1000 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-02 Crusher discharge conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 14 x SP-1002.
+- [machine_context] Last replaced on Thu 2025-10-02.
+- [stock_by_warehouse] SP-1002 Conveyor belt EP800/4, 1000 mm, per m: on hand FI 0, SE 25.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 14 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-20.
+- [incoming_orders] No open purchase orders for SP-1002.
+- [lead_time] Supplier lead time for SP-1002 is 49 days; ordered today it would arrive on Fri 2026-11-20.
+- [substitutes] No approved substitute is recorded for SP-1002.
+- [conflicts] Taking 14 pcs from SE leaves 11 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1002 is also used on 4 other machines, 3 of them criticality A: FR-01 (Power plant customer, criticality A, 20 installed), BC-11 (Power plant customer, criticality A, 16 installed), CH-01 (Pulp mill customer, criticality B, 12 installed), CH-03 (Pulp mill customer, criticality A, 18 installed).
+- [due_soon] Planned replacements of SP-1002 on other machines within 60 days need 18 pcs: CH-03 due Tue 2026-12-01 (18 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-02 SP-1104
+QUESTION: Availability of SP-1104 for BC-02: can we supply a full set (4 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-02 Crusher discharge conveyor
+PART: SP-1104 Impact idler set, 1000 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-02 Crusher discharge conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 4 x SP-1104.
+- [machine_context] Last replaced on Sat 2025-05-03.
+- [stock_by_warehouse] SP-1104 Impact idler set, 1000 mm: on hand FI 2, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 4 pcs, earliest first:
+- [fastest_supply] Option 1: new supplier order, arrives Fri 2026-10-30.
+- [incoming_orders] No open purchase orders for SP-1104.
+- [lead_time] Supplier lead time for SP-1104 is 28 days; ordered today it would arrive on Fri 2026-10-30.
+- [substitutes] No approved substitute is recorded for SP-1104.
+- [conflicts] No warehouse holds a full set of 4 pcs, so no stock conflict arises.
+- [where_used] No other machine uses SP-1104.
+- [due_soon] No other machine is due to replace SP-1104 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): new supplier order, arrives Fri 2026-10-30.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-02 SP-1203
+QUESTION: Availability of SP-1203 for BC-02: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-02 Crusher discharge conveyor
+PART: SP-1203 Drive pulley, lagged, 630 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-02 Crusher discharge conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1203 and the part is marked critical for this machine.
+- [machine_context] No replacement date is recorded for this part on this machine.
+- [stock_by_warehouse] SP-1203 Drive pulley, lagged, 630 mm: on hand FI 0, SE 1.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: from purchase order PO-4720, arrives Thu 2026-11-26.
+- [fastest_supply] Option 3: new supplier order, arrives Fri 2026-12-25.
+- [incoming_orders] Purchase order PO-4720: 1 x SP-1203 due in FI on Thu 2026-11-26.
+- [lead_time] Supplier lead time for SP-1203 is 84 days; ordered today it would arrive on Fri 2026-12-25.
+- [substitutes] No approved substitute is recorded for SP-1203.
+- [conflicts] No planned replacements to conflict with; the part is replaced on failure.
+- [where_used] SP-1203 is also used on 2 other machines, 2 of them criticality A: BC-11 (Power plant customer, criticality A, 1 installed), CH-03 (Pulp mill customer, criticality A, 1 installed).
+- [due_soon] SP-1203 is replaced on failure, not on a schedule.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-02 SP-1301
+QUESTION: Availability of SP-1301 for BC-02: can we supply a full set (4 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-02 Crusher discharge conveyor
+PART: SP-1301 Spherical roller bearing 22216
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-02 Crusher discharge conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 4 x SP-1301 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Tue 2025-12-02.
+- [stock_by_warehouse] SP-1301 Spherical roller bearing 22216: on hand FI 2, SE 4.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 4 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-10-09.
+- [fastest_supply] Option 3: from purchase order PO-4711, arrives Wed 2026-10-14.
+- [incoming_orders] Purchase order PO-4711: 6 x SP-1301 due in FI on Wed 2026-10-14.
+- [lead_time] Supplier lead time for SP-1301 is 7 days; ordered today it would arrive on Fri 2026-10-09.
+- [substitutes] Approved substitute SP-1311 Spherical roller bearing 22216, alternative make: on hand FI 3, SE 0; not enough for the full set: at most 3 of the 4 pcs needed from one warehouse.
+- [conflicts] CONFLICT: taking 4 pcs from SE leaves 0 there, but FR-01 (Power plant customer, 4 pcs due Fri 2026-10-02) is served from SE: a shortfall of 4 pcs within 60 days.
+- [where_used] SP-1301 is also used on 6 other machines, 5 of them criticality A: BC-01 (Sawmill customer, criticality A, 4 installed), BC-03 (Sawmill customer, criticality B, 2 installed), BC-05 (Sawmill customer, criticality A, 2 installed), FR-01 (Power plant customer, criticality A, 4 installed), BC-11 (Power plant customer, criticality A, 2 installed), CH-03 (Pulp mill customer, criticality A, 2 installed).
+- [due_soon] Planned replacements of SP-1301 on other machines within 60 days need 8 pcs: FR-01 due Fri 2026-10-02 (4 pcs); BC-01 due Mon 2026-11-02 (4 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): new supplier order, arrives Fri 2026-10-09. The faster option (transfer from SE stock, 3 days, arrives Mon 2026-10-05) is not used because it would leave SE short for planned needs.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-02 SP-1402
+QUESTION: Availability of SP-1402 for BC-02: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-02 Crusher discharge conveyor
+PART: SP-1402 Primary belt scraper blade, 1000 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-02 Crusher discharge conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1402.
+- [machine_context] Last replaced on Sun 2026-05-03.
+- [stock_by_warehouse] SP-1402 Primary belt scraper blade, 1000 mm: on hand FI 0, SE 2.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: new supplier order, arrives Mon 2026-10-12.
+- [incoming_orders] No open purchase orders for SP-1402.
+- [lead_time] Supplier lead time for SP-1402 is 10 days; ordered today it would arrive on Mon 2026-10-12.
+- [substitutes] No approved substitute is recorded for SP-1402.
+- [conflicts] Taking 1 pcs from SE leaves 1 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1402 is also used on 2 other machines, 1 of them criticality A: FR-01 (Power plant customer, criticality A, 1 installed), CH-01 (Pulp mill customer, criticality B, 1 installed).
+- [due_soon] Planned replacements of SP-1402 on other machines within 60 days need 1 pcs: FR-01 due Fri 2026-10-02 (1 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-02 SP-1502
+QUESTION: Availability of SP-1502 for BC-02: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-02 Crusher discharge conveyor
+PART: SP-1502 Electric motor 15 kW IE3
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-02 Crusher discharge conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1502 and the part is marked critical for this machine.
+- [machine_context] No replacement date is recorded for this part on this machine.
+- [stock_by_warehouse] SP-1502 Electric motor 15 kW IE3: on hand FI 1, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-06.
+- [incoming_orders] No open purchase orders for SP-1502.
+- [lead_time] Supplier lead time for SP-1502 is 35 days; ordered today it would arrive on Fri 2026-11-06.
+- [substitutes] No approved substitute is recorded for SP-1502.
+- [conflicts] No planned replacements to conflict with; the part is replaced on failure.
+- [where_used] SP-1502 is also used on 1 other machine, 1 of them criticality A: CH-02 (Pulp mill customer, criticality A, 1 installed).
+- [due_soon] SP-1502 is replaced on failure, not on a schedule.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== SC-01 SP-1601
+QUESTION: Availability of SP-1601 for SC-01: can we supply a full set (3 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: SC-01 Screen feed screw
+PART: SP-1601 Screw flight section, 400 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] SC-01 Screen feed screw is criticality B (degrades production if it stops).
+- [machine_context] It uses 3 x SP-1601.
+- [machine_context] Last replaced on Mon 2025-03-03.
+- [stock_by_warehouse] SP-1601 Screw flight section, 400 mm: on hand FI 0, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 3 pcs, earliest first:
+- [fastest_supply] Option 1: from purchase order PO-4718, arrives Thu 2026-10-22.
+- [fastest_supply] Option 2: new supplier order, arrives Mon 2026-11-16.
+- [incoming_orders] Purchase order PO-4718: 4 x SP-1601 due in FI on Thu 2026-10-22.
+- [lead_time] Supplier lead time for SP-1601 is 45 days; ordered today it would arrive on Mon 2026-11-16.
+- [substitutes] No approved substitute is recorded for SP-1601.
+- [conflicts] No warehouse holds a full set of 3 pcs, so no stock conflict arises.
+- [where_used] SP-1601 is also used on 2 other machines, 1 of them criticality A: SC-11 (Power plant customer, criticality B, 4 installed), CH-02 (Pulp mill customer, criticality A, 4 installed).
+- [due_soon] Planned replacements of SP-1601 on other machines within 60 days need 4 pcs: CH-02 due Sun 2026-11-01 (4 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from purchase order PO-4718, arrives Thu 2026-10-22.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-03 SP-1001
+QUESTION: Availability of SP-1001 for BC-03: can we supply a full set (12 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-03 Chip return conveyor
+PART: SP-1001 Conveyor belt EP630/4, 800 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-03 Chip return conveyor is criticality B (degrades production if it stops).
+- [machine_context] It uses 12 x SP-1001.
+- [machine_context] Last replaced on Sun 2026-02-01.
+- [stock_by_warehouse] SP-1001 Conveyor belt EP630/4, 800 mm, per m: on hand FI 60, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 12 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-13.
+- [incoming_orders] No open purchase orders for SP-1001.
+- [lead_time] Supplier lead time for SP-1001 is 42 days; ordered today it would arrive on Fri 2026-11-13.
+- [substitutes] No approved substitute is recorded for SP-1001.
+- [conflicts] Taking 12 pcs from FI leaves 48 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] SP-1001 is also used on 4 other machines, 3 of them criticality A: BC-01 (Sawmill customer, criticality A, 18 installed), BC-04 (Sawmill customer, criticality B, 9 installed), BC-05 (Sawmill customer, criticality A, 8 installed), BC-12 (Power plant customer, criticality A, 10 installed).
+- [due_soon] No other machine is due to replace SP-1001 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-03 SP-1102
+QUESTION: Availability of SP-1102 for BC-03: can we supply a full set (3 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-03 Chip return conveyor
+PART: SP-1102 Return idler, 800 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-03 Chip return conveyor is criticality B (degrades production if it stops).
+- [machine_context] It uses 3 x SP-1102.
+- [machine_context] Last replaced on Mon 2024-09-02.
+- [stock_by_warehouse] SP-1102 Return idler, 800 mm: on hand FI 4, SE 2.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 3 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-10-16.
+- [incoming_orders] No open purchase orders for SP-1102.
+- [lead_time] Supplier lead time for SP-1102 is 14 days; ordered today it would arrive on Fri 2026-10-16.
+- [substitutes] No approved substitute is recorded for SP-1102.
+- [conflicts] Taking 3 pcs from FI leaves 1 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] No other machine uses SP-1102.
+- [due_soon] No other machine is due to replace SP-1102 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-03 SP-1202
+QUESTION: Availability of SP-1202 for BC-03: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-03 Chip return conveyor
+PART: SP-1202 Tail pulley, 400 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-03 Chip return conveyor is criticality B (degrades production if it stops).
+- [machine_context] It uses 1 x SP-1202.
+- [machine_context] No replacement date is recorded for this part on this machine.
+- [stock_by_warehouse] SP-1202 Tail pulley, 400 mm: on hand FI 1, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-27.
+- [incoming_orders] No open purchase orders for SP-1202.
+- [lead_time] Supplier lead time for SP-1202 is 56 days; ordered today it would arrive on Fri 2026-11-27.
+- [substitutes] No approved substitute is recorded for SP-1202.
+- [conflicts] No planned replacements to conflict with; the part is replaced on failure.
+- [where_used] No other machine uses SP-1202.
+- [due_soon] SP-1202 is replaced on failure, not on a schedule.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-03 SP-1301
+QUESTION: Availability of SP-1301 for BC-03: can we supply a full set (2 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-03 Chip return conveyor
+PART: SP-1301 Spherical roller bearing 22216
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-03 Chip return conveyor is criticality B (degrades production if it stops).
+- [machine_context] It uses 2 x SP-1301 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Mon 2024-12-02.
+- [stock_by_warehouse] SP-1301 Spherical roller bearing 22216: on hand FI 2, SE 4.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 2 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: approved substitute SP-1311 from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 3: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 4: new supplier order, arrives Fri 2026-10-09.
+- [fastest_supply] Option 5: from purchase order PO-4711, arrives Wed 2026-10-14.
+- [incoming_orders] Purchase order PO-4711: 6 x SP-1301 due in FI on Wed 2026-10-14.
+- [lead_time] Supplier lead time for SP-1301 is 7 days; ordered today it would arrive on Fri 2026-10-09.
+- [substitutes] Approved substitute SP-1311 Spherical roller bearing 22216, alternative make: on hand FI 3, SE 0; enough for the full set.
+- [conflicts] CONFLICT: taking 2 pcs from FI leaves 0 there, but BC-01 (Sawmill customer, 4 pcs due Mon 2026-11-02) is served from FI: a shortfall of 4 pcs within 60 days.
+- [conflicts] CONFLICT: taking 2 pcs from SE leaves 2 there, but FR-01 (Power plant customer, 4 pcs due Fri 2026-10-02) is served from SE: a shortfall of 2 pcs within 60 days.
+- [where_used] SP-1301 is also used on 6 other machines, 6 of them criticality A: BC-01 (Sawmill customer, criticality A, 4 installed), BC-02 (Sawmill customer, criticality A, 4 installed), BC-05 (Sawmill customer, criticality A, 2 installed), FR-01 (Power plant customer, criticality A, 4 installed), BC-11 (Power plant customer, criticality A, 2 installed), CH-03 (Pulp mill customer, criticality A, 2 installed).
+- [due_soon] Planned replacements of SP-1301 on other machines within 60 days need 8 pcs: FR-01 due Fri 2026-10-02 (4 pcs); BC-01 due Mon 2026-11-02 (4 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): approved substitute SP-1311 from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-04 SP-1001
+QUESTION: Availability of SP-1001 for BC-04: can we supply a full set (9 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-04 Stockpile conveyor
+PART: SP-1001 Conveyor belt EP630/4, 800 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-04 Stockpile conveyor is criticality B (degrades production if it stops).
+- [machine_context] It uses 9 x SP-1001.
+- [machine_context] Last replaced on Sat 2025-08-02.
+- [stock_by_warehouse] SP-1001 Conveyor belt EP630/4, 800 mm, per m: on hand FI 60, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 9 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-13.
+- [incoming_orders] No open purchase orders for SP-1001.
+- [lead_time] Supplier lead time for SP-1001 is 42 days; ordered today it would arrive on Fri 2026-11-13.
+- [substitutes] No approved substitute is recorded for SP-1001.
+- [conflicts] Taking 9 pcs from FI leaves 51 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] SP-1001 is also used on 4 other machines, 3 of them criticality A: BC-01 (Sawmill customer, criticality A, 18 installed), BC-03 (Sawmill customer, criticality B, 12 installed), BC-05 (Sawmill customer, criticality A, 8 installed), BC-12 (Power plant customer, criticality A, 10 installed).
+- [due_soon] No other machine is due to replace SP-1001 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-04 SP-1503
+QUESTION: Availability of SP-1503 for BC-04: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-04 Stockpile conveyor
+PART: SP-1503 Flexible coupling, size 5
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-04 Stockpile conveyor is criticality B (degrades production if it stops).
+- [machine_context] It uses 1 x SP-1503 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Wed 2024-04-03.
+- [stock_by_warehouse] SP-1503 Flexible coupling, size 5: on hand FI 2, SE 2.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 3: new supplier order, arrives Fri 2026-10-16.
+- [incoming_orders] No open purchase orders for SP-1503.
+- [lead_time] Supplier lead time for SP-1503 is 14 days; ordered today it would arrive on Fri 2026-10-16.
+- [substitutes] No approved substitute is recorded for SP-1503.
+- [conflicts] Taking 1 pcs from FI leaves 1 there, enough for the planned needs of machines served from FI within 60 days.
+- [conflicts] Taking 1 pcs from SE leaves 1 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1503 is also used on 1 other machine, 1 of them criticality A: BC-12 (Power plant customer, criticality A, 1 installed).
+- [due_soon] Planned replacements of SP-1503 on other machines within 60 days need 1 pcs: BC-12 due Sun 2026-11-01 (1 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BE-01 SP-1701
+QUESTION: Availability of SP-1701 for BE-01: can we supply a full set (60 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BE-01 Boiler feed elevator
+PART: SP-1701 Elevator bucket, 300 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BE-01 Boiler feed elevator is criticality A (stops production if it stops).
+- [machine_context] It uses 60 x SP-1701.
+- [machine_context] Last replaced on Mon 2024-06-03.
+- [stock_by_warehouse] SP-1701 Elevator bucket, 300 mm: on hand FI 40, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 60 pcs, earliest first:
+- [fastest_supply] Option 1: new supplier order, arrives Sun 2026-11-01.
+- [incoming_orders] No open purchase orders for SP-1701.
+- [lead_time] Supplier lead time for SP-1701 is 30 days; ordered today it would arrive on Sun 2026-11-01.
+- [substitutes] No approved substitute is recorded for SP-1701.
+- [conflicts] No warehouse holds a full set of 60 pcs, so no stock conflict arises.
+- [where_used] No other machine uses SP-1701.
+- [due_soon] No other machine is due to replace SP-1701 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): new supplier order, arrives Sun 2026-11-01.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-05 SP-1001
+QUESTION: Availability of SP-1001 for BC-05: can we supply a full set (8 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-05 Boiler day-bin conveyor
+PART: SP-1001 Conveyor belt EP630/4, 800 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-05 Boiler day-bin conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 8 x SP-1001.
+- [machine_context] Last replaced on Tue 2026-06-02.
+- [stock_by_warehouse] SP-1001 Conveyor belt EP630/4, 800 mm, per m: on hand FI 60, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 8 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-13.
+- [incoming_orders] No open purchase orders for SP-1001.
+- [lead_time] Supplier lead time for SP-1001 is 42 days; ordered today it would arrive on Fri 2026-11-13.
+- [substitutes] No approved substitute is recorded for SP-1001.
+- [conflicts] Taking 8 pcs from FI leaves 52 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] SP-1001 is also used on 4 other machines, 2 of them criticality A: BC-01 (Sawmill customer, criticality A, 18 installed), BC-03 (Sawmill customer, criticality B, 12 installed), BC-04 (Sawmill customer, criticality B, 9 installed), BC-12 (Power plant customer, criticality A, 10 installed).
+- [due_soon] No other machine is due to replace SP-1001 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-05 SP-1401
+QUESTION: Availability of SP-1401 for BC-05: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-05 Boiler day-bin conveyor
+PART: SP-1401 Primary belt scraper blade, 800 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-05 Boiler day-bin conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1401.
+- [machine_context] Last replaced on Fri 2026-04-03.
+- [stock_by_warehouse] SP-1401 Primary belt scraper blade, 800 mm: on hand FI 3, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Mon 2026-10-12.
+- [incoming_orders] No open purchase orders for SP-1401.
+- [lead_time] Supplier lead time for SP-1401 is 10 days; ordered today it would arrive on Mon 2026-10-12.
+- [substitutes] No approved substitute is recorded for SP-1401.
+- [conflicts] Taking 1 pcs from FI leaves 2 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] SP-1401 is also used on 1 other machine, 1 of them criticality A: BC-01 (Sawmill customer, criticality A, 1 installed).
+- [due_soon] Planned replacements of SP-1401 on other machines within 60 days need 1 pcs: BC-01 overdue since Tue 2026-09-01 (1 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-05 SP-1301
+QUESTION: Availability of SP-1301 for BC-05: can we supply a full set (2 pcs), how fast, and what else competes for the part?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-05 Boiler day-bin conveyor
+PART: SP-1301 Spherical roller bearing 22216
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-05 Boiler day-bin conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 2 x SP-1301 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Thu 2025-07-03.
+- [stock_by_warehouse] SP-1301 Spherical roller bearing 22216: on hand FI 2, SE 4.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 2 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: approved substitute SP-1311 from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 3: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 4: new supplier order, arrives Fri 2026-10-09.
+- [fastest_supply] Option 5: from purchase order PO-4711, arrives Wed 2026-10-14.
+- [incoming_orders] Purchase order PO-4711: 6 x SP-1301 due in FI on Wed 2026-10-14.
+- [lead_time] Supplier lead time for SP-1301 is 7 days; ordered today it would arrive on Fri 2026-10-09.
+- [substitutes] Approved substitute SP-1311 Spherical roller bearing 22216, alternative make: on hand FI 3, SE 0; enough for the full set.
+- [conflicts] CONFLICT: taking 2 pcs from FI leaves 0 there, but BC-01 (Sawmill customer, 4 pcs due Mon 2026-11-02) is served from FI: a shortfall of 4 pcs within 60 days.
+- [conflicts] CONFLICT: taking 2 pcs from SE leaves 2 there, but FR-01 (Power plant customer, 4 pcs due Fri 2026-10-02) is served from SE: a shortfall of 2 pcs within 60 days.
+- [where_used] SP-1301 is also used on 6 other machines, 5 of them criticality A: BC-01 (Sawmill customer, criticality A, 4 installed), BC-02 (Sawmill customer, criticality A, 4 installed), BC-03 (Sawmill customer, criticality B, 2 installed), FR-01 (Power plant customer, criticality A, 4 installed), BC-11 (Power plant customer, criticality A, 2 installed), CH-03 (Pulp mill customer, criticality A, 2 installed).
+- [due_soon] Planned replacements of SP-1301 on other machines within 60 days need 8 pcs: FR-01 due Fri 2026-10-02 (4 pcs); BC-01 due Mon 2026-11-02 (4 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): approved substitute SP-1311 from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== FR-01 SP-1002
+QUESTION: Availability of SP-1002 for FR-01: can we supply a full set (20 pcs), how fast, and what else competes for the part?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: FR-01 Fuel reception conveyor
+PART: SP-1002 Conveyor belt EP800/4, 1000 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] FR-01 Fuel reception conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 20 x SP-1002.
+- [machine_context] Last replaced on Sat 2025-02-01.
+- [stock_by_warehouse] SP-1002 Conveyor belt EP800/4, 1000 mm, per m: on hand FI 0, SE 25.
+- [fastest_supply] The customer is served from the SE warehouse. Options for 20 pcs, earliest first:
+- [fastest_supply] Option 1: from SE stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-20.
+- [incoming_orders] No open purchase orders for SP-1002.
+- [lead_time] Supplier lead time for SP-1002 is 49 days; ordered today it would arrive on Fri 2026-11-20.
+- [substitutes] No approved substitute is recorded for SP-1002.
+- [conflicts] Taking 20 pcs from SE leaves 5 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1002 is also used on 4 other machines, 3 of them criticality A: BC-02 (Sawmill customer, criticality A, 14 installed), BC-11 (Power plant customer, criticality A, 16 installed), CH-01 (Pulp mill customer, criticality B, 12 installed), CH-03 (Pulp mill customer, criticality A, 18 installed).
+- [due_soon] Planned replacements of SP-1002 on other machines within 60 days need 18 pcs: CH-03 due Tue 2026-12-01 (18 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from SE stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== FR-01 SP-1301
+QUESTION: Availability of SP-1301 for FR-01: can we supply a full set (4 pcs), how fast, and what else competes for the part?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: FR-01 Fuel reception conveyor
+PART: SP-1301 Spherical roller bearing 22216
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] FR-01 Fuel reception conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 4 x SP-1301 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Wed 2024-10-02.
+- [stock_by_warehouse] SP-1301 Spherical roller bearing 22216: on hand FI 2, SE 4.
+- [fastest_supply] The customer is served from the SE warehouse. Options for 4 pcs, earliest first:
+- [fastest_supply] Option 1: from SE stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-10-09.
+- [fastest_supply] Option 3: from purchase order PO-4711, arrives Sat 2026-10-17.
+- [incoming_orders] Purchase order PO-4711: 6 x SP-1301 due in FI on Wed 2026-10-14.
+- [lead_time] Supplier lead time for SP-1301 is 7 days; ordered today it would arrive on Fri 2026-10-09.
+- [substitutes] Approved substitute SP-1311 Spherical roller bearing 22216, alternative make: on hand FI 3, SE 0; not enough for the full set: at most 3 of the 4 pcs needed from one warehouse.
+- [conflicts] Taking 4 pcs from SE leaves 0 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1301 is also used on 6 other machines, 5 of them criticality A: BC-01 (Sawmill customer, criticality A, 4 installed), BC-02 (Sawmill customer, criticality A, 4 installed), BC-03 (Sawmill customer, criticality B, 2 installed), BC-05 (Sawmill customer, criticality A, 2 installed), BC-11 (Power plant customer, criticality A, 2 installed), CH-03 (Pulp mill customer, criticality A, 2 installed).
+- [due_soon] Planned replacements of SP-1301 on other machines within 60 days need 4 pcs: BC-01 due Mon 2026-11-02 (4 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from SE stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== FR-01 SP-1402
+QUESTION: Availability of SP-1402 for FR-01: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: FR-01 Fuel reception conveyor
+PART: SP-1402 Primary belt scraper blade, 1000 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] FR-01 Fuel reception conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1402.
+- [machine_context] Last replaced on Fri 2026-04-03.
+- [stock_by_warehouse] SP-1402 Primary belt scraper blade, 1000 mm: on hand FI 0, SE 2.
+- [fastest_supply] The customer is served from the SE warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from SE stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Mon 2026-10-12.
+- [incoming_orders] No open purchase orders for SP-1402.
+- [lead_time] Supplier lead time for SP-1402 is 10 days; ordered today it would arrive on Mon 2026-10-12.
+- [substitutes] No approved substitute is recorded for SP-1402.
+- [conflicts] Taking 1 pcs from SE leaves 1 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1402 is also used on 2 other machines, 1 of them criticality A: BC-02 (Sawmill customer, criticality A, 1 installed), CH-01 (Pulp mill customer, criticality B, 1 installed).
+- [due_soon] Planned replacements of SP-1402 on other machines within 60 days need 1 pcs: BC-02 due Sun 2026-11-01 (1 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from SE stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== SC-11 SP-1601
+QUESTION: Availability of SP-1601 for SC-11: can we supply a full set (4 pcs), how fast, and what else competes for the part?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: SC-11 Fuel screen screw
+PART: SP-1601 Screw flight section, 400 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] SC-11 Fuel screen screw is criticality B (degrades production if it stops).
+- [machine_context] It uses 4 x SP-1601.
+- [machine_context] Last replaced on Tue 2025-06-03.
+- [stock_by_warehouse] SP-1601 Screw flight section, 400 mm: on hand FI 0, SE 0.
+- [fastest_supply] The customer is served from the SE warehouse. Options for 4 pcs, earliest first:
+- [fastest_supply] Option 1: from purchase order PO-4718, arrives Sun 2026-10-25.
+- [fastest_supply] Option 2: new supplier order, arrives Mon 2026-11-16.
+- [incoming_orders] Purchase order PO-4718: 4 x SP-1601 due in FI on Thu 2026-10-22.
+- [lead_time] Supplier lead time for SP-1601 is 45 days; ordered today it would arrive on Mon 2026-11-16.
+- [substitutes] No approved substitute is recorded for SP-1601.
+- [conflicts] No warehouse holds a full set of 4 pcs, so no stock conflict arises.
+- [where_used] SP-1601 is also used on 2 other machines, 1 of them criticality A: SC-01 (Sawmill customer, criticality B, 3 installed), CH-02 (Pulp mill customer, criticality A, 4 installed).
+- [due_soon] Planned replacements of SP-1601 on other machines within 60 days need 7 pcs: SC-01 overdue since Tue 2026-09-01 (3 pcs); CH-02 due Sun 2026-11-01 (4 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from purchase order PO-4718, arrives Sun 2026-10-25.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-11 SP-1002
+QUESTION: Availability of SP-1002 for BC-11: can we supply a full set (16 pcs), how fast, and what else competes for the part?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: BC-11 Silo feed conveyor
+PART: SP-1002 Conveyor belt EP800/4, 1000 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-11 Silo feed conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 16 x SP-1002.
+- [machine_context] Last replaced on Thu 2026-01-01.
+- [stock_by_warehouse] SP-1002 Conveyor belt EP800/4, 1000 mm, per m: on hand FI 0, SE 25.
+- [fastest_supply] The customer is served from the SE warehouse. Options for 16 pcs, earliest first:
+- [fastest_supply] Option 1: from SE stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-20.
+- [incoming_orders] No open purchase orders for SP-1002.
+- [lead_time] Supplier lead time for SP-1002 is 49 days; ordered today it would arrive on Fri 2026-11-20.
+- [substitutes] No approved substitute is recorded for SP-1002.
+- [conflicts] Taking 16 pcs from SE leaves 9 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1002 is also used on 4 other machines, 3 of them criticality A: BC-02 (Sawmill customer, criticality A, 14 installed), FR-01 (Power plant customer, criticality A, 20 installed), CH-01 (Pulp mill customer, criticality B, 12 installed), CH-03 (Pulp mill customer, criticality A, 18 installed).
+- [due_soon] Planned replacements of SP-1002 on other machines within 60 days need 18 pcs: CH-03 due Tue 2026-12-01 (18 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from SE stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-11 SP-1203
+QUESTION: Availability of SP-1203 for BC-11: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: BC-11 Silo feed conveyor
+PART: SP-1203 Drive pulley, lagged, 630 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-11 Silo feed conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1203 and the part is marked critical for this machine.
+- [machine_context] No replacement date is recorded for this part on this machine.
+- [stock_by_warehouse] SP-1203 Drive pulley, lagged, 630 mm: on hand FI 0, SE 1.
+- [fastest_supply] The customer is served from the SE warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from SE stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: from purchase order PO-4720, arrives Sun 2026-11-29.
+- [fastest_supply] Option 3: new supplier order, arrives Fri 2026-12-25.
+- [incoming_orders] Purchase order PO-4720: 1 x SP-1203 due in FI on Thu 2026-11-26.
+- [lead_time] Supplier lead time for SP-1203 is 84 days; ordered today it would arrive on Fri 2026-12-25.
+- [substitutes] No approved substitute is recorded for SP-1203.
+- [conflicts] No planned replacements to conflict with; the part is replaced on failure.
+- [where_used] SP-1203 is also used on 2 other machines, 2 of them criticality A: BC-02 (Sawmill customer, criticality A, 1 installed), CH-03 (Pulp mill customer, criticality A, 1 installed).
+- [due_soon] SP-1203 is replaced on failure, not on a schedule.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from SE stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-11 SP-1301
+QUESTION: Availability of SP-1301 for BC-11: can we supply a full set (2 pcs), how fast, and what else competes for the part?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: BC-11 Silo feed conveyor
+PART: SP-1301 Spherical roller bearing 22216
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-11 Silo feed conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 2 x SP-1301 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Thu 2025-01-02.
+- [stock_by_warehouse] SP-1301 Spherical roller bearing 22216: on hand FI 2, SE 4.
+- [fastest_supply] The customer is served from the SE warehouse. Options for 2 pcs, earliest first:
+- [fastest_supply] Option 1: from SE stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: transfer from FI stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 3: new supplier order, arrives Fri 2026-10-09.
+- [fastest_supply] Option 4: from purchase order PO-4711, arrives Sat 2026-10-17.
+- [incoming_orders] Purchase order PO-4711: 6 x SP-1301 due in FI on Wed 2026-10-14.
+- [lead_time] Supplier lead time for SP-1301 is 7 days; ordered today it would arrive on Fri 2026-10-09.
+- [substitutes] Approved substitute SP-1311 Spherical roller bearing 22216, alternative make: on hand FI 3, SE 0; enough for the full set.
+- [conflicts] CONFLICT: taking 2 pcs from FI leaves 0 there, but BC-01 (Sawmill customer, 4 pcs due Mon 2026-11-02) is served from FI: a shortfall of 4 pcs within 60 days.
+- [conflicts] CONFLICT: taking 2 pcs from SE leaves 2 there, but FR-01 (Power plant customer, 4 pcs due Fri 2026-10-02) is served from SE: a shortfall of 2 pcs within 60 days.
+- [where_used] SP-1301 is also used on 6 other machines, 5 of them criticality A: BC-01 (Sawmill customer, criticality A, 4 installed), BC-02 (Sawmill customer, criticality A, 4 installed), BC-03 (Sawmill customer, criticality B, 2 installed), BC-05 (Sawmill customer, criticality A, 2 installed), FR-01 (Power plant customer, criticality A, 4 installed), CH-03 (Pulp mill customer, criticality A, 2 installed).
+- [due_soon] Planned replacements of SP-1301 on other machines within 60 days need 8 pcs: FR-01 due Fri 2026-10-02 (4 pcs); BC-01 due Mon 2026-11-02 (4 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): new supplier order, arrives Fri 2026-10-09. The faster option (from SE stock, available today (Fri 2026-10-02)) is not used because it would leave SE short for planned needs.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-12 SP-1001
+QUESTION: Availability of SP-1001 for BC-12: can we supply a full set (10 pcs), how fast, and what else competes for the part?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: BC-12 Boiler feed conveyor
+PART: SP-1001 Conveyor belt EP630/4, 800 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-12 Boiler feed conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 10 x SP-1001.
+- [machine_context] Last replaced on Wed 2024-01-03.
+- [stock_by_warehouse] SP-1001 Conveyor belt EP630/4, 800 mm, per m: on hand FI 60, SE 0.
+- [fastest_supply] The customer is served from the SE warehouse. Options for 10 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from FI stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-13.
+- [incoming_orders] No open purchase orders for SP-1001.
+- [lead_time] Supplier lead time for SP-1001 is 42 days; ordered today it would arrive on Fri 2026-11-13.
+- [substitutes] No approved substitute is recorded for SP-1001.
+- [conflicts] Taking 10 pcs from FI leaves 50 there, enough for the planned needs of machines served from FI within 60 days.
+- [where_used] SP-1001 is also used on 4 other machines, 2 of them criticality A: BC-01 (Sawmill customer, criticality A, 18 installed), BC-03 (Sawmill customer, criticality B, 12 installed), BC-04 (Sawmill customer, criticality B, 9 installed), BC-05 (Sawmill customer, criticality A, 8 installed).
+- [due_soon] No other machine is due to replace SP-1001 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): transfer from FI stock, 3 days, arrives Mon 2026-10-05.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-12 SP-1503
+QUESTION: Availability of SP-1503 for BC-12: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: BC-12 Boiler feed conveyor
+PART: SP-1503 Flexible coupling, size 5
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] BC-12 Boiler feed conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1503 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Fri 2023-11-03.
+- [stock_by_warehouse] SP-1503 Flexible coupling, size 5: on hand FI 2, SE 2.
+- [fastest_supply] The customer is served from the SE warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from SE stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: transfer from FI stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 3: new supplier order, arrives Fri 2026-10-16.
+- [incoming_orders] No open purchase orders for SP-1503.
+- [lead_time] Supplier lead time for SP-1503 is 14 days; ordered today it would arrive on Fri 2026-10-16.
+- [substitutes] No approved substitute is recorded for SP-1503.
+- [conflicts] Taking 1 pcs from FI leaves 1 there, enough for the planned needs of machines served from FI within 60 days.
+- [conflicts] Taking 1 pcs from SE leaves 1 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1503 is also used on 1 other machine, 0 of them criticality A: BC-04 (Sawmill customer, criticality B, 1 installed).
+- [due_soon] No other machine is due to replace SP-1503 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from SE stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== CH-01 SP-1002
+QUESTION: Availability of SP-1002 for CH-01: can we supply a full set (12 pcs), how fast, and what else competes for the part?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-01 Chip unloading conveyor
+PART: SP-1002 Conveyor belt EP800/4, 1000 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] CH-01 Chip unloading conveyor is criticality B (degrades production if it stops).
+- [machine_context] It uses 12 x SP-1002.
+- [machine_context] Last replaced on Mon 2024-06-03.
+- [stock_by_warehouse] SP-1002 Conveyor belt EP800/4, 1000 mm, per m: on hand FI 0, SE 25.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 12 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-20.
+- [incoming_orders] No open purchase orders for SP-1002.
+- [lead_time] Supplier lead time for SP-1002 is 49 days; ordered today it would arrive on Fri 2026-11-20.
+- [substitutes] No approved substitute is recorded for SP-1002.
+- [conflicts] Taking 12 pcs from SE leaves 13 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1002 is also used on 4 other machines, 4 of them criticality A: BC-02 (Sawmill customer, criticality A, 14 installed), FR-01 (Power plant customer, criticality A, 20 installed), BC-11 (Power plant customer, criticality A, 16 installed), CH-03 (Pulp mill customer, criticality A, 18 installed).
+- [due_soon] Planned replacements of SP-1002 on other machines within 60 days need 18 pcs: CH-03 due Tue 2026-12-01 (18 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12
+
+=== CH-01 SP-1402
+QUESTION: Availability of SP-1402 for CH-01: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-01 Chip unloading conveyor
+PART: SP-1402 Primary belt scraper blade, 1000 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] CH-01 Chip unloading conveyor is criticality B (degrades production if it stops).
+- [machine_context] It uses 1 x SP-1402.
+- [machine_context] Last replaced on Sun 2026-08-02.
+- [stock_by_warehouse] SP-1402 Primary belt scraper blade, 1000 mm: on hand FI 0, SE 2.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: new supplier order, arrives Mon 2026-10-12.
+- [incoming_orders] No open purchase orders for SP-1402.
+- [lead_time] Supplier lead time for SP-1402 is 10 days; ordered today it would arrive on Mon 2026-10-12.
+- [substitutes] No approved substitute is recorded for SP-1402.
+- [conflicts] Taking 1 pcs from SE leaves 1 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1402 is also used on 2 other machines, 2 of them criticality A: BC-02 (Sawmill customer, criticality A, 1 installed), FR-01 (Power plant customer, criticality A, 1 installed).
+- [due_soon] Planned replacements of SP-1402 on other machines within 60 days need 2 pcs: FR-01 due Fri 2026-10-02 (1 pcs); BC-02 due Sun 2026-11-01 (1 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12
+
+=== CH-02 SP-1601
+QUESTION: Availability of SP-1601 for CH-02: can we supply a full set (4 pcs), how fast, and what else competes for the part?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-02 Chip pile reclaim screw
+PART: SP-1601 Screw flight section, 400 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] CH-02 Chip pile reclaim screw is criticality A (stops production if it stops).
+- [machine_context] It uses 4 x SP-1601 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Sat 2025-05-03.
+- [stock_by_warehouse] SP-1601 Screw flight section, 400 mm: on hand FI 0, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 4 pcs, earliest first:
+- [fastest_supply] Option 1: from purchase order PO-4718, arrives Thu 2026-10-22.
+- [fastest_supply] Option 2: new supplier order, arrives Mon 2026-11-16.
+- [incoming_orders] Purchase order PO-4718: 4 x SP-1601 due in FI on Thu 2026-10-22.
+- [lead_time] Supplier lead time for SP-1601 is 45 days; ordered today it would arrive on Mon 2026-11-16.
+- [substitutes] No approved substitute is recorded for SP-1601.
+- [conflicts] No warehouse holds a full set of 4 pcs, so no stock conflict arises.
+- [where_used] SP-1601 is also used on 2 other machines, 0 of them criticality A: SC-01 (Sawmill customer, criticality B, 3 installed), SC-11 (Power plant customer, criticality B, 4 installed).
+- [due_soon] Planned replacements of SP-1601 on other machines within 60 days need 3 pcs: SC-01 overdue since Tue 2026-09-01 (3 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from purchase order PO-4718, arrives Thu 2026-10-22.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12
+
+=== CH-02 SP-1502
+QUESTION: Availability of SP-1502 for CH-02: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-02 Chip pile reclaim screw
+PART: SP-1502 Electric motor 15 kW IE3
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] CH-02 Chip pile reclaim screw is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1502 and the part is marked critical for this machine.
+- [machine_context] No replacement date is recorded for this part on this machine.
+- [stock_by_warehouse] SP-1502 Electric motor 15 kW IE3: on hand FI 1, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-06.
+- [incoming_orders] No open purchase orders for SP-1502.
+- [lead_time] Supplier lead time for SP-1502 is 35 days; ordered today it would arrive on Fri 2026-11-06.
+- [substitutes] No approved substitute is recorded for SP-1502.
+- [conflicts] No planned replacements to conflict with; the part is replaced on failure.
+- [where_used] SP-1502 is also used on 1 other machine, 1 of them criticality A: BC-02 (Sawmill customer, criticality A, 1 installed).
+- [due_soon] SP-1502 is replaced on failure, not on a schedule.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12
+
+=== CH-03 SP-1002
+QUESTION: Availability of SP-1002 for CH-03: can we supply a full set (18 pcs), how fast, and what else competes for the part?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-03 Digester feed conveyor
+PART: SP-1002 Conveyor belt EP800/4, 1000 mm, per m
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] CH-03 Digester feed conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 18 x SP-1002.
+- [machine_context] Last replaced on Sun 2023-12-03.
+- [stock_by_warehouse] SP-1002 Conveyor belt EP800/4, 1000 mm, per m: on hand FI 0, SE 25.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 18 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: new supplier order, arrives Fri 2026-11-20.
+- [incoming_orders] No open purchase orders for SP-1002.
+- [lead_time] Supplier lead time for SP-1002 is 49 days; ordered today it would arrive on Fri 2026-11-20.
+- [substitutes] No approved substitute is recorded for SP-1002.
+- [conflicts] Taking 18 pcs from SE leaves 7 there, enough for the planned needs of machines served from SE within 60 days.
+- [where_used] SP-1002 is also used on 4 other machines, 3 of them criticality A: BC-02 (Sawmill customer, criticality A, 14 installed), FR-01 (Power plant customer, criticality A, 20 installed), BC-11 (Power plant customer, criticality A, 16 installed), CH-01 (Pulp mill customer, criticality B, 12 installed).
+- [due_soon] No other machine is due to replace SP-1002 within 60 days.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12
+
+=== CH-03 SP-1203
+QUESTION: Availability of SP-1203 for CH-03: can we supply a full set (1 pcs), how fast, and what else competes for the part?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-03 Digester feed conveyor
+PART: SP-1203 Drive pulley, lagged, 630 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] CH-03 Digester feed conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 1 x SP-1203 and the part is marked critical for this machine.
+- [machine_context] No replacement date is recorded for this part on this machine.
+- [stock_by_warehouse] SP-1203 Drive pulley, lagged, 630 mm: on hand FI 0, SE 1.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 1 pcs, earliest first:
+- [fastest_supply] Option 1: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 2: from purchase order PO-4720, arrives Thu 2026-11-26.
+- [fastest_supply] Option 3: new supplier order, arrives Fri 2026-12-25.
+- [incoming_orders] Purchase order PO-4720: 1 x SP-1203 due in FI on Thu 2026-11-26.
+- [lead_time] Supplier lead time for SP-1203 is 84 days; ordered today it would arrive on Fri 2026-12-25.
+- [substitutes] No approved substitute is recorded for SP-1203.
+- [conflicts] No planned replacements to conflict with; the part is replaced on failure.
+- [where_used] SP-1203 is also used on 2 other machines, 2 of them criticality A: BC-02 (Sawmill customer, criticality A, 1 installed), BC-11 (Power plant customer, criticality A, 1 installed).
+- [due_soon] SP-1203 is replaced on failure, not on a schedule.
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12
+
+=== CH-03 SP-1301
+QUESTION: Availability of SP-1301 for CH-03: can we supply a full set (2 pcs), how fast, and what else competes for the part?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-03 Digester feed conveyor
+PART: SP-1301 Spherical roller bearing 22216
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the part is needed for planned service; the machine is running.
+- [machine_context] CH-03 Digester feed conveyor is criticality A (stops production if it stops).
+- [machine_context] It uses 2 x SP-1301 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Thu 2025-10-02.
+- [stock_by_warehouse] SP-1301 Spherical roller bearing 22216: on hand FI 2, SE 4.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 2 pcs, earliest first:
+- [fastest_supply] Option 1: from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 2: approved substitute SP-1311 from FI stock, available today (Fri 2026-10-02).
+- [fastest_supply] Option 3: transfer from SE stock, 3 days, arrives Mon 2026-10-05.
+- [fastest_supply] Option 4: new supplier order, arrives Fri 2026-10-09.
+- [fastest_supply] Option 5: from purchase order PO-4711, arrives Wed 2026-10-14.
+- [incoming_orders] Purchase order PO-4711: 6 x SP-1301 due in FI on Wed 2026-10-14.
+- [lead_time] Supplier lead time for SP-1301 is 7 days; ordered today it would arrive on Fri 2026-10-09.
+- [substitutes] Approved substitute SP-1311 Spherical roller bearing 22216, alternative make: on hand FI 3, SE 0; enough for the full set.
+- [conflicts] CONFLICT: taking 2 pcs from FI leaves 0 there, but BC-01 (Sawmill customer, 4 pcs due Mon 2026-11-02) is served from FI: a shortfall of 4 pcs within 60 days.
+- [conflicts] CONFLICT: taking 2 pcs from SE leaves 2 there, but FR-01 (Power plant customer, 4 pcs due Fri 2026-10-02) is served from SE: a shortfall of 2 pcs within 60 days.
+- [where_used] SP-1301 is also used on 6 other machines, 5 of them criticality A: BC-01 (Sawmill customer, criticality A, 4 installed), BC-02 (Sawmill customer, criticality A, 4 installed), BC-03 (Sawmill customer, criticality B, 2 installed), BC-05 (Sawmill customer, criticality A, 2 installed), FR-01 (Power plant customer, criticality A, 4 installed), BC-11 (Power plant customer, criticality A, 2 installed).
+- [due_soon] Planned replacements of SP-1301 on other machines within 60 days need 8 pcs: FR-01 due Fri 2026-10-02 (4 pcs); BC-01 due Mon 2026-11-02 (4 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for planned service: earliest option that leaves no other planned need short): approved substitute SP-1311 from FI stock, available today (Fri 2026-10-02).
+
+TOOLS RUN: machine_context → stock_by_warehouse → fastest_supply → incoming_orders → lead_time → substitutes → conflicts → where_used → due_soon → recommended_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12

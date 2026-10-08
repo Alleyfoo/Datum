@@ -1,0 +1,284 @@
+=== BC-01
+QUESTION: Service demand for BC-01: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-01 Bark conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] BC-01 Bark conveyor (Belt conveyor) is criticality A; it has 6 parts on its parts list.
+- [service_schedule] SP-1401 Primary belt scraper blade, 800 mm: 1 pcs overdue since Tue 2026-09-01 (replaced every 6 months, last on Tue 2026-03-03).
+- [service_schedule] SP-1301 Spherical roller bearing 22216: 4 pcs due Mon 2026-11-02 (replaced every 24 months, last on Sat 2024-11-02).
+- [service_schedule] 2 other scheduled parts are due later; the next is SP-1101 on Mon 2027-02-01.
+- [service_schedule] Replaced on failure, not on a schedule: SP-1201 Drive pulley, lagged, 500 mm, SP-1501 Helical bevel gearbox, 15 kW.
+- [service_supply] SP-1301: take 4 from purchase order PO-4711, ready Wed 2026-10-14.
+- [service_supply] SP-1401: reserve 1 from FI stock, ready Fri 2026-10-02.
+- [critical_spares] Critical spare SP-1201 Drive pulley, lagged, 500 mm: none on hand anywhere; if it failed today a new one would arrive Fri 2026-12-11 (70-day lead time).
+- [critical_spares] Critical spare SP-1501 Helical bevel gearbox, 15 kW: none on hand anywhere; if it failed today a new one would arrive Fri 2027-01-08 (98-day lead time).
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Fri 2026-10-02, replacing 1 x SP-1401. Actions: SP-1401: reserve 1 from FI stock. Left for a later visit: SP-1301 (due Mon 2026-11-02).
+- [service_plan] RECOMMENDED PLAN (company rule: a critical part with a lead time over 30 days must have a spare): order 1 x SP-1201 today as a spare; it arrives Fri 2026-12-11.
+- [service_plan] RECOMMENDED PLAN (company rule: a critical part with a lead time over 30 days must have a spare): order 1 x SP-1501 today as a spare; it arrives Fri 2027-01-08.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== CR-01
+QUESTION: Service demand for CR-01: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: CR-01 Bark crusher
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] CR-01 Bark crusher (Crusher) is criticality A; it has 2 parts on its parts list.
+- [service_schedule] SP-1303 Spherical roller bearing 22220: 2 pcs overdue since Mon 2026-08-03 (replaced every 24 months, last on Sat 2024-08-03).
+- [service_schedule] SP-1801 Crusher hammer set: 1 pcs due Mon 2026-11-02 (replaced every 12 months, last on Sun 2025-11-02).
+- [service_supply] SP-1801: reserve 1 from FI stock, ready Fri 2026-10-02.
+- [service_supply] SP-1303: not in stock in a full set; order 2 from the supplier (7-day lead time); too late to have it by the due date: ordered today it arrives Fri 2026-10-09, 7 days after today.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Fri 2026-10-09, replacing 2 x SP-1303. Actions: SP-1303: order 2 from the supplier (7-day lead time). Left for a later visit: SP-1801 (due Mon 2026-11-02).
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-02
+QUESTION: Service demand for BC-02: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-02 Crusher discharge conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] BC-02 Crusher discharge conveyor (Belt conveyor) is criticality A; it has 6 parts on its parts list.
+- [service_schedule] SP-1104 Impact idler set, 1000 mm: 4 pcs due Sun 2026-11-01 (replaced every 18 months, last on Sat 2025-05-03).
+- [service_schedule] SP-1402 Primary belt scraper blade, 1000 mm: 1 pcs due Sun 2026-11-01 (replaced every 6 months, last on Sun 2026-05-03).
+- [service_schedule] 2 other scheduled parts are due later; the next is SP-1301 on Thu 2027-12-02.
+- [service_schedule] Replaced on failure, not on a schedule: SP-1203 Drive pulley, lagged, 630 mm, SP-1502 Electric motor 15 kW IE3.
+- [service_supply] SP-1104: not in stock in a full set; order 4 from the supplier (28-day lead time); order by Fri 2026-10-02 to have it by the due date.
+- [service_supply] SP-1402: transfer 1 from SE stock, ready Mon 2026-10-05.
+- [critical_spares] Critical spare SP-1203 Drive pulley, lagged, 630 mm: 1 on hand.
+- [critical_spares] Critical spare SP-1502 Electric motor 15 kW IE3: 1 on hand.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Mon 2026-11-02, replacing 4 x SP-1104, 1 x SP-1402. Actions: SP-1104: order 4 from the supplier (28-day lead time); SP-1402: transfer 1 from SE stock.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== SC-01
+QUESTION: Service demand for SC-01: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: SC-01 Screen feed screw
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] SC-01 Screen feed screw (Screw conveyor) is criticality B; it has 1 part on its parts list.
+- [service_schedule] SP-1601 Screw flight section, 400 mm: 3 pcs overdue since Tue 2026-09-01 (replaced every 18 months, last on Mon 2025-03-03).
+- [service_supply] SP-1601: take 3 from purchase order PO-4718, ready Thu 2026-10-22.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Thu 2026-10-22, replacing 3 x SP-1601. Actions: SP-1601: take 3 from purchase order PO-4718.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-03
+QUESTION: Service demand for BC-03: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-03 Chip return conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] BC-03 Chip return conveyor (Belt conveyor) is criticality B; it has 4 parts on its parts list.
+- [service_schedule] SP-1102 Return idler, 800 mm: 3 pcs overdue since Wed 2026-09-02 (replaced every 24 months, last on Mon 2024-09-02).
+- [service_schedule] SP-1301 Spherical roller bearing 22216: 2 pcs due Wed 2026-12-02 (replaced every 24 months, last on Mon 2024-12-02).
+- [service_schedule] 1 other scheduled part is due later; the next is SP-1001 on Tue 2029-01-30.
+- [service_schedule] Replaced on failure, not on a schedule: SP-1202 Tail pulley, 400 mm.
+- [service_supply] SP-1102: reserve 3 from FI stock, ready Fri 2026-10-02.
+- [service_supply] SP-1301: take 2 from purchase order PO-4711, ready Wed 2026-10-14.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Fri 2026-10-02, replacing 3 x SP-1102. Actions: SP-1102: reserve 3 from FI stock. Left for a later visit: SP-1301 (due Wed 2026-12-02).
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-04
+QUESTION: Service demand for BC-04: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-04 Stockpile conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] BC-04 Stockpile conveyor (Belt conveyor) is criticality B; it has 2 parts on its parts list.
+- [service_schedule] No scheduled part falls due within 90 days.
+- [service_schedule] 2 other scheduled parts are due later; the next is SP-1503 on Fri 2027-04-02.
+- [service_supply] Nothing scheduled within the horizon needs supplying.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN: no service visit needed within 90 days.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BE-01
+QUESTION: Service demand for BE-01: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BE-01 Boiler feed elevator
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] BE-01 Boiler feed elevator (Bucket elevator) is criticality A; it has 1 part on its parts list.
+- [service_schedule] SP-1701 Elevator bucket, 300 mm: 60 pcs due Wed 2026-12-02 (replaced every 30 months, last on Mon 2024-06-03).
+- [service_supply] SP-1701: not in stock in a full set; order 60 from the supplier (30-day lead time); order by Mon 2026-11-02 to have it by the due date.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Wed 2026-12-02, replacing 60 x SP-1701. Actions: SP-1701: order 60 from the supplier (30-day lead time).
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-05
+QUESTION: Service demand for BC-05: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Sawmill customer (Sawmill, Central Finland)
+MACHINE: BC-05 Boiler day-bin conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] BC-05 Boiler day-bin conveyor (Belt conveyor) is criticality A; it has 3 parts on its parts list.
+- [service_schedule] SP-1401 Primary belt scraper blade, 800 mm: 1 pcs due Fri 2026-10-02 (replaced every 6 months, last on Fri 2026-04-03).
+- [service_schedule] 2 other scheduled parts are due later; the next is SP-1301 on Sat 2027-07-03.
+- [service_supply] SP-1401: reserve 1 from FI stock, ready Fri 2026-10-02.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Fri 2026-10-02, replacing 1 x SP-1401. Actions: SP-1401: reserve 1 from FI stock.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Power plant customer, FR-01, SC-11, BC-11, BC-12, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== FR-01
+QUESTION: Service demand for FR-01: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: FR-01 Fuel reception conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] FR-01 Fuel reception conveyor (Belt conveyor) is criticality A; it has 3 parts on its parts list.
+- [service_schedule] SP-1301 Spherical roller bearing 22216: 4 pcs due Fri 2026-10-02 (replaced every 24 months, last on Wed 2024-10-02).
+- [service_schedule] SP-1402 Primary belt scraper blade, 1000 mm: 1 pcs due Fri 2026-10-02 (replaced every 6 months, last on Fri 2026-04-03).
+- [service_schedule] 1 other scheduled part is due later; the next is SP-1002 on Mon 2028-01-31.
+- [service_supply] SP-1301: reserve 4 from SE stock, ready Fri 2026-10-02.
+- [service_supply] SP-1402: reserve 1 from SE stock, ready Fri 2026-10-02.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Fri 2026-10-02, replacing 4 x SP-1301, 1 x SP-1402. Actions: SP-1301: reserve 4 from SE stock; SP-1402: reserve 1 from SE stock.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== SC-11
+QUESTION: Service demand for SC-11: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: SC-11 Fuel screen screw
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] SC-11 Fuel screen screw (Screw conveyor) is criticality B; it has 1 part on its parts list.
+- [service_schedule] SP-1601 Screw flight section, 400 mm: 4 pcs due Wed 2026-12-02 (replaced every 18 months, last on Tue 2025-06-03).
+- [service_supply] SP-1601: not in stock in a full set; order 4 from the supplier (45-day lead time); order by Fri 2026-10-16 to have it by the due date.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Wed 2026-12-02, replacing 4 x SP-1601. Actions: SP-1601: order 4 from the supplier (45-day lead time).
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-11
+QUESTION: Service demand for BC-11: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: BC-11 Silo feed conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] BC-11 Silo feed conveyor (Belt conveyor) is criticality A; it has 3 parts on its parts list.
+- [service_schedule] No scheduled part falls due within 90 days.
+- [service_schedule] 2 other scheduled parts are due later; the next is SP-1301 on Sat 2027-01-02.
+- [service_schedule] Replaced on failure, not on a schedule: SP-1203 Drive pulley, lagged, 630 mm.
+- [service_supply] Nothing scheduled within the horizon needs supplying.
+- [critical_spares] Critical spare SP-1203 Drive pulley, lagged, 630 mm: 1 on hand.
+- [service_plan] RECOMMENDED PLAN: no service visit needed within 90 days.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== BC-12
+QUESTION: Service demand for BC-12: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: BC-12 Boiler feed conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] BC-12 Boiler feed conveyor (Belt conveyor) is criticality A; it has 2 parts on its parts list.
+- [service_schedule] SP-1503 Flexible coupling, size 5: 1 pcs due Sun 2026-11-01 (replaced every 36 months, last on Fri 2023-11-03).
+- [service_schedule] 1 other scheduled part is due later; the next is SP-1001 on Fri 2027-01-01.
+- [service_supply] SP-1503: reserve 1 from SE stock, ready Fri 2026-10-02.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Mon 2026-11-02, replacing 1 x SP-1503. Actions: SP-1503: reserve 1 from SE stock.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Pulp mill customer, CH-01, CH-02, CH-03
+
+=== CH-01
+QUESTION: Service demand for CH-01: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-01 Chip unloading conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] CH-01 Chip unloading conveyor (Belt conveyor) is criticality B; it has 2 parts on its parts list.
+- [service_schedule] No scheduled part falls due within 90 days.
+- [service_schedule] 2 other scheduled parts are due later; the next is SP-1402 on Sun 2027-01-31.
+- [service_supply] Nothing scheduled within the horizon needs supplying.
+- [critical_spares] This machine has no critical parts that are replaced on failure.
+- [service_plan] RECOMMENDED PLAN: no service visit needed within 90 days.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12
+
+=== CH-02
+QUESTION: Service demand for CH-02: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-02 Chip pile reclaim screw
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] CH-02 Chip pile reclaim screw (Screw conveyor) is criticality A; it has 2 parts on its parts list.
+- [service_schedule] SP-1601 Screw flight section, 400 mm: 4 pcs due Sun 2026-11-01 (replaced every 18 months, last on Sat 2025-05-03).
+- [service_schedule] Replaced on failure, not on a schedule: SP-1502 Electric motor 15 kW IE3.
+- [service_supply] SP-1601: take 4 from purchase order PO-4718, ready Thu 2026-10-22.
+- [critical_spares] Critical spare SP-1502 Electric motor 15 kW IE3: 1 on hand.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Mon 2026-11-02, replacing 4 x SP-1601. Actions: SP-1601: take 4 from purchase order PO-4718.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12
+
+=== CH-03
+QUESTION: Service demand for CH-03: which parts fall due within 90 days, can we have them ready, and when should the service visit be?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-03 Digester feed conveyor
+PART: all parts on the machine's parts list
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_overview] CH-03 Digester feed conveyor (Belt conveyor) is criticality A; it has 3 parts on its parts list.
+- [service_schedule] SP-1002 Conveyor belt EP800/4, 1000 mm, per m: 18 pcs due Tue 2026-12-01 (replaced every 36 months, last on Sun 2023-12-03).
+- [service_schedule] 1 other scheduled part is due later; the next is SP-1301 on Sat 2027-10-02.
+- [service_schedule] Replaced on failure, not on a schedule: SP-1203 Drive pulley, lagged, 630 mm.
+- [service_supply] SP-1002: transfer 18 from SE stock, ready Mon 2026-10-05.
+- [critical_spares] Critical spare SP-1203 Drive pulley, lagged, 630 mm: 1 on hand.
+- [service_plan] RECOMMENDED PLAN (company rules: bundle parts due within 30 days of the first, visit on a working day when all are ready): service visit on Tue 2026-12-01, replacing 18 x SP-1002. Actions: SP-1002: transfer 18 from SE stock.
+
+TOOLS RUN: machine_overview → service_schedule → service_supply → critical_spares → service_plan
+CONFIDENTIAL: Sawmill customer, BC-01, CR-01, BC-02, SC-01, BC-03, BC-04, BE-01, BC-05, Power plant customer, FR-01, SC-11, BC-11, BC-12

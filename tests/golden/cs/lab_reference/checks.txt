@@ -1,0 +1,8 @@
+reply: ok=True unsupported=() leaks=()
+rebuilt_date: ok=True unsupported=() leaks=()
+date_piece: ok=True unsupported=() leaks=()
+invented_number: ok=False unsupported=('6',) leaks=()
+other_customer: ok=False unsupported=() leaks=('Sawmill customer',)
+other_machine: ok=False unsupported=() leaks=('SC-01',)
+others_named_internally: ok=True unsupported=() leaks=()
+no_sections: ok=False unsupported=() leaks=('Sawmill customer',)
