@@ -322,3 +322,11 @@ the file saved for them (P20, `447946c`). Building P20 raised one question for t
 **Caveat on P24.** A null check catches a missing result. It does not catch a placeholder 0 that a program saved
 for a formula marked for recalculation: 0 is not null, so it still passes. That risk is still open and needs the
 workbook's calculation settings, or a separate rule. Decide before any real workbook is read.
+
+## 22. Working assumption: placeholder values
+
+| ID | Status | Assumption | Revisit when |
+|---|---|---|---|
+| A-1 | Provisional | The placeholder-0 risk (section 21) is handled by clearing the data first: a workbook is cleaned and checked before its values are trusted. Until real data exists, this cannot be tested. | The first real workbook is read. |
+
+Recorded as provisional, per the assumption rules in `mcp-messy-data` (a first observation is not a permanent rule).
