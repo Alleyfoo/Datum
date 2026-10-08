@@ -291,3 +291,18 @@ that offers a signed data processing agreement with documented zero retention, a
 | RD-4 | Flag: the sibling repo tracks it | `mcp-messy-data` tracks `messy-data.xlsx`, `answers.xlsx` and several fixtures in git, although its README says no real source data is committed. Whether that is a problem depends on what the file contains; the owner should check it. The sibling repo is not edited. |
 
 | RD-5 | Not used | The real workbooks are not used. The project uses synthetic data only until real data is approved. The tracking question in RD-4 is left to the owner; the sibling repo is not edited. |
+
+## 20. Owner answers, fourth round
+
+| ID | Answer | What it means |
+|---|---|---|
+| Q-merge-intake | Yes | Merged into `main` (commit `3585dc7`). |
+| Q-merge-views | Yes | Merged into `main` (commit `c52342b`). |
+| Q-claim | Keep | A ticket's claim (lease) stays. |
+| Q-lease | One day | A lease runs for one day. (Replaces the 30-minute placeholder, P22.) |
+| Q-stale | Keep `in_progress` | A ticket whose agent stops stays `in_progress` until a person releases it. Some tickets may take weeks. |
+| Q-group | Later | Grouping of tickets is left for later; one ticket per file for now. |
+| Q-bugs | Fix | B6 (a 27th part drops out of the menu), and the latent B2 and B3, are fixed. |
+| Q-rename | Now | Done: the GitHub repository is `Alleyfoo/Datum`, still private. The local folder keeps its name. |
+| Q-publish | No decision | Public repository or recordings for the job posts is still open. |
+| P20 | Calculate, then process | A formula cell's value is calculated first, and the value is then processed like any other value. Formula cells are no longer refused. |

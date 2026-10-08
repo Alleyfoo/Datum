@@ -1,6 +1,6 @@
 # Plan: Datum (working name)
 
-The repository is still named Babel-Tower. The product name is Datum: a reference point that every measurement is taken from.
+The repository is named Datum (renamed from Babel-Tower on 2026-10-08). Datum is a reference point that every measurement is taken from.
 
 Status: agreed direction, 2026-10-07. Phase 1 built on 2026-10-08. Everything else is
 planned, and the board below says which parts are read, coded or still to decide.
