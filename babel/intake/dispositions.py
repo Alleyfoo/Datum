@@ -22,7 +22,7 @@ from typing import Optional
 from babel.record import queue
 from babel.record.store import Store, require, text
 
-from . import accepted
+from . import accepted, schemas
 
 DISPOSITIONS = ("import", "create_schema", "drop")
 #: what a proposal of each kind must name
@@ -87,6 +87,10 @@ def admit(store: Store, ticket: int, approver: str, reason: str) -> dict:
     def effect(db, item, proposal):
         p = proposal["payload"]
         fitting_finding(store, db, item["number"], p)
+        current = schemas.current_version(db, p["company_id"], p["file_kind"])
+        require(current is None or current == p["schema_version"], "schema_superseded",
+                f"{p['file_kind']} version {p['schema_version']} is not the active version"
+                f" ({current or 'none'}); try the file again")
         row = accepted.record(store, db, company_id=p["company_id"], file_kind=p["file_kind"],
                               source_id=p["source_id"], schema_version=p["schema_version"],
                               ticket=item["number"], admitted_by=approver)

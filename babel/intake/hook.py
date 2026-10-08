@@ -31,6 +31,7 @@ from babel.schema.headers import Versioned
 
 from . import accepted, dispositions, inbox, staging, trial
 from .inbox import IntakeError
+from .schemas import provider as stored_schemas
 
 HOOK = "hook"
 #: the person's choices on a ticket, by trial outcome (intake.md, routing by the hook's trial)
@@ -125,8 +126,12 @@ def _open(store: Store, kept: inbox.Preserved, company_id: str, *, outcome: str,
     return ticket, finding
 
 
-def trigger(root, company_id: str, path, *, store: Store, schemas: Schemas) -> Arrival:
-    """Run one arriving file through preserve, staging and the trial, and open its ticket."""
+def trigger(root, company_id: str, path, *, store: Store, schemas: Optional[Schemas] = None) -> Arrival:
+    """Run one arriving file through preserve, staging and the trial, and open its ticket.
+
+    `schemas` gives a company's active schema versions; by default, the versions in the store.
+    """
+    schemas = schemas or stored_schemas(store)
     path = Path(path)
     if path.suffix.lower() != ".xlsx":
         raise IntakeError("unsupported_format", f"{path.name}: only .xlsx files are supported")
