@@ -330,3 +330,8 @@ workbook's calculation settings, or a separate rule. Decide before any real work
 | A-1 | Provisional | The placeholder-0 risk (section 21) is handled by clearing the data first: a workbook is cleaned and checked before its values are trusted. Until real data exists, this cannot be tested. | The first real workbook is read. |
 
 Recorded as provisional, per the assumption rules in `mcp-messy-data` (a first observation is not a permanent rule).
+
+## 23. Next run: the customer-service slice
+
+The scope is in [slice-customer-service.md](slice-customer-service.md). It is not started. The owner answers the three
+open points there before the run starts.
