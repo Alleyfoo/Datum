@@ -6,9 +6,16 @@ database refuses both), so a change is always a new version. Only the status mov
 forward: a draft becomes active or rejected, and an active version becomes superseded when a newer
 one is activated. At most one version per company and file kind is active.
 
-Drafting is a worker's step on a ticket: the draft's full rule list is written onto the ticket, and
-the draft is proposed to an approver as create_schema. Activation is the create-schema gate,
-confirm(): nothing else activates a version, neither a timeout nor the hook.
+An amendment is a new version (owner answer P23, build-plan section 7). A file accepted under an
+earlier version stays accepted under that version, and the new version is not checked against it;
+the amendment applies to new files.
+
+Drafting is open to anyone with access to the company's folder (build-plan section 7): whoever
+holds the ticket's claim and acts in a role (worker or approver) drafts, and the draft records who
+drafted it. A service account, such as the hook, never drafts: it holds no role, and modules write
+only to the inbox. The draft's full rule list is written onto the ticket, and the draft is proposed
+to an approver as create_schema. Activation is the create-schema gate, confirm(): nothing else
+activates a version, neither a timeout nor the hook.
 """
 
 from __future__ import annotations
@@ -19,10 +26,10 @@ from collections import Counter
 from typing import Callable, List, Optional, Tuple
 
 from babel.record import queue
-from babel.record.store import Store, require, text
+from babel.record.store import ROLES, Store, require, text
 from babel.schema.headers import Column, HeaderSchema, Versioned
 
-from . import accepted, staging, trial
+from . import staging, trial
 from .staging import Dataset
 
 FILE_KIND = re.compile(r"[a-z][a-z0-9_]{0,63}")
@@ -153,15 +160,18 @@ def suggest(dataset: Dataset, header_row: int = 1) -> Tuple[Optional[HeaderSchem
 
 
 def draft(store: Store, ticket: int, actor: str, file_kind: str, schema: HeaderSchema, reason: str) -> Versioned:
-    """A worker drafts the next version from the ticket's file, lists its rules on the ticket and
-    proposes it to an approver."""
+    """Whoever holds the ticket, in any role, drafts the next version from the ticket's file, lists
+    its rules on the ticket and proposes it to an approver. The draft records who drafted it."""
     ready(store)
     reason = text(reason, "reason")
     require(isinstance(file_kind, str) and FILE_KIND.fullmatch(file_kind) is not None, "invalid_argument",
             "a file kind is lower-case letters, digits and underscores, starting with a letter")
     with store.transaction() as db:
         item = store.hold(db, ticket, actor)
-        role = store.acting_role(db, actor, "worker")
+        role = store.acting_role(db, actor)
+        require(role in ROLES, "role_missing",
+                f"{actor} is a service account and holds no role; a draft is made by a person or an "
+                "assistant with access to the company's folder")
         require(not item["data"].get("proposal"), "proposal_pending", f"#{ticket} already waits on a decision")
         subject = item["data"].get("subject") or {}
         require(subject.get("company_id") and subject.get("source_id"), "invalid_argument",
@@ -176,7 +186,7 @@ def draft(store: Store, ticket: int, actor: str, file_kind: str, schema: HeaderS
         store.write_journal(db, ticket, actor, role, "rules_listed", {
             "company_id": company_id, "file_kind": file_kind, "version": version, "digest": schema.digest(),
             "rules": schema.rule_text()})
-    queue.propose(store, ticket, actor, "create_schema", reason, role="worker",
+    queue.propose(store, ticket, actor, "create_schema", reason, role=role,
                   payload={"company_id": company_id, "file_kind": file_kind, "version": version})
     return Versioned(company_id, file_kind, version, schema)
 
@@ -211,16 +221,16 @@ def confirm(store: Store, root, ticket: int, approver: str, reason: str) -> dict
 
     The draft becomes active only when all of these hold, checked in the approval's transaction:
     1. a named person who holds the approver role, whose name is not agent-like, confirms it with a
-       reason (the confirmer may be the drafter: owner answer Q7);
+       reason (the confirmer may be the drafter: owner answers Q7 and round two);
     2. the draft's full rule list is on the ticket, as written when it was drafted;
-    3. the file it was drafted from passes it with zero refusals;
-    4. every file the company already accepted as this kind passes it (no regression).
-    Otherwise nothing changes, the refusal is journaled, and the version stays a draft. On success
-    the previous active version is superseded, the ticket's file gets a new verified trial finding,
-    and its import is proposed to an approver.
+    3. the file it was drafted from passes it with zero refusals.
+    Files the company already accepted are not checked: each stays accepted under the version it was
+    accepted with, and the new version applies to new files (owner answer P23). Otherwise nothing
+    changes, the refusal is journaled, and the version stays a draft. On success the previous active
+    version is superseded, the ticket's file gets a new verified trial finding, and its import is
+    proposed to an approver.
     """
     ready(store)
-    accepted.ready(store)
 
     def gate(db, item, proposal):
         version = _draft(db, proposal["payload"])
@@ -232,15 +242,6 @@ def confirm(store: Store, root, ticket: int, approver: str, reason: str) -> dict
         own = trial.run(sheets, schema)
         require(own.fits, "draft_refuses_its_file",
                 f"{label} does not pass the file it was drafted from: {trial.headline(own)}")
-        rows = db.execute("SELECT source_id FROM accepted_files WHERE company_id=? AND file_kind=?"
-                          " ORDER BY admitted_at, ticket", (company_id, file_kind)).fetchall()
-        regressions = []
-        for (source_id,) in rows:
-            earlier = trial.run(_sheets(root, company_id, source_id), schema)
-            if not earlier.fits:
-                regressions.append(f"{source_id}: {trial.headline(earlier)}")
-        require(not regressions, "regression",
-                f"{len(regressions)} accepted file(s) do not pass {label}: " + "; ".join(regressions))
         check = trial.verify(root, company_id, version["drafted_from"], sheets, schema, own)
         require(check["fingerprints_reproduced"] and check["trial_reproduced"], "not_reproduced",
                 f"the trial of the drafted file against {label} did not reproduce from the raw file")
@@ -272,9 +273,10 @@ def confirm(store: Store, root, ticket: int, approver: str, reason: str) -> dict
             "record": {"schema": {"company_id": company_id, "file_kind": file_kind, "version": number,
                                   "digest": version["digest"]},
                        "gate": {"rules_on_ticket": True, "drafted_from": version["drafted_from"],
-                                "drafted_from_refusals": 0, "accepted_files_checked": [r[0] for r in rows]}},
+                                "drafted_from_refusals": 0}},
             "summary": (f"Gate passed: the full rule list is on the ticket; the drafted file passes with "
-                        f"zero refusals; {len(rows)} accepted file(s) still pass. {label} is active."),
+                        f"zero refusals. {label} is active. Files accepted under earlier versions keep "
+                        f"their versions and were not checked against it."),
         }
 
     return queue.approve(store, ticket, approver, reason, effect=gate, expect="create_schema")

@@ -2,8 +2,9 @@
 
 - import: the file fits an active schema, and an approver admits it. Admission records the file
   as accepted for its company and file kind under that schema version (see accepted.py).
-- create_schema: the file needs a schema, or a new version of one. A worker drafts it and an
-  approver confirms it; the confirmation is the create-schema gate (schemas.py).
+- create_schema: the file needs a schema, or a new version of one. Anyone with access to the
+  company's folder drafts it, and an approver confirms it; the confirmation is the create-schema
+  gate (schemas.py).
 - drop: the file is not needed. A worker or an approver drops it with a reason. It stays in the
   inbox and the ticket records that it was dropped and why; nothing is deleted.
 

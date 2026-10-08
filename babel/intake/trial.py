@@ -12,7 +12,9 @@ A file that does not fit is classified by deterministic checks, in this order:
 2. structural_change: enough headers appear to know the file, but the sheet, the header row or the
    header list differs (a header renamed, added, removed or moved). Values are not compared.
 3. schema_defect: the structure matches and cells are refused, and the same schema also refuses a
-   file the company already accepted. The schema is suspect, not the file.
+   file the company accepted under it. The schema is suspect, not the file. The caller passes only
+   the files accepted under the version tried: a file accepted under an earlier version keeps
+   that version and is not checked against a newer one (owner answer P23).
 4. value_problem: the structure matches, cells are refused, and the accepted files still pass.
 
 The half-of-the-headers line is mcp-messy-data's recognition rule (DRIFT versus UNKNOWN).
@@ -200,8 +202,9 @@ def run(datasets: Sequence[Dataset], schema: HeaderSchema, *,
         accepted: Sequence[Tuple[str, Sequence[Dataset]]] = ()) -> Result:
     """Try one file's staged sheets against a schema.
 
-    `accepted` holds (source id, staged sheets) for each file the company already accepted as
-    this kind; they are only read when the file's own values are refused (schema defect check).
+    `accepted` holds (source id, staged sheets) for each file the company accepted under this
+    schema's version; they are only read when the file's own values are refused (schema defect
+    check).
     """
     result = Result("", schema.digest(), fingerprints={d.sheet: d.fingerprint for d in datasets})
     located = _locate(datasets, schema)

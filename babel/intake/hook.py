@@ -72,9 +72,12 @@ def choose(tried: List[Tuple[Versioned, trial.Result]]) -> Tuple[Optional[Versio
     return versioned, result, ""
 
 
-def _accepted_sheets(root, store: Store, company_id: str, file_kind: str):
+def _accepted_sheets(root, store: Store, company_id: str, versioned: Versioned):
+    """The staged files accepted under this very version, for the trial's schema-defect check. A
+    file accepted under an earlier version keeps that version, and a newer one is not checked
+    against it (owner answer P23)."""
     files = []
-    for row in accepted.files(store, company_id, file_kind):
+    for row in accepted.files(store, company_id, versioned.file_kind, schema_version=versioned.version):
         sheets = staging.datasets(root, company_id, row["source_id"]) or staging.stage_all(root, company_id, row["source_id"])
         files.append((row["source_id"], sheets))
     return files
@@ -160,13 +163,13 @@ def trigger(root, company_id: str, path, *, store: Store, schemas: Optional[Sche
             finding_data={"outcome": "no_schema", "sheets": _first_rows(sheets)})
         return Arrival(ticket, kept.source_id, False, "no_schema", finding=finding)
 
-    tried = [(v, trial.run(sheets, v.schema, accepted=_accepted_sheets(root, store, company_id, v.file_kind)))
+    tried = [(v, trial.run(sheets, v.schema, accepted=_accepted_sheets(root, store, company_id, v)))
              for v in active]
     versioned, result, ambiguity = choose(tried)
     if versioned is None:
         return unclassified(ambiguity, {"tried": [{"file_kind": v.file_kind, "version": v.version,
                                                    "outcome": r.outcome} for v, r in tried]})
-    files = _accepted_sheets(root, store, company_id, versioned.file_kind)
+    files = _accepted_sheets(root, store, company_id, versioned)
     check = trial.verify(root, company_id, kept.source_id, sheets, versioned.schema, result, files)
     if not (check["fingerprints_reproduced"] and check["trial_reproduced"]):
         return unclassified("the trial did not reproduce from the raw file", check)

@@ -160,6 +160,19 @@ def test_a_schema_that_refuses_an_accepted_file_is_reported_as_a_schema_defect(d
     assert [r["source_id"] for r in refused] == [first.source_id]
 
 
+def test_files_accepted_under_an_earlier_version_do_not_make_a_schema_defect(data_root, store, tmp_path, workbook):
+    first = hook.trigger(data_root, "C-100", EXPORT, store=store, schemas=_with(V1))
+    dispositions.admit(store, first.ticket, "anna", "fits")
+    renamed = HeaderSchema("Stock", 1, STOCK.columns[:3] + (Column("Quantity on hand", "int"),) + STOCK.columns[4:])
+    v2 = Versioned("C-100", "stock_export", 2, renamed)
+    rows = [list(renamed.names), ["SP-1", "Part", "FI", 7.5, datetime(2026, 8, 21)]]
+    arrival = hook.trigger(data_root, "C-100", workbook(tmp_path / "bad.xlsx", {"Stock": rows}),
+                           store=store, schemas=_with(v2))
+    # the file accepted under v1 keeps v1 and is not tried against v2, so the refusal is the file's
+    assert arrival.outcome == "value_problem"
+    assert store.get(arrival.finding)["data"]["evidence"] == {"accepted_files_checked": []}
+
+
 def test_an_unestablished_company_gets_no_inbox(data_root, store):
     with pytest.raises(IntakeError) as error:
         hook.trigger(data_root, "C-999", EXPORT, store=store, schemas=_with(V1))

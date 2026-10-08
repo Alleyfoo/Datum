@@ -1,14 +1,15 @@
 """Accepted files: what an approver admitted, per company and file kind, under which schema version.
 
 A row is written only by an admission and is never changed or removed (the database refuses
-both). The create-schema gate reads these rows: every file a company already accepted must still
-pass a new schema version.
+both). A file stays accepted under the version it was admitted with: a newer version of the
+schema is not checked against it (owner answer P23), so an amendment never touches an accepted
+file. The trial reads the files accepted under the version it tries, for its schema-defect check.
 """
 
 from __future__ import annotations
 
 import sqlite3
-from typing import List
+from typing import List, Optional
 
 from babel.record.store import RecordError, Store
 
@@ -49,10 +50,14 @@ def record(store: Store, db, *, company_id: str, file_kind: str, source_id: str,
     return row
 
 
-def files(store: Store, company_id: str, file_kind: str) -> List[dict]:
-    """The files a company accepted as one file kind, in the order they were admitted."""
+def files(store: Store, company_id: str, file_kind: str, schema_version: Optional[int] = None) -> List[dict]:
+    """The files a company accepted as one file kind, in the order they were admitted; with
+    `schema_version`, only the files accepted under that version."""
     ready(store)
+    query = "SELECT * FROM accepted_files WHERE company_id=? AND file_kind=?"
+    args: tuple = (company_id, file_kind)
+    if schema_version is not None:
+        query, args = query + " AND schema_version=?", args + (schema_version,)
     with store.reading() as db:
-        rows = db.execute("SELECT * FROM accepted_files WHERE company_id=? AND file_kind=?"
-                          " ORDER BY admitted_at, ticket", (company_id, file_kind)).fetchall()
+        rows = db.execute(query + " ORDER BY admitted_at, ticket", args).fetchall()
     return [dict(r) for r in rows]

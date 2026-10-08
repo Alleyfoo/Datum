@@ -105,6 +105,16 @@ def test_drafting_needs_the_claim_a_role_and_a_plain_file_kind(data_root, store)
     assert schemas.versions(store, "C-100", "stock_export") == []
 
 
+def test_anyone_who_holds_the_ticket_in_a_role_drafts_and_is_recorded(data_root, store):
+    # folder access is enough to draft (build-plan section 7); anna holds only the approver role
+    arrival = _claimed_ticket(data_root, store, by="anna")
+    schemas.draft(store, arrival.ticket, "anna", "stock_export", STOCK, "Drafted from this export")
+    [row] = schemas.versions(store, "C-100", "stock_export")
+    assert (row["status"], row["drafted_by"]) == ("draft", "anna")
+    [listed] = [e for e in store.journal(arrival.ticket) if e["action"] == "rules_listed"]
+    assert (listed["actor"], listed["role"]) == ("anna", "approver")
+
+
 def test_a_draft_can_be_read_off_the_staged_export(data_root):
     source = inbox.preserve(data_root, "C-100", EXPORT)
     [sheet] = staging.stage_all(data_root, "C-100", source.source_id)
