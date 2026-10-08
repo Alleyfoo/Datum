@@ -110,9 +110,9 @@ sees exactly what changed.
 **Verifying a mismatch before the ticket states it.** A failed trial is not reported as
 "does not fit" until the hook has checked which kind of failure it is:
 
-1. **Wrong file:** the file's identity (its declared source, sender or export header) does
-   not belong to this customer. The file is held, not compared against this customer's
-   schema at all.
+1. **Wrong file:** the check is that the headers match the schema of the company the file is filed under.
+   When fewer than half of the declared headers are found, the file is not that company's file of
+   this kind: it is held, not compared against this customer's schema at all.
 2. **Structural change:** a column is renamed, added, removed or reordered. The hook
    checks the header against the schema's declared structure and lists the differences.
 3. **Value problem:** the structure matches, but values fail declared rules (type, unit,

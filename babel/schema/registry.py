@@ -8,6 +8,7 @@ can read them; they are not converted here.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -107,6 +108,8 @@ class Registry:
                 continue
             if not _matches(field, value):
                 raise SchemaError("wrong_type", f"{field.name} must be {field.type}")
+            if isinstance(value, float) and not math.isfinite(value):
+                raise SchemaError("non_finite", f"{field.name} must be a finite number, not {value!r}")
             out[field.name] = value.strip() if field.type == "text" else value
         return out
 

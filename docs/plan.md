@@ -64,26 +64,24 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 
 | Category | Count | What it means |
 |---|---|---|
-| Done | 2 | schema registry (D1); synthetic company and ledger (D2) |
-| Read | 20 | sibling-repo rules and code to read and port (R1–R20) |
-| Code | 24 | defined here, to build (C1–C24), including 4 defects from the lab |
-| Plan | 19 | decisions still open (P1–P19) |
-| Bugs | 5 | four open (B1–B4, one confirmed by probe), one fixed (B5) without a regression test |
-| Research | 1 | the import research pass, before the trial and the create-schema gate are designed |
+| Done | 19 | schema registry (D1); synthetic company and ledger (D2); staging, assumption, versioning, mapping and reference rules read (R1–R5); the intake chain C1–C9, the synthetic stock export (C25), the cleaning stage (C26) and schema amendment (C27), on branch `build/intake-chain` |
+| Read | 15 | sibling-repo rules and code to read and port (R6–R20; R15 partly read) |
+| Code | 16 | defined here, to build (C10–C24, and the folder watcher C3b), including 4 defects from the lab |
+| Plan | 23 | decisions (P1–P23): P1, P12, P13, P21 and P23 answered, P7 answered for schemas; P20–P23 raised by the intake build |
+| Bugs | 5 | three fixed (B1, B4, and B5 with its regression test); two latent, open (B2, B3) |
+| Research | 1 | the import research pass: done, see [research/import.md](research/import.md) |
 
-**Next up.** The build starts from [build-plan.md](build-plan.md): the owner confirms gaps G1 to G12 first, and the defect fixes (B1, B4, B5) can start at once. The intake chain comes next:
+**Next up.** The intake chain runs end to end on synthetic data: a file is preserved, staged,
+cleaned, tried against its company's schema and routed to a ticket; a new schema version, also an
+amendment for a renamed header (demo step 3), passes the create-schema gate only through a named
+approver; an approver admits a fitting file. What it needs from the owner, in
+[backlog.md](backlog.md#plan-needs-a-decision-or-design-first):
 
-1. Read the staging and preserve rules (R1, R2, R4, R5), then build the inbox preserve and
-   staging step (C1, C2).
-2. Build the folder hook and the strict trial (C3, C4).
-3. Extend the case store into the ticket spine (R15, C5), then the approval queue (C6) and the
-   three dispositions (C7).
-4. Run the import research pass (`build-plan.md` section 5) before C4 and C8 are designed.
-5. Decide the open items the intake chain needs: P1 (file identity), P2 (ticket grouping),
-   P7 (who approves). These block C4 and C8.
+1. P20 (formula cells), P22 (lease length).
+2. Then the folder watcher (C3b), the module registry (C10) and customer establishment (C11).
 
-**Blocked on decisions:** the wrong-file check (P1), the create-schema approver rule (P7), the
-collector (P9), the identity items (P6, environment unknown), and the first real export (P17, P16).
+**Blocked on decisions:** the collector (P9), the identity items (P6, environment unknown), and the
+first real export (P17, P16).
 
 ## Phases (each ends with something you can show)
 
@@ -125,8 +123,9 @@ Decided by the owner, 2026-10-08:
 - **Email is out of scope** until a real mailbox exists.
 - **Merge** to `main` happens once the owner agrees the idea is settled.
 - **The create-schema gate is strict:** a draft becomes active only when the file it came from
-  passes with zero refusals, earlier files still pass, the full rule list is on the ticket, and a
-  person who did not draft it confirms.
+  passes with zero refusals after cleaning, the full rule list is on the ticket, and a named person
+  confirms it with a reason; the drafter may confirm. Files accepted under earlier versions keep
+  their versions and are not checked against the new one.
 - **Collection can be automatic; admission is never automatic.**
 - **Schema means the headers of a file kind.** Mapping a header to its meaning is a separate stage.
 - **The old repositories stay frozen.** Their data is imported with provenance; their code is not extended.
@@ -165,7 +164,8 @@ Decided by the owner, 2026-10-08:
   assistant proposes values; a person approves them.
 
 Proposed, awaiting the owner's confirmation: the customer folder layout in
-[customer-layout.md](customer-layout.md). Answers recorded in [build-plan.md](build-plan.md) section 6.
+[customer-layout.md](customer-layout.md). Answers recorded in [build-plan.md](build-plan.md): the first
+round in section 8, the second round in section 7.
 
 ## Defects to fix while porting
 
@@ -187,3 +187,4 @@ Proposed, awaiting the owner's confirmation: the customer folder layout in
 | [demo.md](demo.md) | what the demo shows and the steps to a meaningful demo |
 | [provenance.md](provenance.md) | where each ported piece comes from |
 | [interaction.md](interaction.md) | the search, context, question and answer flow in three client tiers (draft) |
+| [research/import.md](research/import.md) | the import research pass: five answers with sources, and a decision list for the owner |
