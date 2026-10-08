@@ -28,12 +28,13 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | C7 | Dispositions import, create schema, drop; each writes its own record (a decision document; admission also an accepted file) | `babel/intake/dispositions.py`, `babel/intake/accepted.py` | `e82f859` |
 | C4 | Trial: strict fit (zero refusals), per-cell results, failure classes (wrong file, structural change, schema defect, value problem) | `babel/intake/trial.py`, `babel/schema/headers.py` | `3a50b74` |
 | C3 | Hook, manual trigger: preserve, stage, try against the company's schemas, verify, open the ticket (the folder watcher stays planned) | `babel/intake/hook.py` | `2d783e3` |
+| R3 | Versioned schemas, N+1 never rewrites N: rule read for C9 | [provenance.md](provenance.md#rules-read-read-items) | `1f30ed0` |
+| C9 | Schema versioning per company and file kind: N+1 never rewrites N, status only forward, one active version | `babel/intake/schemas.py` | `1f30ed0` |
 
 ## Read (defined elsewhere, read and port)
 
 | ID | Item | Source to read |
 |---|---|---|
-| R3 | Versioned schemas, N+1 never rewrites N | `mcp-messy-data` `docs/ARCHITECTURE.md` (Canonical) |
 | R6 | Close-of-day worklist: what needs attention, with the evidence on each line | Shop-flow `docs/adr/0019` (Decision 4), `0021`, `src/shopflow/worklist.py` |
 | R7 | Four roles: human, modelling LLM (temporary), established worker, supervisory LLM outside the flow | Shop-flow `docs/adr/0019` (role table, Decision 1) |
 | R8 | Sender recognition as routing; unknown sources refused as an output | Shop-flow `docs/adr/0020` |
@@ -58,7 +59,6 @@ Each ported file records its origin in [provenance.md](provenance.md).
 |---|---|---|---|
 | C3b | Folder hook: wait for a complete file (polling with a stability window, G6), then call the manual trigger (C3) | C3 | [intake.md](intake.md#what-happens-to-an-arriving-file); planned only (owner answer Q2) |
 | C8 | Create-schema gate: draft, regression check, full rule listing, a non-drafter confirms | R3, C7 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
-| C9 | Schema versioning (N+1) and rejection of agent-named approvals | R2, R3 | [intake.md](intake.md#the-import-definition) (Define) |
 | C10 | Module registry: contract, approver, limitations, failures | R9 | [intake.md](intake.md#modules) |
 | C11 | Establishment ticket flow for a new company (separate process) | C5, C10 | [intake.md](intake.md#establishing-a-customer-separate-process) |
 | C12 | Role tool lists per role, with a server-side check on every call | P6 | P6 below |
