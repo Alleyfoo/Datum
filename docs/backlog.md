@@ -26,6 +26,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | C5 | Ticket spine on the Subroutine model: one number space, documents, `blocks`, leases, attributed append-only journal, roles | `babel/record/store.py` | `ad403b5` |
 | C6 | Approval queue inside the ticket flow: proposals park a ticket; a named approver decides with a reason | `babel/record/queue.py` | `095eea6` |
 | C7 | Dispositions import, create schema, drop; each writes its own record (a decision document; admission also an accepted file) | `babel/intake/dispositions.py`, `babel/intake/accepted.py` | `e82f859` |
+| C4 | Trial: strict fit (zero refusals), per-cell results, failure classes (wrong file, structural change, schema defect, value problem) | `babel/intake/trial.py`, `babel/schema/headers.py` | `3a50b74` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -55,7 +56,6 @@ Each ported file records its origin in [provenance.md](provenance.md).
 | ID | Item | Depends on | Spec |
 |---|---|---|---|
 | C3 | Folder hook: wait for complete file, hash check, open ticket, run trial | C1, C2 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
-| C4 | Trial: strict fit (zero refusals), per-cell results, failure classes 2–4 | C2, R4 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C8 | Create-schema gate: draft, regression check, full rule listing, a non-drafter confirms | R3, C7 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C9 | Schema versioning (N+1) and rejection of agent-named approvals | R2, R3 | [intake.md](intake.md#the-import-definition) (Define) |
 | C10 | Module registry: contract, approver, limitations, failures | R9 | [intake.md](intake.md#modules) |
@@ -117,3 +117,6 @@ found, so it can be reproduced before it is fixed.
 | P17 | Interim ERP interface: the Excel export's fields and format | The only ERP input until the ERP is known | Which export, which fields? |
 | P18 | Multi-warehouse scope: transfers are a small multi-echelon case. Limit or extend? | Sets the scope of the inventory logic | Keep as a stated limit? |
 | P19 | Which assistant the desktop connection targets | Affects C22 | Claude Desktop only, or others? |
+| P20 | May a formula cell's cached value count as the cell's value in the trial? Staging keeps both the formula and the cached value; the trial refuses formula cells for now (C4, rule R6). Evidence in [research/import.md](research/import.md#3-how-are-formula-cells-and-cached-values-handled-when-software-produces-the-file) | A stock export with formulas would never fit | Accept cached values, or keep refusing? |
+| P21 | Is whitespace inside a header significant? The trial compares headers exactly, as the lab does; mcp-messy-data normalises whitespace. See [research/import.md](research/import.md#2-what-minimum-header-declaration-tells-one-file-kind-from-another-without-values) | A trailing space in a header makes a structural change | Exact, or whitespace-normalised? |
+| P22 | Lease length for a claim. A placeholder of 30 minutes is in `babel/record/store.py` (C5); neither source states one | How soon an abandoned ticket can be taken | Which length, after real use? |
