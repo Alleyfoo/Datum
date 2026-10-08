@@ -110,7 +110,7 @@ found, so it can be reproduced before it is fixed.
 | P10 | Tolerance for "fits" | Zero is the rule now | Later, after real files exist |
 | P11 | Demo hosting: the repository is private and the public demo needs a public repo | Blocks step 7 | Public demo or private demo? |
 | P12 | Ticket model: copy Subroutine's concepts, or use Subroutine as the backend (see build-plan G10) | Shapes C5 | Copy or use? |
-| P13 | Python version: `pyproject.toml` says 3.12+, the machine runs 3.11 | Affects tooling only | Which to target? |
+| P13 | Python version. **Decided by the owner (build-plan Q10): target 3.11**; `pyproject.toml` now says `>=3.11` | Affects tooling only | Answered |
 | P14 | Unit conversion scope | Units are recorded, not converted | Which conversions are needed? |
 | P15 | Exception types: agree the list, owner and decision for each | Defines the first cases | See [positioning.md](positioning.md#exception-types-initial-list-to-be-agreed) |
 | P16 | Measure exception share in real data | Shows whether the value is large enough | Which real export? |
