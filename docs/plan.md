@@ -11,14 +11,35 @@ first **domain pack**, the demo case that proves the core.
 
 Roles talk to the record through an AI assistant (Claude, Copilot or a local model):
 
-- **Customer service** discuss a customer's issue or ticket. The assistant drafts a
-  reply from facts the tools produce, and a person approves it.
+- **Customer service** discuss a customer's issue or ticket, and works the tickets that new
+  data opens. The assistant drafts a reply from facts the tools produce, and a person
+  approves it.
 - **The analyst** asks about lead times, demand, forecasts and anomalies, and records
   findings and questions in cases.
 - **The data owner** imports files into the schema. The format is recognised and
   mapped; unknown formats are refused; new mappings are confirmed by a person.
 - **The approver** decides on replies, purchases and data changes. Nothing is approved
   inside a chat.
+
+## Design principles
+
+1. **The human is the gate.** A person brings data into the system and decides what it
+   means. Nothing reaches the record, a customer or the ERP without a person.
+2. **Data enters when a person brings it in:** uploads it, forwards it, or places it in
+   the inbox. Automatic collection (for example mail scraping) is a module that a person
+   enables and names. It is not the default.
+3. **Everything is a module with a contract.** Each module declares its input, its output
+   and destination folder, its approver, and its known failures. The core does not change
+   when a module is added or replaced.
+4. **New data opens a ticket.** Arrival, refusal and every change to a mapping create a
+   ticket. The ticket holds the context for the next person.
+5. **The person works the ticket; the assistant helps.** A customer service person or data
+   owner works through the data. The assistant fetches data, lists options with their
+   evidence, and gives insight. It does not close tickets, change mappings or approve
+   replies, and every insight cites the data behind it.
+6. **Cheap before costly.** Rules first, then classical ML, then the assistant, then a
+   person. The escalation ladder below applies to every module.
+7. **Minimum allowed access, per identity** (item 17 below).
 
 ## Why it is being rebuilt here
 
@@ -277,9 +298,9 @@ outside this repository. The repository stays synthetic-only.
 
 Rules that follow from it:
 
-- **Routing is recognition, not understanding.** Sender identity decides the customer
-  folder, as in Shop-flow ADR 0020. An unknown sender is refused and goes to a ticket;
-  nothing is guessed from the message body.
+- **Placement is recognition, not understanding.** A file goes into a customer folder
+  because a person put it there or named the customer. An unknown or ambiguous customer is
+  refused and goes to a ticket; nothing is guessed from the content.
 - **Attachments and message text are data, never instructions.** They are parsed by the
   same rules as any other file. A message cannot change a mapping or a schema.
 - **Raw is kept, extracts are rebuilt.** Extraction writes new files; it never overwrites
@@ -295,6 +316,22 @@ Rules that follow from it:
 Open questions for the owner: how many customers are expected in the first pilot; whether
 customers share part numbers (if they do, the item master is one table, not one per
 customer); and who may read each customer's folder.
+
+### Modules
+
+Every processing step is a module, and the core does not know what any module does. A
+module declares:
+
+- **Input:** what it reads (a file in `inbox/`, a scanned page, a table).
+- **Output and destination:** what it writes and where. An OCR reader, for example, writes
+  text with a confidence per field to `customers/<id>/extracts/`.
+- **Approver and limitations:** a named person establishes the module, and the known
+  limitations are recorded with the approval (the Shop-flow pattern).
+- **Failures:** a refusal becomes a ticket with the reason.
+
+Adding an OCR reader means declaring its contract, establishing it, and pointing its output
+at the customer folder. Nothing else changes. Its output is new data, so it opens a ticket
+for a person to work through.
 
 ## Steps to a meaningful demo
 
