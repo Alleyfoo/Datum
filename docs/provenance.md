@@ -7,6 +7,8 @@ Every ported file or value records its origin, so the lab's frozen evidence stay
 | `domains/spare_parts/world.py` `snapshot()` | Predictive-Spare-Parts-Lab `desk/data.py` at `a8843ea` | Customers, machines, parts, substitutes, stock, bill of materials and open purchase orders copied as values. Counts checked by `tests/test_spare_parts_world.py`. Date fixed at 2026-10-02, as in the desk. |
 | `domains/spare_parts/world.py` `generate_history()` | New | Requests, deliveries and stock movements generated from a seed. Not in the lab. |
 | `babel/schema/registry.py` | New | Field and cleaning rules. The lab's `desk/source_contract.py` holds the workbook rules that will be generalised later (phase 3). |
+| `domains/spare_parts/data.py` record classes and `ServiceData` | Predictive-Spare-Parts-Lab `desk/data.py` at `fa3836f` (blob `7be9e2c`) | Field for field, in `0c7c97c`. `from_tables()` is new: the company is read from the schema's tables instead of the lab's literals, and `demo()` is `build()` read through it. Tables with a warehouse other than FI and SE are refused. The lab's `TODAY` is `world.AS_OF`. |
+| `tests/golden/views/lab_reference/` | Output of Predictive-Spare-Parts-Lab `desk/views.py` at `fa3836f` | Captured once in `7181e03` by `scripts/capture_lab_reference.py`, which reads the five desk files with `git show` and runs them outside the lab. Evidence: never regenerated. |
 
 Lab revision used as the reference for this port: `fa3836f` (HEAD at the time of the port).
 
