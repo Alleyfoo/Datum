@@ -1,0 +1,72 @@
+--- in the approval queue, anna (approver) approves the reply on #1: "Checked against the facts; PO-4718 goes to CH-02, SC-01 is followed up separately"
+
+>>> open_consultation("C-100", "SC-01", "SP-1601")
+Consultation #3 opened: in_progress, with ville. It is this call's ticket.
+Consultation: Sawmill customer · SC-01 Screen feed screw · SP-1601 Screw flight section, 400 mm
+
+SC-01 Screen feed screw · screw conveyor · criticality B
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1601  Screw flight section, 400 mm          3    0    0  ▲  overdue since 2026-09-01
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list
+
+Ask: ask(3, "Availability"), ask(3, "Lead time") or ask(3, "Service demand"). Availability needs the person's answer first: ask them whether SC-01 has stopped and record it with stopped(3, "stopped") or stopped(3, "planned"). Never guess it.
+
+--- ville releases #3 unconcluded: the customer will call back
+
+>>> open_consultation("C-200", "SC-11")
+Consultation #4 opened: in_progress, with ville. It is this call's ticket.
+Consultation: Power plant customer · SC-11 Fuel screen screw
+
+SC-11 Fuel screen screw · screw conveyor · criticality B
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1601  Screw flight section, 400 mm          4    0    0  ▲  due 2026-12-02
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list
+
+Ask: ask(4, "Service demand") for the whole of SC-11. Availability and Lead time need a part: open a consultation with one.
+
+>>> search(status="open")
+search status open: 1 ticket, shown; viewing it changes nothing.
+
+#3 consultation · open
+Consultation: Sawmill customer · SC-01 Screen feed screw · SP-1601 Screw flight section, 400 mm
+
+From the person: nothing yet
+
+Questions: none asked yet
+Checks: none run
+Reply: nothing queued yet: propose_reply queues the reply for an approver, a named person with the approver role. Nothing is sent
+
+>>> search(status="in_progress")
+search status in_progress: 1 ticket, shown; viewing it changes nothing.
+
+#4 consultation · in_progress, with ville
+Consultation: Power plant customer · SC-11 Fuel screen screw
+
+From the person: nothing yet
+
+Questions: none asked yet
+Checks: none run
+Reply: nothing queued yet: propose_reply queues the reply for an approver, a named person with the approver role. Nothing is sent
+
+>>> search(status="closed")
+search status closed: 1 ticket, shown; viewing it changes nothing.
+
+#1 consultation · closed
+Consultation: Pulp mill customer · CH-02 Chip pile reclaim screw · SP-1601 Screw flight section, 400 mm
+
+From the person
+  stopped   machine stopped: yes (breakdown), answered by ville
+
+Questions 1-2 of 2
+   1  Availability of SP-1601 for CH-02  ·  was waiting for the person: Has CH-02 stopped?; answered in 2
+   2  Availability of SP-1601 for CH-02  ·  answered: breakdown → fastest option
+Open questions, of all 2: none
+Checks: 2 run; the last passed
+Reply: approved by anna (decision #2): Checked against the facts; PO-4718 goes to CH-02, SC-01 is followed up separately
+
+>>> search(text="zzz", status="open")
+search "zzz" with status open: no ticket.

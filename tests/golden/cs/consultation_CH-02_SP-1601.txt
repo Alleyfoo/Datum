@@ -1,0 +1,132 @@
+>>> search("screw")
+search "screw": 4 matches. Which one?
+
+ 1  machine  SC-01    Screen feed screw          Sawmill customer       ▲
+ 2  machine  SC-11    Fuel screen screw          Power plant customer   ▲
+ 3  machine  CH-02    Chip pile reclaim screw    Pulp mill customer     ✖
+ 4  part     SP-1601  Screw flight section, 400 mm
+
+The person picks one; search its id to open it.
+
+>>> search("reclaim screw")
+search "reclaim screw": 1 match, opened.
+
+CH-02 Chip pile reclaim screw · screw conveyor · criticality A
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1601  Screw flight section, 400 mm ★        4    0    0  ✖  due 2026-11-01
+ 2  SP-1502  Electric motor 15 kW IE3 ★            1    1    0  ●
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list
+
+Customer: Pulp mill customer (C-300). To start the call: open_consultation("C-300", "CH-02", part) with a part of the card, or without a part for the service demand of the whole machine.
+
+>>> search("zzz")
+search "zzz": no match among customers, machines and parts. Nothing is opened; ask the person for an id or other words.
+
+>>> open_consultation("C-300", "CH-02", "SP-1601")
+Consultation #1 opened: in_progress, with ville. It is this call's ticket.
+Consultation: Pulp mill customer · CH-02 Chip pile reclaim screw · SP-1601 Screw flight section, 400 mm
+
+CH-02 Chip pile reclaim screw · screw conveyor · criticality A
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1601  Screw flight section, 400 mm ★        4    0    0  ✖  due 2026-11-01
+ 2  SP-1502  Electric motor 15 kW IE3 ★            1    1    0  ●
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list
+
+Ask: ask(1, "Availability"), ask(1, "Lead time") or ask(1, "Service demand"). Availability needs the person's answer first: ask them whether CH-02 has stopped and record it with stopped(1, "stopped") or stopped(1, "planned"). Never guess it.
+
+>>> ask(1, "Availability")
+#1 question 1: Availability of SP-1601 for CH-02 waits for the person. No answer is given without it.
+
+Has CH-02 stopped? Ask the person; do not guess it, even if the call already said so.
+  stopped   yes: it has stopped and waits for this part (a breakdown)
+  planned   no: the part is for planned service, and the machine runs
+
+Record the answer with stopped(1, "stopped") or stopped(1, "planned"), then ask(1, "Availability") again.
+
+>>> stopped(1, "stopped")
+Recorded on #1: CH-02 has stopped and waits for the part (breakdown), as ville reports from the person. The breakdown rule applies to ask(1, "Availability").
+
+>>> ask(1, "Availability")
+#1 question 2: Availability of SP-1601 for CH-02
+
+QUESTION: Availability of SP-1601 for CH-02: can we supply a full set (4 pcs), how fast, and what else competes for the part?
+CUSTOMER: Pulp mill customer (Pulp mill, Eastern Finland)
+MACHINE: CH-02 Chip pile reclaim screw
+PART: SP-1601 Screw flight section, 400 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [reported_by_person] The service person reports: the machine has stopped and is waiting for this part (breakdown).
+- [machine_context] CH-02 Chip pile reclaim screw is criticality A (stops production if it stops).
+- [machine_context] It uses 4 x SP-1601 and the part is marked critical for this machine.
+- [machine_context] Last replaced on Sat 2025-05-03.
+- [stock_by_warehouse] SP-1601 Screw flight section, 400 mm: on hand FI 0, SE 0.
+- [fastest_supply] The customer is served from the FI warehouse. Options for 4 pcs, earliest first:
+- [fastest_supply] Option 1: from purchase order PO-4718, arrives Thu 2026-10-22.
+- [fastest_supply] Option 2: new supplier order, arrives Mon 2026-11-16.
+- [incoming_orders] Purchase order PO-4718: 4 x SP-1601 due in FI on Thu 2026-10-22.
+- [lead_time] Supplier lead time for SP-1601 is 45 days; ordered today it would arrive on Mon 2026-11-16.
+- [substitutes] No approved substitute is recorded for SP-1601.
+- [conflicts] No warehouse holds a full set of 4 pcs, so no stock conflict arises.
+- [where_used] SP-1601 is also used on 2 other machines, 0 of them criticality A: SC-01 (Sawmill customer, criticality B, 3 installed), SC-11 (Power plant customer, criticality B, 4 installed).
+- [due_soon] Planned replacements of SP-1601 on other machines within 60 days need 3 pcs: SC-01 overdue since Tue 2026-09-01 (3 pcs).
+- [recommended_plan] RECOMMENDED PLAN (company rule for a breakdown: fastest option): from purchase order PO-4718, arrives Thu 2026-10-22.
+
+RECEIPT  #1 question 2: Availability of SP-1601 for CH-02
+  asked of the person   machine stopped: yes (breakdown), answered by ville
+  tools run             machine_context · stock_by_warehouse · fastest_supply · incoming_orders ·
+                        lead_time · substitutes · conflicts · where_used · due_soon ·
+                        recommended_plan
+  rule applied          breakdown → fastest option
+  checks                not run yet: check(consultation, answer) runs them on a draft
+  not known             competing claims on PO-4718 are not modelled: SC-01 is overdue for 3 pcs,
+                        also served from FI
+  needs approval        nothing queued yet: propose_reply queues the reply for an approver, a named
+                        person with the approver role. Nothing is sent
+
+Explain these FACTS as CUSTOMER ANSWER / SITUATION / RECOMMENDATION. Run check(1, answer) on your draft, then propose_reply(1, answer).
+
+--- the consultant's reply, drafted from the FACTS (a fixed text: no model runs here)
+CUSTOMER ANSWER:
+We have no screw flight sections in stock. A purchase order with the full set of 4 arrives at our
+Finnish warehouse on Thu 2026-10-22; we will deliver from that.
+
+SITUATION:
+- CH-02 is criticality A and has stopped; it uses 4 x SP-1601.
+- Stock is 0 in FI and SE. No approved substitute.
+- PO-4718 brings 4 pcs to FI on Thu 2026-10-22. A new order would arrive Mon 2026-11-16 (45 days).
+
+RECOMMENDATION:
+- Company rule for a breakdown: fastest option, so take PO-4718.
+- SC-01 (another customer, FI) is overdue for 3 pcs of the same part: decide who gets PO-4718.
+
+>>> check(1, answer)
+checks on #1 against question 2 (Availability of SP-1601 for CH-02): pass
+  numbers           all in the facts
+  dates             all in the facts, compared as whole dates
+  other customers   none named in the customer answer
+
+>>> propose_reply(1, answer)
+Reply proposed on #1: it waits for an approver. Nothing has been sent.
+
+CUSTOMER ANSWER, as it would go to the customer once approved:
+We have no screw flight sections in stock. A purchase order with the full set of 4 arrives at our
+Finnish warehouse on Thu 2026-10-22; we will deliver from that.
+
+RECEIPT  #1 question 2: Availability of SP-1601 for CH-02
+  asked of the person   machine stopped: yes (breakdown), answered by ville
+  tools run             machine_context · stock_by_warehouse · fastest_supply · incoming_orders ·
+                        lead_time · substitutes · conflicts · where_used · due_soon ·
+                        recommended_plan
+  rule applied          breakdown → fastest option
+  checks                pass: numbers: all in the facts · dates: all in the facts, compared as whole
+                        dates · other customers: none named in the customer answer (on the reply as
+                        proposed)
+  not known             competing claims on PO-4718 are not modelled: SC-01 is overdue for 3 pcs,
+                        also served from FI
+  needs approval        the reply waits in the approval queue on #1: a named person with the
+                        approver role approves or rejects it, with a reason. Nothing has been sent
