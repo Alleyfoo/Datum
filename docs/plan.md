@@ -134,6 +134,7 @@ Decided by the owner, 2026-10-08:
 - **Python:** 3.11 is the target.
 - **Demo:** one customer, local, private repository, connected through MCP. Identity and the mail
   collector are left out of the demo. Unit conversion and multi-warehouse optimisation wait.
+- **Item master:** the demo has one item master file, shared by its data.
 - **Thresholds** (for example, the unusual-order rule) are placeholders tuned later from data. The
   assistant proposes values; a person approves them.
 

@@ -111,7 +111,7 @@ fields). Each is a yes, a change, or a different answer.
 | Q13 | Yes | Demo connects through MCP. The owner has MCP set up for all agent systems, so the connection is generic MCP, not Claude-only. |
 | Q14 | Yes | The Excel stock export is the only ERP input. |
 | Q15 | Yes | Five exception types as listed. |
-| Q16 | Deferred | Demo uses one customer. The shared item master question waits for the first pilot. |
+| Q16 | Yes, for the demo | The demo has one item master file, shared by all its data. Whether each customer later gets its own item master waits for the first pilot. |
 | Q17 | Yes, tuned later | The threshold is a placeholder until real data exists. The assistant proposes tuning values from the data; a person approves them. |
 | Q18 | Yes, with roles | Identity stays a principle for the real environment. The demo uses two Subroutine roles: approver and worker. |
 | Q19 | Yes | The import research pass runs before the trial and the create-schema gate are designed. |
