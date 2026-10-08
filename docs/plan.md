@@ -372,15 +372,44 @@ Staging writes nothing to `extracts/`, the schema or product data.
 | Schema exists, file fits | "Fits schema X: ready to import" | import, or drop |
 | Schema exists, file does not fit | "Does not fit schema X: here is what failed" | create a new schema version, or drop |
 
-"Fits" is strict. The file must pass the schema with no refusals. Header similarity, a
+"Fits" is strict. Zero refusals is the rule for now; a tolerance is a later decision. The
+file must pass the schema with no refusals. Header similarity, a
 guessed synonym or a position match is never used to make it fit (the rule from the lab's
 source-owner contract). Where a file does not fit, the ticket lists each failed row, field
 and rule, so the person sees exactly what changed.
+
+**Verifying a mismatch before the ticket states it.** A failed trial is not reported as
+"does not fit" until the hook has checked which kind of failure it is:
+
+1. **Wrong file:** the file's identity (its declared source, sender or export header) does
+   not belong to this customer. The file is held, not compared against this customer's
+   schema at all.
+2. **Structural change:** a column is renamed, added, removed or reordered. The hook
+   checks the header against the schema's declared structure and lists the differences.
+3. **Value problem:** the structure matches, but values fail declared rules (type, unit,
+   range, duplicate key, unknown reference). The hook counts and lists the failing rows.
+4. **Schema defect:** the schema itself rejects rows that the customer's earlier accepted
+   files pass. Here the schema is suspect, not the file.
+
+Each check is deterministic and reproducible. The ticket states the verified kind, the
+evidence, and the number of rows affected. A failure that cannot be classified is stated
+as unclassified, with the raw evidence, and goes to a person without a suggested cause.
 
 When no schema exists, the create-schema process starts. The assistant drafts a schema
 from the file, as options with evidence, and the draft waits on the ticket. A person
 confirms it, with their name recorded, before it becomes the customer's schema. A new
 schema version is handled the same way.
+
+**The create-schema gate is strict.** A draft becomes active only when all of these hold:
+
+- the file it was drafted from passes it with zero refusals;
+- every file the customer already accepted under the previous version still passes it
+  (no regression);
+- the draft's rules are listed in full on the ticket, not summarised, so the approver sees
+  exactly what they are approving;
+- a person who is not the drafter confirms it, with their name and the reason recorded.
+
+Nothing is activated by the assistant, by a timeout or by the hook.
 
 The hook does not admit anything. Admission is the person's choice on the ticket, so the
 hook can be fully automatic without moving the human gate. The hook never
