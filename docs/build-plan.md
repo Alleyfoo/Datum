@@ -259,3 +259,12 @@ match Ollama's. Until this is confirmed, the manager runs on synthetic data only
 
 **Next step:** confirm the hosting route and terms for glm-5.3-flash. If they do not meet the bar, choose a provider
 that offers a signed data processing agreement with documented zero retention, and rerun the evaluation on that model.
+
+## 17. The manager runs on Claude
+
+| ID | Answer | What it means |
+|---|---|---|
+| R-claude | Use Claude for the manager | The manager's model is Claude. |
+| R-why | Why glm was tested | The Parts-Service-Desk handoff (decision D13) says glm-5.3-flash:cloud stood in for Claude for work, through the Claude Code harness, because the experiments used cloud models. It was a proxy, not the chosen model. |
+| R-gap | Claude is not evaluated yet | The evaluation (L3-2) measured glm. Claude has not been run through the same feed, prompt, checks and bar. Before the manager goes live, run the same evaluation on Claude (the planned L3-3 is the place). |
+| R-route | Data route still checked | The section 16 rule still applies: before real company data is sent, the written terms for the Claude route must cover no training and the retention used. |
