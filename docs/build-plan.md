@@ -178,3 +178,12 @@ Recommendation: it may release, because a released ticket loses nothing and wait
 
 Earlier note, still open: what happens if the agent stops without releasing. Options: the ticket stays `in_progress` until a
 person releases it, or it returns to `open` after a set time.
+
+## 11. The manager agent
+
+| ID | Answer | What it means |
+|---|---|---|
+| M-role | System-side view | The manager agent sees the whole system. It gives verdicts from the system's side (for example, a ticket is stale, or a schema is failing often) and speaks to people only through tickets. |
+| M-static | System tickets | The manager may open tickets of its own, not tied to an arriving file. Reading: these are system-level tickets, for example a stale ticket, a repeated failure, or a drift in a schema. Confirm the reading. |
+| M-release | May release | The manager may release a ticket to `open`. The release is a journal entry, and the history stays. Nothing is deleted or rewritten. |
+| M-conclude | May not conclude | Only a person or a worker records a decision. |
