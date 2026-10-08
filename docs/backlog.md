@@ -73,6 +73,8 @@ Each ported file records its origin in [provenance.md](provenance.md).
 | C23 | Second domain sketch on the same core | C1–C9 | [demo.md](demo.md) step 8 |
 | C24 | Collectors (mail, folder watcher) as modules: write only to `inbox/` | C10, P9 | [intake.md](intake.md#modules) |
 | C25 | Synthetic weekly stock export and renamed-column variant, adapted from the messy-data generator | D2 | [build-plan.md](build-plan.md) G8 |
+| C26 | Cleaning stage: schema-driven transforms, trim by default, every change recorded | C2 | [intake.md](intake.md#cleaning-a-stage-of-its-own-driven-by-the-schema) |
+| C27 | Schema amendment: new version, accepted files keep theirs, drafting by folder access | C8, C9 | [build-plan.md](build-plan.md) section 7 |
 
 ### Defects from the lab (fix while porting)
 

@@ -102,7 +102,7 @@ fields). Each is a yes, a change, or a different answer.
 | Q4 | Yes, Excel only | Only Excel is supported. OCR and PDF are a later question, decided when they are implemented. |
 | Q5 | Yes, with a change of meaning. Sender identity is optional: a file dragged into a folder has no sender, and the process is the same. | The wrong-file check is: the file's headers must match the schema of the company it is filed under. Sender identity is not used for now. |
 | Q6 | Open | One test company exists, so one ticket per file is enough. Grouping waits for real cases. |
-| Q7 | Not required | The confirmer may be the drafter. The gate still needs a named person and a recorded reason. Roles: a worker drafts, an approver (manager) confirms; one person may hold both. |
+| Q7 | Not required (superseded in round 2: see below) | The confirmer may be the drafter. The gate still needs a named person and a recorded reason. Roles: a worker drafts, an approver (manager) confirms; one person may hold both. |
 | Q8 | Yes | No mail collector in the demo. |
 | Q9 | Yes | Demo runs locally, repository private. |
 | Q10 | No preference: Python 3.11 | Target 3.11, the version installed here. `pyproject.toml` changes to `requires-python = ">=3.11"`. |
@@ -121,3 +121,18 @@ fields). Each is a yes, a change, or a different answer.
 one by one, and newer language and speed features are unavailable. Since the owner has no
 preference, 3.11 is the target until a dependency requires more.
 
+
+## 7. Owner answers, second round
+
+| ID | Answer | What it means |
+|---|---|---|
+| P23 | Yes, amendable | Renamed headers can be accepted by amending the schema. An amendment is a new version; old files keep theirs. The regression rule is replaced accordingly (intake.md). Fixes the conflict with demo step 3. |
+| D-drafting | Folder access is enough | Anyone with access to the company folder may draft. The worker-only rule is removed. |
+| D-email | Not now | No email design until a real mailbox exists. |
+| D-merge | When settled | The branch `build/intake-chain` is merged once the owner agrees the idea is settled. |
+| P21 | Yes | Whitespace in headers is not significant. Headers are trimmed. |
+| D-clean | Own stage | Cleaning is a schema-driven stage, trim by default (intake.md). New backlog items C26 and C27. |
+| D-repo | Lab frozen, this repository not | The lab is not edited. This repository extends its own port (plan.md). |
+
+Items the branch must change before merging: the create-schema gate (amendment and folder-access
+drafting), the cleaning stage with its trim default, and demo step 3 as a test.
