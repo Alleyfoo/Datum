@@ -86,6 +86,10 @@ before C4 (the trial) and C8 (the create-schema gate), and writes its findings t
 The research pass has no code output. It ends with a decision list that feeds back into this
 document.
 
+**Status:** done on branch `build/intake-chain`. The answers, their sources and the decision
+list are in [research/import.md](research/import.md). The decision list holds proposals for the
+owner; nothing in it changes a decision recorded here.
+
 ## 6. What the owner needs to confirm before the build starts
 
 In order of how many items they unblock: G3 (state), G1 (canonical versus customer schema),

@@ -64,7 +64,7 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 | Code | 24 | defined here, to build (C1–C24), including 4 defects from the lab |
 | Plan | 19 | decisions still open (P1–P19) |
 | Bugs | 5 | three fixed (B1, B4, and B5 with its regression test); two latent, open (B2, B3) |
-| Research | 1 | the import research pass, before the trial and the create-schema gate are designed |
+| Research | 1 | the import research pass: done, see [research/import.md](research/import.md) |
 
 **Next up.** The build starts from [build-plan.md](build-plan.md): the owner confirms gaps G1 to G12 first, and the defect fixes (B1, B4, B5) can start at once. The intake chain comes next:
 
@@ -165,3 +165,4 @@ Proposed, awaiting the owner's confirmation: the customer folder layout in
 | [demo.md](demo.md) | what the demo shows and the steps to a meaningful demo |
 | [provenance.md](provenance.md) | where each ported piece comes from |
 | [interaction.md](interaction.md) | the search, context, question and answer flow in three client tiers (draft) |
+| [research/import.md](research/import.md) | the import research pass: five answers with sources, and a decision list for the owner |
