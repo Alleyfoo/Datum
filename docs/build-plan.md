@@ -333,5 +333,15 @@ Recorded as provisional, per the assumption rules in `mcp-messy-data` (a first o
 
 ## 23. Next run: the customer-service slice
 
-The scope is in [slice-customer-service.md](slice-customer-service.md). It is not started. The owner answers the three
-open points there before the run starts.
+The scope is in [slice-customer-service.md](slice-customer-service.md). The owner answered the three open points there
+before the run started.
+
+**Status:** built on branch `build/cs-slice`, not merged. In order: the lab's briefs and checks captured as reference
+text (`52e0ffc`); the service rules ported with the lab's text (`77748b7`), substitute stock checked for conflicts
+(`d2c2274`), and each brief naming its rule and what is not known (`4de9290`); the answer checks with whole dates
+(`d1cf46b`); T-open and T-release in the store (`0e5aaa6`); consultations as tickets (`8b65872`, `b430f54`), with open
+questions counted over all questions, not the page (`ceff80f`); the tool registry (`06df35e`) and the role's tools
+(`7508baf`, `7ebc795`, `c207f68`); the scenario's golden files and the determinism tests (`28a2aa1`). The ten acceptance
+criteria are met; 333 tests pass. Building it raised two questions for the owner, P25 (where a ticket waiting for
+approval belongs among the three statuses) and P26 (tools to release and resume a consultation), in
+[backlog.md](backlog.md).

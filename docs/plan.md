@@ -64,12 +64,17 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 
 | Category | Count | What it means |
 |---|---|---|
-| Done | 23 | schema registry (D1); synthetic company and ledger (D2); the desk's data (D3) and its text views with golden files (D4); staging, assumption, versioning, mapping and reference rules read (R1–R5); the intake chain C1–C9, the synthetic stock export (C25) and the cleaning stage (C26, C27); round four: the one-day lease (P22) and formula cells taken as their saved values (P20) |
-| Read | 15 | sibling-repo rules and code to read and port (R6–R20; R15 partly read) |
-| Code | 16 | defined here, to build (C10–C24, and the folder watcher C3b), including 4 defects from the lab |
-| Plan | 24 | decisions (P1–P24): P1, P12, P13 and P20–P23 answered (P20 and P22 built in round four), P7 answered for schemas; P20–P23 raised by the intake build, P24 (saved formula values a workbook marks as not current) by the P20 build |
+| Done | 28 | schema registry (D1); synthetic company and ledger (D2); the desk's data (D3) and its text views with golden files (D4); staging, assumption, versioning, mapping and reference rules read (R1–R5); the intake chain C1–C9, the synthetic stock export (C25) and the cleaning stage (C26, C27); round four: the one-day lease (P22) and formula cells taken as their saved values (P20); the customer-service slice: the service rules (D5), the answer checks (R17), the lab's defects (C13), consultations as tickets (D6) and the role's tools with golden files (D7) |
+| Read | 14 | sibling-repo rules and code to read and port (R6–R20 without R17; R15 and R18 partly read) |
+| Code | 15 | defined here, to build (C10–C24 without C13, and the folder watcher C3b) |
+| Plan | 26 | decisions (P1–P26): P1, P12, P13 and P20–P23 answered (P20 and P22 built in round four), P7 answered for schemas; P20–P23 raised by the intake build, P24 (saved formula values a workbook marks as not current) by the P20 build, P25 (where a ticket waiting for approval belongs among the three statuses) and P26 (tools to release and resume a consultation) by the customer-service slice |
 | Bugs | 6 | all fixed: B1, B4, B5 (with its regression test), and in round four B2 and B3 (the ledger carries request and delivery ids) and B6 (menu letters go on past z) |
 | Research | 1 | the import research pass: done, see [research/import.md](research/import.md) |
+
+**Built, not merged: the customer-service slice** (branch `build/cs-slice`, build-plan section 23). One call, "CH-02 has
+stopped; the customer needs SP-1601", runs through the role's tools as a ticket: search, the person asked whether the
+machine stopped, the lab's rules and facts, the checks, and a reply that waits for an approver with its receipt. The
+owner decides the merge and answers P25 and P26.
 
 **Next up.** The intake chain runs end to end on synthetic data: a file is preserved, staged,
 cleaned, tried against its company's schema and routed to a ticket; a new schema version, also an
@@ -168,12 +173,12 @@ Proposed, awaiting the owner's confirmation: the customer folder layout in
 [customer-layout.md](customer-layout.md). Answers recorded in [build-plan.md](build-plan.md): the first
 round in section 8, the second round in section 7.
 
-## Defects to fix while porting
+## Defects fixed while porting (C13, on branch `build/cs-slice`)
 
 - `check_answer` compares number fragments: a date rebuilt from fact pieces passes
-  (2026-10-02 → 2026-02-10). Compare whole dates and numbers.
-- `get_case` derives open and resolved questions from the paged slice only.
-- Substitute-stock supply options are not checked for conflicts.
+  (2026-10-02 → 2026-02-10). Compare whole dates and numbers. Fixed: `d1cf46b`.
+- `get_case` derives open and resolved questions from the paged slice only. Fixed for consultations: `ceff80f`.
+- Substitute-stock supply options are not checked for conflicts. Fixed: `d2c2274`.
 
 ## Documents
 

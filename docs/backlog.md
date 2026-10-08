@@ -37,6 +37,11 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | D4 | The desk's text views ported with the lab's exact text: line and machine status, countries, companies, plant view, machine card, menu tree, text menu, widget. Golden files written only by `scripts/regen_golden.py`; tested for identical text across calls and processes, emoji off by default, and no model, randomness or clock (the date is `AS_OF`) | `domains/spare_parts/views.py`, `tools.py`, `tests/golden/views/` | `1c4b4a7`, `1fba3c4`, `420c3ca`, `0761f71`, `53157b3`, `8217786` |
 | P22 | Lease length, the owner's answer (build-plan section 20): a claim's lease runs one day from the holder's last write; tested held at 23 hours without a write and run out at 25 | `babel/record/store.py` (`LEASE`) | `ca0d13b` (tests that assumed 30 minutes changed in `1606d40`) |
 | P20 | Formula cells, the owner's answer (build-plan section 20): a formula counts as the value the file saved for it (its cached value), taken first in the cleaning stage (rule F1, recorded against the cell with the formula), then cleaned and tried like any other value; a formula with no saved value is refused as `formula_not_calculated` (R6). Staging is unchanged and keeps the formula and the saved value. No formula engine is used | `babel/intake/cleaning.py`, `babel/intake/trial.py`, `babel/schema/headers.py` | `447946c` (tests that pinned the formula refusal and the one-rule cleaning default changed in `2371337`) |
+| D5 | The service rules ported from the lab with its text: availability, lead time and service demand, the same facts for every question on every part of every machine, checked against the lab's captured briefs (golden case: CH-02 with SP-1601 stopped takes PO-4718 by the breakdown rule). Each brief also states the rule it applied and what the rules do not weigh: the other planned needs on an incoming order the plan takes | `domains/spare_parts/tools.py`, `tests/golden/cs/lab_reference/` | `52e0ffc`, `77748b7`, `4de9290` |
+| C13 | The lab's defects, fixed while porting: a date in an answer is compared whole, not as number fragments; a consultation's open questions are counted over all its questions, not the page; an approved substitute's stock is checked for conflicts. Each has a test that fails on the lab's rule | `babel/checks/answers.py`, `babel/record/consultations.py`, `domains/spare_parts/tools.py` | `d1cf46b`, `ceff80f`, `d2c2274` |
+| R17 | Answer checks read and ported: every number and date of an answer is in the facts, and the customer answer names no other customer or machine | `babel/checks/` | `d1cf46b` |
+| D6 | Consultations are tickets: one per call, opened to the agent (`in_progress`) and back to `open` when released unconcluded (the owner's T-open and T-release, now in the store); the person's answers, the questions, the checks and the reply through the approval queue, every write attributed; a receipt per answer | `babel/record/store.py`, `babel/record/consultations.py` | `0e5aaa6`, `8b65872`, `b430f54` |
+| D7 | The customer-service role for spare parts: `search` (0/1/many; tickets by status), `open_consultation`, `ask`, `stopped` (required before an availability answer), `check` and `propose_reply` (nothing is sent), plain typed functions in a registry; no tool calls a model. The scenario's golden files are written only by `scripts/regen_golden_cs.py`, and the scenario gives the same text in one process and in two others | `babel/mcp/`, `domains/spare_parts/customer_service.py`, `tests/golden/cs/` | `06df35e`, `7508baf`, `7ebc795`, `c207f68`, `28a2aa1` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -53,8 +58,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | R14 | Unknown path: observe, propose, human confirms, source established | Learning Lab (establishment flow) |
 | R15 | Case store, evidence, typed findings, claims. Partly read: `desk/cases.py` at `fa3836f`, its concepts ported in C5; `case_evidence.py` and `evidence_intake.py` not yet | Predictive-Spare-Parts-Lab `desk/cases.py`, `case_evidence.py`, `evidence_intake.py` |
 | R16 | Bounded workbook reading, recognition, refusal, provenance | Predictive-Spare-Parts-Lab `desk/source_contract.py`, `source_publication.py` |
-| R17 | Answer checks | Predictive-Spare-Parts-Lab `desk/expert.py` |
-| R18 | Availability, lead time, service plan rules; menus. Partly read: `desk/views.py` and `due_date` from `tools.py` at `fa3836f`, ported in D4; the rest of `tools.py` and `mcp_server.py` not yet | Predictive-Spare-Parts-Lab `desk/tools.py`, `views.py`, `mcp_server.py` |
+| R18 | Availability, lead time, service plan rules; menus. Partly read: `desk/views.py` (D4), all of `tools.py` (D5) and the role tools of `mcp_server.py` (D7) are ported; its menu tools (`open_desk`, `pick`, the widget tool, prompts and forms) are not yet, and belong to the demo UI (C18) | Predictive-Spare-Parts-Lab `desk/tools.py`, `views.py`, `mcp_server.py`; Parts-Service-Desk `desk/mcp_server.py` |
 | R19 | TSB and Croston methods, as-of features | Predictive-Spare-Parts-Lab `predictive_lab/intermittent.py`, `temporal.py` |
 | R20 | Coverage map and proposals with audit log | Spare-Parts-Readiness |
 
@@ -67,9 +71,8 @@ Each ported file records its origin in [provenance.md](provenance.md).
 | C3b | Folder hook: wait for a complete file (polling with a stability window, G6), then call the manual trigger (C3) | C3 | [intake.md](intake.md#what-happens-to-an-arriving-file); planned only (owner answer Q2) |
 | C10 | Module registry: contract, approver, limitations, failures | R9 | [intake.md](intake.md#modules) |
 | C11 | Establishment ticket flow for a new company (separate process) | C5, C10 | [intake.md](intake.md#establishing-a-customer-separate-process) |
-| C12 | Role tool lists per role, with a server-side check on every call | P6 | P6 below |
-| C13 | Checks and fixes: whole-date comparison, paged `get_case` questions, substitute conflicts | R17, R15 | defects below |
-| C14 | Analysis tools on the schema: lead-time spread, availability, pre-order proposal | D2, R18 | [demo.md](demo.md) |
+| C12 | Role tool lists per role, with a server-side check on every call (a role's tool list is a registry since D7; the per-call check waits for P6) | P6 | P6 below |
+| C14 | Analysis tools on the schema: lead-time spread, pre-order proposal (availability is built: D5, D7) | D2, R18 | [demo.md](demo.md) |
 | C15 | Anomaly rules that open an analysis ticket automatically (rule part only) | C5, P5 | [demo.md](demo.md) step 4 |
 | C16 | Worklist over tickets, one per role | R6, C5 | [positioning.md](positioning.md) |
 | C17 | Event history used by analytics (requests, deliveries, movements) | D2 | [demo.md](demo.md) |
@@ -81,12 +84,13 @@ Each ported file records its origin in [provenance.md](provenance.md).
 | C23 | Second domain sketch on the same core | C1–C9 | [demo.md](demo.md) step 8 |
 | C24 | Collectors (mail, folder watcher) as modules: write only to `inbox/` | C10, P9 | [intake.md](intake.md#modules) |
 
-### Defects from the lab (fix while porting)
+### Defects from the lab (fixed while porting, C13)
 
 - `check_answer` compares number fragments: a date rebuilt from fact pieces passes
-  (2026-10-02 → 2026-02-10). Compare whole dates and numbers.
-- `get_case` derives open and resolved questions from the paged slice only.
-- Substitute-stock supply options are not checked for conflicts.
+  (2026-10-02 → 2026-02-10). Compare whole dates and numbers. **Fixed** in `d1cf46b`.
+- `get_case` derives open and resolved questions from the paged slice only. **Fixed** for
+  consultations in `ceff80f` (the lab's case store itself is not ported).
+- Substitute-stock supply options are not checked for conflicts. **Fixed** in `d2c2274`.
 
 ## Bugs to fix
 
@@ -130,3 +134,5 @@ found, so it can be reproduced before it is fixed.
 | P22 | Lease length for a claim. A placeholder of 30 minutes is in `babel/record/store.py` (C5); neither source states one. **Answered (build-plan section 20): one day.** Done in `ca0d13b`: a lease runs one day from the holder's last write | How soon an abandoned ticket can be taken | Answered |
 | P23 | Does the gate's "every accepted file still passes" apply to the header names? As written (and built, C8), a new version that renames a header is refused once any file with the old header was accepted, so the demo's renamed column (demo step 3) can never become a new version. Options: keep it (a rename is a new file kind); check accepted files only against the value rules, column by column in the declared order; or check only files accepted under the same header list. **Answered (build-plan section 7):** amendable. An amendment is a new version; accepted files keep theirs and are not checked against it, so the regression rule is gone. Built in C27 (`78ad2e7`); demo step 3 is a test | Blocked demo step 3 | Answered |
 | P24 | Answered (section 21): a null check in cleaning. Open: a placeholder 0 is not null, so a calculation-settings rule is still needed before real workbooks. | — | [build-plan.md](build-plan.md) section 21 |
+| P25 | Ticket statuses. The store keeps `open`, `in_progress`, `needs_input` and `done`; the owner's list is `open`, `in_progress` and `closed` (build-plan section 12). The status filter maps `closed` to `done`, and a ticket whose reply waits for an approver (`needs_input`, set by the approval queue, C6) appears under none of the three: it is found in the approval queue (the slice's owner answer 3). Raised by the customer-service slice | Decides what "what is waiting" shows, and whether the store's names follow the owner's | Does a ticket waiting for approval count as `in_progress`, or keep a status of its own? Should `done` be called `closed` in the store too? |
+| P26 | Releasing and resuming a consultation through MCP. Both are built in the record and tested (`consultations.release`, T-release; `store.open_ticket`, T-open), but neither is among the six tools of the slice, so a consultant cannot hand a call back, and a released or rejected consultation can be taken up again only in code. Raised by the customer-service slice | Without a release tool, a consultation the consultant leaves stays `in_progress` until a person releases it (Q-stale) | Add `release(consultation)` and a way to resume a consultation (for example, open it by its ticket number) to the role's tools? |

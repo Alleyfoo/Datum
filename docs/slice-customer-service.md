@@ -1,6 +1,7 @@
 # Slice: the customer-service consultation
 
-**Status:** scope for the next build run. Not started. The owner has answered the open points (section "Owner answers" at the end).
+**Status:** built on branch `build/cs-slice`, not merged (build-plan section 23). The owner answered the open points
+before the run (section "Owner answers" at the end). Where each criterion is tested is at the end, under "Built".
 
 ## What the slice is
 
@@ -68,3 +69,21 @@ derives open questions from all questions, not the page; substitute stock is che
 1. **Receipt default: answered.** Show the full receipt in the golden file; fold it in the conversation view later.
 2. **"Stopped" as an argument: answered.** Required; the consultant must ask the person first.
 3. **Search scope: answered.** Search filters by ticket status (see the `search` tool and criterion 9). Pending approvals are not separately searched in this slice.
+
+## Built
+
+| Criterion | Tested in | Commit |
+|---|---|---|
+| 1 Golden scenario | `tests/test_cs_rules.py` (every brief against the lab's), `tests/test_cs_golden.py` | `52e0ffc`, `77748b7`, `28a2aa1` |
+| 2 The unknown is shown | `test_the_receipt_names_the_competing_claim_that_is_not_modelled` (`test_cs_golden.py`, `test_cs_tools.py`) | `4de9290` |
+| 3 Person-only facts are asked | `test_availability_without_the_persons_answer_returns_the_question_not_an_answer` | `7ebc795` |
+| 4 0/1/many | `tests/test_cs_search.py` | `7508baf` |
+| 5 Checks | `tests/test_checks.py` (the lab's fragment comparison beside the new one) | `d1cf46b` |
+| 6 Propose, do not send | `test_propose_reply_queues_it_for_an_approver_and_sends_nothing` | `8b65872`, `7ebc795` |
+| 7 Every consultation is a ticket | `tests/test_consultations.py`, `tests/test_record_store.py` (T-open, T-release) | `0e5aaa6`, `8b65872` |
+| 8 Determinism | `test_two_runs_in_one_process_give_identical_text`, `test_two_processes_give_identical_text`, `test_no_tool_calls_a_model` | `28a2aa1`, `7ebc795` |
+| 9 Status filter | `test_the_status_filter_lists_tickets_of_that_status_only`, `test_a_status_with_no_ticket_is_reported` | `7508baf` |
+| 10 The suite passes | 333 tests; no existing test changed | all |
+
+Also fixed while porting (C13): open questions counted over all questions, not the page (`ceff80f`), and substitute stock
+checked for conflicts (`d2c2274`). Raised for the owner: P25 and P26 in [backlog.md](backlog.md).
