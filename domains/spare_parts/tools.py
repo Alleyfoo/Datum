@@ -44,6 +44,10 @@ class Brief(NamedTuple):
     facts: Tuple[Fact, ...]
     #: names and machine ids of *other* customers: must not reach the customer answer
     confidential: Tuple[str, ...] = ()
+    #: the company rule the recommended plan applied, in a few words (not in the lab)
+    rule: str = ""
+    #: what the rules do not weigh for this answer, said instead of hidden (not in the lab)
+    not_known: Tuple[str, ...] = ()
 
     def render(self) -> str:
         lines = [f"QUESTION: {self.question}",
@@ -172,6 +176,8 @@ class Option(NamedTuple):
     draws_from: Optional[str] = None
     #: the part whose stock it uses up, when that is an approved substitute and not the part asked about
     part_no: Optional[str] = None
+    #: the purchase order it takes, if any: the rules do not weigh other claims on it (not_known)
+    po: Optional[str] = None
 
 
 def _options(data: ServiceData, part_no: str, customer_id: str, qty: int) -> List[Option]:
@@ -195,7 +201,7 @@ def _options(data: ServiceData, part_no: str, customer_id: str, qty: int) -> Lis
     for o in data.incoming:
         if o.part_no == part_no and o.qty >= qty and o.due >= AS_OF:
             arrive = o.due + timedelta(days=0 if o.warehouse == home else TRANSFER_DAYS)
-            options.append(Option(arrive, f"from purchase order {o.po}, arrives {_d(arrive)}"))
+            options.append(Option(arrive, f"from purchase order {o.po}, arrives {_d(arrive)}", po=o.po))
     eta = AS_OF + timedelta(days=data.parts[part_no].lead_time_days)
     options.append(Option(eta, f"new supplier order, arrives {_d(eta)}"))
     return sorted(options, key=lambda o: o.arrives)
@@ -296,6 +302,18 @@ def recommended_plan(data: ServiceData, machine_id: str, part_no: str, qty: int,
     An approved substitute's option is weighed against the planned needs for the substitute
     (backlog C13), and a breakdown that takes it restocks the substitute, with its own lead time.
     """
+    return [Fact("recommended_plan", _choose(data, machine_id, part_no, qty, situation)[1])]
+
+
+#: the company rule each situation applies, in a few words, for the receipt
+PLAN_RULES = {
+    "breakdown": "breakdown → fastest option",
+    "planned": "planned service → earliest option that leaves no other planned need short",
+}
+
+
+def _choose(data: ServiceData, machine_id: str, part_no: str, qty: int, situation: str) -> Tuple[Option, str]:
+    """The option the rules choose, and the plan's text."""
     m = data.machines[machine_id]
     options = _options(data, part_no, m.customer_id, qty)
 
@@ -312,7 +330,7 @@ def recommended_plan(data: ServiceData, machine_id: str, part_no: str, qty: int,
             text += (f" Because this leaves {chosen.draws_from} short for planned needs, also order "
                      f"{gap} pcs{which} today to restock {chosen.draws_from}; with the {lead}-day lead time they "
                      f"arrive {_d(AS_OF + timedelta(days=lead))}.")
-        return [Fact("recommended_plan", text)]
+        return chosen, text
 
     chosen = next(o for o in options if not short(o))
     text = (f"RECOMMENDED PLAN (company rule for planned service: earliest option that leaves "
@@ -321,7 +339,33 @@ def recommended_plan(data: ServiceData, machine_id: str, part_no: str, qty: int,
     if skipped:
         text += (f" The faster option ({skipped[0].text}) is not used because it would leave "
                  f"{skipped[0].draws_from} short for planned needs.")
-    return [Fact("recommended_plan", text)]
+    return chosen, text
+
+
+def competing_claims(data: ServiceData, po: str, part_no: str, machine_id: str,
+                     horizon_days: int = 60) -> str:
+    """What the rules do not weigh when a plan takes an incoming order: the other planned needs.
+
+    The conflict check covers stock on hand, not incoming orders, so a plan that takes a purchase
+    order hands it over without weighing the other machines whose planned replacement of the same
+    part falls due within the horizon and is served from the order's warehouse. They are named
+    here, so the receipt says what the answer did not weigh instead of hiding it.
+    """
+    order = next(o for o in data.incoming if o.po == po)
+    planned = data.parts[part_no].service_interval_months
+    served = sorted(((when, b) for when, b in (_due(data, part_no, machine_id, horizon_days) if planned else [])
+                     if home_warehouse(data, data.machines[b.machine_id].customer_id) == order.warehouse),
+                    key=lambda x: x[0])
+    if not served:
+        return (f"competing claims on {order.po} are not modelled; no other planned need for {part_no} "
+                f"is served from {order.warehouse} within {horizon_days} days")
+    claims = [f"{b.machine_id} is {'overdue' if when < AS_OF else 'due on ' + _d(when)} for {b.qty_installed} pcs"
+              for when, b in served]
+    if home_warehouse(data, data.machines[machine_id].customer_id) == order.warehouse:
+        where = f"{'also' if len(claims) == 1 else 'all also'} served from {order.warehouse}"
+    else:
+        where = f"served from {order.warehouse}, where the order arrives"
+    return f"competing claims on {order.po} are not modelled: {' and '.join(claims)}, {where}"
 
 
 # -- questions -----------------------------------------------------------------
@@ -360,6 +404,7 @@ def availability(data: ServiceData, machine_id: str, part_no: str,
     facts: List[Fact] = [Fact("reported_by_person", f"The service person reports: {SITUATIONS[situation]}.")]
     for _, run in steps:
         facts += run()
+    chosen, _ = _choose(data, machine_id, part_no, line.qty_installed, situation)
     return Brief(
         question=f"Availability of {part_no} for {machine_id}: can we supply a full set "
                  f"({line.qty_installed} pcs), how fast, and what else competes for the part?",
@@ -369,6 +414,8 @@ def availability(data: ServiceData, machine_id: str, part_no: str,
         tools_run=tuple(name for name, _ in steps),
         facts=tuple(facts),
         confidential=confidential(data, m.customer_id),
+        rule=PLAN_RULES[situation],
+        not_known=(competing_claims(data, chosen.po, part_no, machine_id),) if chosen.po else (),
     )
 
 
@@ -405,18 +452,25 @@ def _ready(data: ServiceData, part_no: str, qty: int, home: str, machine_id: str
     Planned work follows the same rule as a planned availability question: stock
     that other machines' planned replacements need is not taken.
     """
+    ready, how, _ = _readiness(data, part_no, qty, home, machine_id)
+    return ready, how
+
+
+def _readiness(data: ServiceData, part_no: str, qty: int, home: str,
+               machine_id: str) -> Tuple[date, str, Optional[str]]:
+    """``_ready``, with the purchase order it takes, if any."""
     other = next(w for w in WAREHOUSES if w != home)
     if data.on_hand(part_no, home) >= qty and not _shortfall(data, part_no, machine_id, qty, home)[0]:
-        return AS_OF, f"reserve {qty} from {home} stock"
+        return AS_OF, f"reserve {qty} from {home} stock", None
     if data.on_hand(part_no, other) >= qty and not _shortfall(data, part_no, machine_id, qty, other)[0]:
-        return AS_OF + timedelta(days=TRANSFER_DAYS), f"transfer {qty} from {other} stock"
+        return AS_OF + timedelta(days=TRANSFER_DAYS), f"transfer {qty} from {other} stock", None
     for o in sorted(data.incoming, key=lambda o: o.due):
         if o.part_no == part_no and o.warehouse == home and o.qty >= qty and o.due >= AS_OF:
-            return o.due, f"take {qty} from purchase order {o.po}"
+            return o.due, f"take {qty} from purchase order {o.po}", o.po
     lead = data.parts[part_no].lead_time_days
     held = [w for w in WAREHOUSES if data.on_hand(part_no, w) >= qty]
     note = (f"; {' and '.join(held)} stock is held for other planned replacements" if held else "")
-    return AS_OF + timedelta(days=lead), f"order {qty} from the supplier ({lead}-day lead time){note}"
+    return AS_OF + timedelta(days=lead), f"order {qty} from the supplier ({lead}-day lead time){note}", None
 
 
 def service_schedule(data: ServiceData, machine_id: str) -> List[Fact]:
@@ -535,10 +589,8 @@ def service_plan(data: ServiceData, machine_id: str) -> List[Fact]:
         facts.append(Fact("service_plan",
                           f"RECOMMENDED PLAN: no service visit needed within {HORIZON_DAYS} days."))
     for b in data.bom_of(machine_id):
-        p = data.parts[b.part_no]
-        if (b.critical and not p.service_interval_months and p.lead_time_days > SPARE_LEAD_DAYS
-                and not any(data.on_hand(b.part_no, w) for w in WAREHOUSES)):
-            eta = AS_OF + timedelta(days=p.lead_time_days)
+        if _needs_spare(data, b):
+            eta = AS_OF + timedelta(days=data.parts[b.part_no].lead_time_days)
             facts.append(Fact("service_plan",
                               f"RECOMMENDED PLAN (company rule: a critical part with a lead time over "
                               f"{SPARE_LEAD_DAYS} days must have a spare): order 1 x {b.part_no} today "
@@ -571,11 +623,66 @@ def service_demand(data: ServiceData, machine_id: str, part_no: Optional[str] = 
         tools_run=tuple(name for name, _ in steps),
         facts=tuple(facts),
         confidential=confidential(data, m.customer_id),
+        rule=_service_rule(data, machine_id),
+        not_known=_service_claims(data, machine_id),
     )
+
+
+SPARE_RULE = f"a critical part with a lead time over {SPARE_LEAD_DAYS} days keeps a spare"
+
+
+def _needs_spare(data: ServiceData, line: BomLine) -> bool:
+    """The spare rule of the service plan: critical, replaced on failure, a long lead and none held."""
+    p = data.parts[line.part_no]
+    return (line.critical and not p.service_interval_months and p.lead_time_days > SPARE_LEAD_DAYS
+            and not any(data.on_hand(line.part_no, w) for w in WAREHOUSES))
+
+
+def _service_rule(data: ServiceData, machine_id: str) -> str:
+    """The rules the service plan applied, in a few words."""
+    horizon = AS_OF + timedelta(days=HORIZON_DAYS)
+    lines = data.bom_of(machine_id)
+    if any(due_date(data, b) and due_date(data, b) <= horizon for b in lines):
+        rule = (f"service visit → bundle parts due within {BUNDLE_DAYS} days of the first, "
+                f"on a working day when all are ready")
+    else:
+        rule = f"service visit → none needed within {HORIZON_DAYS} days"
+    return rule + (f"; {SPARE_RULE}" if any(_needs_spare(data, b) for b in lines) else "")
+
+
+def _service_claims(data: ServiceData, machine_id: str) -> Tuple[str, ...]:
+    """The incoming orders the service supply takes, each with the claims on it the rules do not weigh."""
+    home = home_warehouse(data, data.machines[machine_id].customer_id)
+    horizon = AS_OF + timedelta(days=HORIZON_DAYS)
+    claims: List[str] = []
+    for b in data.bom_of(machine_id):
+        when = due_date(data, b)
+        if when is None or when > horizon:
+            continue
+        po = _readiness(data, b.part_no, b.qty_installed, home, machine_id)[2]
+        if po:
+            claim = competing_claims(data, po, b.part_no, machine_id)
+            if claim not in claims:
+                claims.append(claim)
+    return tuple(claims)
+
+
+#: the rules the lead-time plan applies, in a few words: which one decided is kept on the brief
+LEAD_TIME_RULES = {
+    "free": "scheduled part → take free stock or an incoming order before ordering anew",
+    "order": "scheduled part → order by the last working day before the due date less the lead time",
+    "spare": f"critical part replaced on failure → {SPARE_RULE}",
+    "none": "part replaced on failure → no order until it is needed",
+}
 
 
 def lead_time_plan(data: ServiceData, machine_id: str, part_no: str) -> List[Fact]:
     """When must we order? Rules, not judgement."""
+    return [Fact("lead_time_plan", f"RECOMMENDED PLAN: {_lead_time_decision(data, machine_id, part_no)[0]}.")]
+
+
+def _lead_time_decision(data: ServiceData, machine_id: str, part_no: str) -> Tuple[str, str, Optional[str]]:
+    """The lead-time plan's text, the rule that decided it, and the purchase order it takes, if any."""
     m = data.machines[machine_id]
     line = next(b for b in data.bom_of(machine_id) if b.part_no == part_no)
     p = data.parts[part_no]
@@ -583,23 +690,26 @@ def lead_time_plan(data: ServiceData, machine_id: str, part_no: str) -> List[Fac
     total = sum(data.on_hand(part_no, w) for w in WAREHOUSES)
     eta = AS_OF + timedelta(days=p.lead_time_days)
     when = due_date(data, line)
+    po = None
     if when is not None:
-        ready, how = _ready(data, part_no, line.qty_installed, home, machine_id)
+        ready, how, po = _readiness(data, part_no, line.qty_installed, home, machine_id)
         need = (f"the replacement overdue since {_d(when)}" if when < AS_OF
                 else f"the next replacement due {_d(when)}")
         if not how.startswith("order"):
-            text = f"no new order needed for {need}: {how}, ready {_d(ready)}"
+            text, rule = f"no new order needed for {need}: {how}, ready {_d(ready)}", "free"
         else:
             order_by = last_working_day(when - timedelta(days=p.lead_time_days))
             text = (f"order {line.qty_installed} pcs by {_d(order_by)} for the replacement due {_d(when)}"
                     if order_by >= AS_OF else
                     f"order {line.qty_installed} pcs today; they arrive {_d(eta)}, after the due date {_d(when)}")
+            rule = "order"
     elif line.critical and total == 0 and p.lead_time_days > SPARE_LEAD_DAYS:
         text = (f"keep a spare (company rule: critical, lead time over {SPARE_LEAD_DAYS} days): "
                 f"order 1 pc today, it arrives {_d(eta)}")
+        rule = "spare"
     else:
-        text = "no order needed now; the part is replaced on failure and the spare rule does not apply"
-    return [Fact("lead_time_plan", f"RECOMMENDED PLAN: {text}.")]
+        text, rule = "no order needed now; the part is replaced on failure and the spare rule does not apply", "none"
+    return text, LEAD_TIME_RULES[rule], po
 
 
 def lead_time_question(data: ServiceData, machine_id: str, part_no: str,
@@ -631,6 +741,7 @@ def lead_time_question(data: ServiceData, machine_id: str, part_no: str,
     facts: List[Fact] = []
     for _, run in steps:
         facts += run()
+    _, rule, po = _lead_time_decision(data, machine_id, part_no)
     return Brief(
         question=f"Lead time of {part_no} for {machine_id}: how long does it take to get, "
                  f"and when must we order it?",
@@ -640,6 +751,8 @@ def lead_time_question(data: ServiceData, machine_id: str, part_no: str,
         tools_run=tuple(name for name, _ in steps),
         facts=tuple(facts),
         confidential=confidential(data, m.customer_id),
+        rule=rule,
+        not_known=(competing_claims(data, po, part_no, machine_id),) if po else (),
     )
 
 

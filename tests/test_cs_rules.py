@@ -172,6 +172,57 @@ def test_every_question_keeps_other_customers_confidential():
         assert "Sawmill customer" not in brief.confidential and "BC-01" not in brief.confidential, name
 
 
+# -- the rule applied and what is not known: for the receipt, never in the facts -----------
+
+
+def test_the_golden_answer_names_the_competing_claim_it_does_not_weigh():
+    brief = tools.availability(DATA, *GOLDEN)
+    assert brief.rule == "breakdown → fastest option"
+    assert brief.not_known == (
+        "competing claims on PO-4718 are not modelled: SC-01 is overdue for 3 pcs, also served from FI",)
+    assert not any("not modelled" in f.text for f in brief.facts)  # the facts stay the lab's
+
+
+def test_a_plan_from_stock_has_no_order_claim_to_name():
+    brief = tools.availability(DATA, "BC-02", "SP-1203", "breakdown")  # the transfer from SE
+    assert (brief.rule, brief.not_known) == ("breakdown → fastest option", ())
+    assert tools.availability(DATA, "BC-01", "SP-1301", "planned").rule == (
+        "planned service → earliest option that leaves no other planned need short")
+
+
+def test_claims_on_an_order_in_another_warehouse_say_where_it_arrives():
+    brief = tools.availability(DATA, "SC-11", "SP-1601", "breakdown")  # a Swedish line, a Finnish order
+    assert brief.not_known == (
+        "competing claims on PO-4718 are not modelled: SC-01 is overdue for 3 pcs and CH-02 is due on "
+        "Sun 2026-11-01 for 4 pcs, served from FI, where the order arrives",)
+
+
+def test_an_order_nobody_else_is_due_for_is_still_named():
+    brief = tools.lead_time_question(DATA, "BC-01", "SP-1301")
+    assert brief.not_known == ("competing claims on PO-4711 are not modelled; no other planned need for "
+                               "SP-1301 is served from FI within 60 days",)
+
+
+def test_lead_time_and_service_demand_name_their_rule_and_the_orders_they_take():
+    golden_claim = tools.availability(DATA, *GOLDEN).not_known
+    lead = tools.lead_time_question(DATA, "CH-02", "SP-1601")
+    assert lead.rule == "scheduled part → take free stock or an incoming order before ordering anew"
+    assert lead.not_known == golden_claim
+    assert tools.lead_time_question(DATA, "BC-02", "SP-1104").rule == (
+        "scheduled part → order by the last working day before the due date less the lead time")
+    assert tools.lead_time_question(DATA, "BC-01", "SP-1501").rule == (
+        "critical part replaced on failure → a critical part with a lead time over 30 days keeps a spare")
+    assert tools.lead_time_question(DATA, "BC-02", "SP-1502").rule == (
+        "part replaced on failure → no order until it is needed")
+    service = tools.service_demand(DATA, "CH-02")
+    assert service.rule == ("service visit → bundle parts due within 30 days of the first, "
+                            "on a working day when all are ready")
+    assert service.not_known == golden_claim
+    assert tools.service_demand(DATA, "BC-01").rule.endswith(
+        "; a critical part with a lead time over 30 days keeps a spare")
+    assert tools.service_demand(DATA, "BC-04").rule == "service visit → none needed within 90 days"
+
+
 # -- substitute stock is checked for conflicts (backlog C13) ----------------------------
 
 
