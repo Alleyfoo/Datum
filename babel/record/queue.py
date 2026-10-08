@@ -118,21 +118,27 @@ def approve(store: Store, number: int, approver: str, reason: str, *, effect: Op
         raise
 
 
-def reject(store: Store, number: int, approver: str, reason: str) -> dict:
-    """Turn a proposal down. The ticket goes back to the workers, open and unclaimed."""
+def reject(store: Store, number: int, approver: str, reason: str, *, effect: Optional[Effect] = None,
+           expect: Optional[str] = None) -> dict:
+    """Turn a proposal down. The ticket goes back to the workers, open and unclaimed.
+
+    `effect` may record what the rejection means for the proposed thing, in the same transaction.
+    """
     reason = text(reason, "reason")
     try:
         with store.transaction() as db:
             role = store.approver(db, approver)
-            item = _waiting(store, db, number, None)
+            item = _waiting(store, db, number, expect)
             proposal = item["data"]["proposal"]
             store.take(db, number, approver, role)
+            outcome = (effect(db, item, proposal) if effect else None) or {}
             decision = store.document(
                 db, approver, "decision", f"Rejected: {proposal['action']} on #{number}",
                 f"Rejected by {approver} (approver): {reason}\n"
                 f"Proposed by {proposal['by']} ({proposal['role']}): {proposal['action']}, {proposal['reason']}",
                 data={"decision": "rejected", "action": proposal["action"], "ticket": number,
-                      "approver": approver, "reason": reason, "proposal": proposal},
+                      "approver": approver, "reason": reason, "proposal": proposal,
+                      **outcome.get("record", {})},
                 about=number, role=role)
             data = {k: v for k, v in item["data"].items() if k != "proposal"}
             data["decisions"] = data.get("decisions", []) + [decision]

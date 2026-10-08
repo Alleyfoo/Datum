@@ -80,18 +80,6 @@ def _accepted_sheets(root, store: Store, company_id: str, file_kind: str):
     return files
 
 
-def _verify(root, company_id: str, source_id: str, sheets, versioned: Versioned, result: trial.Result,
-            files) -> dict:
-    rebuilt = [staging.rebuild(root, company_id, source_id, d.sheet) for d in sheets]
-    again = trial.run(rebuilt, versioned.schema, accepted=files)
-    return {
-        "fingerprints": {d.sheet: {"staged": d.fingerprint, "rebuilt": r.fingerprint} for d, r in zip(sheets, rebuilt)},
-        "fingerprints_reproduced": all(d.fingerprint == r.fingerprint for d, r in zip(sheets, rebuilt)),
-        "result_digest": result.digest(),
-        "trial_reproduced": again.digest() == result.digest(),
-    }
-
-
 def _first_rows(sheets) -> List[dict]:
     """Raw evidence for a file with no schema: each sheet's first row with content, as found."""
     evidence = []
@@ -179,7 +167,7 @@ def trigger(root, company_id: str, path, *, store: Store, schemas: Optional[Sche
         return unclassified(ambiguity, {"tried": [{"file_kind": v.file_kind, "version": v.version,
                                                    "outcome": r.outcome} for v, r in tried]})
     files = _accepted_sheets(root, store, company_id, versioned.file_kind)
-    check = _verify(root, company_id, kept.source_id, sheets, versioned, result, files)
+    check = trial.verify(root, company_id, kept.source_id, sheets, versioned.schema, result, files)
     if not (check["fingerprints_reproduced"] and check["trial_reproduced"]):
         return unclassified("the trial did not reproduce from the raw file", check)
 

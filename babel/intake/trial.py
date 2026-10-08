@@ -29,6 +29,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from babel.schema.headers import Column, HeaderSchema
 
+from . import staging
 from .staging import Dataset, Row, column_id
 
 OUTCOMES = ("fits", "wrong_file", "structural_change", "schema_defect", "value_problem")
@@ -239,6 +240,20 @@ def run(datasets: Sequence[Dataset], schema: HeaderSchema, *,
         result.outcome = "value_problem"
         result.evidence = {"accepted_files_checked": [source_id for source_id, _ in accepted]}
     return result
+
+
+def verify(root, company_id: str, source_id: str, sheets: Sequence[Dataset], schema: HeaderSchema,
+           result: Result, accepted: Sequence[Tuple[str, Sequence[Dataset]]] = ()) -> dict:
+    """Check a result before anyone states it: every sheet rebuilt from the raw file must give its
+    recorded fingerprint, and the trial on the rebuilt sheets must give the same result digest."""
+    rebuilt = [staging.rebuild(root, company_id, source_id, d.sheet) for d in sheets]
+    again = run(rebuilt, schema, accepted=accepted)
+    return {
+        "fingerprints": {d.sheet: {"staged": d.fingerprint, "rebuilt": r.fingerprint} for d, r in zip(sheets, rebuilt)},
+        "fingerprints_reproduced": all(d.fingerprint == r.fingerprint for d, r in zip(sheets, rebuilt)),
+        "result_digest": result.digest(),
+        "trial_reproduced": again.digest() == result.digest(),
+    }
 
 
 def headline(result: Result) -> str:

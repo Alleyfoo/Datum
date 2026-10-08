@@ -22,6 +22,7 @@ from babel.record import queue
 from babel.record.store import Store, require, text
 from babel.schema.headers import Column, HeaderSchema, Versioned
 
+from . import accepted, staging, trial
 from .staging import Dataset
 
 FILE_KIND = re.compile(r"[a-z][a-z0-9_]{0,63}")
@@ -178,3 +179,118 @@ def draft(store: Store, ticket: int, actor: str, file_kind: str, schema: HeaderS
     queue.propose(store, ticket, actor, "create_schema", reason, role="worker",
                   payload={"company_id": company_id, "file_kind": file_kind, "version": version})
     return Versioned(company_id, file_kind, version, schema)
+
+
+# -- the create-schema gate ----------------------------------------------------------------------
+
+def rules_on_ticket(db, ticket: int, version: dict) -> bool:
+    """Whether the ticket carries the draft's full rule list, as written when it was drafted."""
+    for row in db.execute("SELECT details FROM journal WHERE item=? AND action='rules_listed' ORDER BY seq",
+                          (ticket,)):
+        listed = json.loads(row[0])
+        if (listed.get("company_id"), listed.get("file_kind"), listed.get("version")) == (
+                version["company_id"], version["file_kind"], version["version"]):
+            return listed.get("digest") == version["digest"] and listed.get("rules") == version["schema"].rule_text()
+    return False
+
+
+def _sheets(root, company_id: str, source_id: str) -> List[Dataset]:
+    return staging.datasets(root, company_id, source_id) or staging.stage_all(root, company_id, source_id)
+
+
+def _draft(db, payload: dict) -> dict:
+    row = db.execute("SELECT * FROM schema_versions WHERE company_id=? AND file_kind=? AND version=?",
+                     (payload["company_id"], payload["file_kind"], payload["version"])).fetchone()
+    require(row is not None and row["status"] == "draft", "not_a_draft",
+            f"{payload['file_kind']} version {payload['version']} is not a draft waiting for a decision")
+    return _row(row)
+
+
+def confirm(store: Store, root, ticket: int, approver: str, reason: str) -> dict:
+    """The create-schema gate: an approver confirms the draft the ticket proposes.
+
+    The draft becomes active only when all of these hold, checked in the approval's transaction:
+    1. a named person who holds the approver role, whose name is not agent-like, confirms it with a
+       reason (the confirmer may be the drafter: owner answer Q7);
+    2. the draft's full rule list is on the ticket, as written when it was drafted;
+    3. the file it was drafted from passes it with zero refusals;
+    4. every file the company already accepted as this kind passes it (no regression).
+    Otherwise nothing changes, the refusal is journaled, and the version stays a draft. On success
+    the previous active version is superseded, the ticket's file gets a new verified trial finding,
+    and its import is proposed to an approver.
+    """
+    ready(store)
+    accepted.ready(store)
+
+    def gate(db, item, proposal):
+        version = _draft(db, proposal["payload"])
+        company_id, file_kind, number = version["company_id"], version["file_kind"], version["version"]
+        schema, label = version["schema"], f"schema {file_kind} v{number}"
+        require(rules_on_ticket(db, item["number"], version), "rules_not_on_ticket",
+                f"#{item['number']} does not carry the full rule list of {label}")
+        sheets = _sheets(root, company_id, version["drafted_from"])
+        own = trial.run(sheets, schema)
+        require(own.fits, "draft_refuses_its_file",
+                f"{label} does not pass the file it was drafted from: {trial.headline(own)}")
+        rows = db.execute("SELECT source_id FROM accepted_files WHERE company_id=? AND file_kind=?"
+                          " ORDER BY admitted_at, ticket", (company_id, file_kind)).fetchall()
+        regressions = []
+        for (source_id,) in rows:
+            earlier = trial.run(_sheets(root, company_id, source_id), schema)
+            if not earlier.fits:
+                regressions.append(f"{source_id}: {trial.headline(earlier)}")
+        require(not regressions, "regression",
+                f"{len(regressions)} accepted file(s) do not pass {label}: " + "; ".join(regressions))
+        check = trial.verify(root, company_id, version["drafted_from"], sheets, schema, own)
+        require(check["fingerprints_reproduced"] and check["trial_reproduced"], "not_reproduced",
+                f"the trial of the drafted file against {label} did not reproduce from the raw file")
+
+        stamp = store.now()
+        db.execute("UPDATE schema_versions SET status='superseded' WHERE company_id=? AND file_kind=?"
+                   " AND status='active'", (company_id, file_kind))
+        db.execute("UPDATE schema_versions SET status='active', decided_by=?, decided_at=?, reason=?"
+                   " WHERE company_id=? AND file_kind=? AND version=?",
+                   (approver, stamp, reason, company_id, file_kind, number))
+        subject = item["data"]["subject"]
+        finding = store.document(
+            db, approver, "finding", f"Trial against {label}: {trial.headline(own)}",
+            trial.report(own, schema) + "\n\nVerified: every sheet rebuilt from the raw file gives its "
+            f"recorded fingerprint, and the trial on the rebuilt sheets gives the same result "
+            f"(digest {check['result_digest'][:16]}).",
+            data={**own.to_dict(), "subject": subject, "file_kind": file_kind, "schema_version": number,
+                  "verification": check},
+            about=item["number"], role="approver")
+        name = subject.get("original_name", subject["source_id"])
+        return {
+            "title": f"{name}: fits {label}: ready to import",
+            "data": {"trial": {"outcome": "fits", "finding": finding, "file_kind": file_kind,
+                               "schema_version": number},
+                     "choices": ["import", "drop"]},
+            "proposal": {"action": "import", "reason": f"The file fits {label} with zero refusals.",
+                         "payload": {"company_id": company_id, "source_id": subject["source_id"],
+                                     "file_kind": file_kind, "schema_version": number, "finding": finding}},
+            "record": {"schema": {"company_id": company_id, "file_kind": file_kind, "version": number,
+                                  "digest": version["digest"]},
+                       "gate": {"rules_on_ticket": True, "drafted_from": version["drafted_from"],
+                                "drafted_from_refusals": 0, "accepted_files_checked": [r[0] for r in rows]}},
+            "summary": (f"Gate passed: the full rule list is on the ticket; the drafted file passes with "
+                        f"zero refusals; {len(rows)} accepted file(s) still pass. {label} is active."),
+        }
+
+    return queue.approve(store, ticket, approver, reason, effect=gate, expect="create_schema")
+
+
+def refuse(store: Store, ticket: int, approver: str, reason: str) -> dict:
+    """An approver turns the draft down: it is marked rejected, keeps its number, and the ticket
+    goes back to the workers."""
+    ready(store)
+
+    def rejected(db, item, proposal):
+        version = _draft(db, proposal["payload"])
+        db.execute("UPDATE schema_versions SET status='rejected', decided_by=?, decided_at=?, reason=?"
+                   " WHERE company_id=? AND file_kind=? AND version=?",
+                   (approver, store.now(), reason, version["company_id"], version["file_kind"], version["version"]))
+        return {"record": {"schema": {"company_id": version["company_id"], "file_kind": version["file_kind"],
+                                      "version": version["version"], "status": "rejected"}}}
+
+    return queue.reject(store, ticket, approver, reason, effect=rejected, expect="create_schema")
