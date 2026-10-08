@@ -64,25 +64,24 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 
 | Category | Count | What it means |
 |---|---|---|
-| Done | 17 | schema registry (D1); synthetic company and ledger (D2); staging, assumption, versioning, mapping and reference rules read (R1–R5); the intake chain C1–C9 and the synthetic stock export (C25), on branch `build/intake-chain` |
+| Done | 19 | schema registry (D1); synthetic company and ledger (D2); staging, assumption, versioning, mapping and reference rules read (R1–R5); the intake chain C1–C9, the synthetic stock export (C25), the cleaning stage (C26) and schema amendment (C27), on branch `build/intake-chain` |
 | Read | 15 | sibling-repo rules and code to read and port (R6–R20; R15 partly read) |
 | Code | 16 | defined here, to build (C10–C24, and the folder watcher C3b), including 4 defects from the lab |
-| Plan | 23 | decisions (P1–P23): P1, P12 and P13 answered, P7 answered for schemas; P20–P23 raised by the intake build |
+| Plan | 23 | decisions (P1–P23): P1, P12, P13, P21 and P23 answered, P7 answered for schemas; P20–P23 raised by the intake build |
 | Bugs | 5 | three fixed (B1, B4, and B5 with its regression test); two latent, open (B2, B3) |
 | Research | 1 | the import research pass: done, see [research/import.md](research/import.md) |
 
 **Next up.** The intake chain runs end to end on synthetic data: a file is preserved, staged,
-tried against its company's schema and routed to a ticket; a new schema version passes the
-create-schema gate only through a named approver; an approver admits a fitting file. What it
-needs from the owner, in [backlog.md](backlog.md#plan-needs-a-decision-or-design-first):
+cleaned, tried against its company's schema and routed to a ticket; a new schema version, also an
+amendment for a renamed header (demo step 3), passes the create-schema gate only through a named
+approver; an approver admits a fitting file. What it needs from the owner, in
+[backlog.md](backlog.md#plan-needs-a-decision-or-design-first):
 
-1. P23: whether the gate's regression check covers header names. As written it refuses any
-   renamed header once a file was accepted, which blocks demo step 3.
-2. P20 (formula cells), P21 (whitespace in headers), P22 (lease length).
-3. Then the folder watcher (C3b), the module registry (C10) and customer establishment (C11).
+1. P20 (formula cells), P22 (lease length).
+2. Then the folder watcher (C3b), the module registry (C10) and customer establishment (C11).
 
-**Blocked on decisions:** the renamed-header path (P23), the collector (P9), the identity items
-(P6, environment unknown), and the first real export (P17, P16).
+**Blocked on decisions:** the collector (P9), the identity items (P6, environment unknown), and the
+first real export (P17, P16).
 
 ## Phases (each ends with something you can show)
 

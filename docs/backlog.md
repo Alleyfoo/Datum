@@ -31,6 +31,8 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | R3 | Versioned schemas, N+1 never rewrites N: rule read for C9 | [provenance.md](provenance.md#rules-read-read-items) | `1f30ed0` |
 | C9 | Schema versioning per company and file kind: N+1 never rewrites N, status only forward, one active version | `babel/intake/schemas.py` | `1f30ed0` |
 | C8 | Create-schema gate: full rule list on the ticket, the drafted file passes, no regression, a named approver with a reason (the drafter may confirm, Q7); agent names refused; nothing activates by timeout or hook | `babel/intake/schemas.py` (`confirm`, `refuse`) | `0e52240` |
+| C27 | Schema amendment: an amendment is a new version; accepted files keep their version and are not checked against it (C8's regression check removed); drafting by anyone with access to the company's folder; demo step 3 as a test | `babel/intake/schemas.py`, `babel/intake/accepted.py`, `babel/intake/hook.py` | `78ad2e7` (tests that pinned the replaced rules changed in `e4328c3`) |
+| C26 | Cleaning stage: trim by default (T1), case declared per field, every change recorded against its cell; staging unchanged; the trial runs on cleaned values | `babel/intake/cleaning.py`, `babel/schema/headers.py` | `017afb1` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -74,8 +76,6 @@ Each ported file records its origin in [provenance.md](provenance.md).
 | C22 | Claude Desktop connection | C12 | [demo.md](demo.md) step 7 |
 | C23 | Second domain sketch on the same core | C1–C9 | [demo.md](demo.md) step 8 |
 | C24 | Collectors (mail, folder watcher) as modules: write only to `inbox/` | C10, P9 | [intake.md](intake.md#modules) |
-| C26 | Cleaning stage: schema-driven transforms, trim by default, every change recorded | C2 | [intake.md](intake.md#cleaning-a-stage-of-its-own-driven-by-the-schema) |
-| C27 | Schema amendment: new version, accepted files keep theirs, drafting by folder access | C8, C9 | [build-plan.md](build-plan.md) section 7 |
 
 ### Defects from the lab (fix while porting)
 
@@ -121,6 +121,6 @@ found, so it can be reproduced before it is fixed.
 | P18 | Multi-warehouse scope: transfers are a small multi-echelon case. Limit or extend? | Sets the scope of the inventory logic | Keep as a stated limit? |
 | P19 | Which assistant the desktop connection targets | Affects C22 | Claude Desktop only, or others? |
 | P20 | May a formula cell's cached value count as the cell's value in the trial? Staging keeps both the formula and the cached value; the trial refuses formula cells for now (C4, rule R6). Evidence in [research/import.md](research/import.md#3-how-are-formula-cells-and-cached-values-handled-when-software-produces-the-file) | A stock export with formulas would never fit | Accept cached values, or keep refusing? |
-| P21 | Is whitespace inside a header significant? The trial compares headers exactly, as the lab does; mcp-messy-data normalises whitespace. See [research/import.md](research/import.md#2-what-minimum-header-declaration-tells-one-file-kind-from-another-without-values) | A trailing space in a header makes a structural change | Exact, or whitespace-normalised? |
+| P21 | Is whitespace inside a header significant? The trial compares headers exactly, as the lab does; mcp-messy-data normalises whitespace. See [research/import.md](research/import.md#2-what-minimum-header-declaration-tells-one-file-kind-from-another-without-values). **Answered (build-plan section 7):** yes, headers are trimmed; whitespace at either end is not significant. Built in C26 (`017afb1`) | A trailing space in a header makes a structural change | Answered |
 | P22 | Lease length for a claim. A placeholder of 30 minutes is in `babel/record/store.py` (C5); neither source states one | How soon an abandoned ticket can be taken | Which length, after real use? |
-| P23 | Does the gate's "every accepted file still passes" apply to the header names? As written (and built, C8), a new version that renames a header is refused once any file with the old header was accepted, so the demo's renamed column (demo step 3) can never become a new version. Options: keep it (a rename is a new file kind); check accepted files only against the value rules, column by column in the declared order; or check only files accepted under the same header list | Blocks demo step 3 | Which reading is meant? |
+| P23 | Does the gate's "every accepted file still passes" apply to the header names? As written (and built, C8), a new version that renames a header is refused once any file with the old header was accepted, so the demo's renamed column (demo step 3) can never become a new version. Options: keep it (a rename is a new file kind); check accepted files only against the value rules, column by column in the declared order; or check only files accepted under the same header list. **Answered (build-plan section 7):** amendable. An amendment is a new version; accepted files keep theirs and are not checked against it, so the regression rule is gone. Built in C27 (`78ad2e7`); demo step 3 is a test | Blocked demo step 3 | Answered |
