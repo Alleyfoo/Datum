@@ -192,8 +192,10 @@ person releases it, or it returns to `open` after a set time.
 
 | ID | Answer | What it means |
 |---|---|---|
-| S-state | `static` is a state | A ticket that is no longer proceeding, and is set to `open`, becomes `static`. It is still in the open queue, marked as not moving. |
-| S-who | Set by the manager | The manager agent sets a ticket to `static` when it finds the ticket cannot be resumed (see section 11). A person can also set it. |
-| S-leave | Leaves `static` by a worker or a person | A worker who picks it up hands it to an agent (`in_progress`). Nothing else moves it. |
+| S-state | `static` is a flag on an in-progress ticket | A ticket that is `in_progress` but has not moved for a set time is marked `static`. It keeps its agent and its status; the mark says it has stalled. |
+| S-who | Found by the manager | The manager agent finds static tickets, inspects them and reports on them (see section 11). A person can also see them. |
+| S-leave | Leaves `static` when it moves or is released | If the agent resumes and the ticket moves, the mark is cleared. If the manager or a person releases it, it goes back to `open` and the history stays. |
 
-Status list, now: `open`, `in_progress`, `static`, `closed`. `waiting` from the earlier draft is not used.
+Status list, now: `open`, `in_progress`, `closed`. `static` is a marker on `in_progress`, not a status of its own.
+`waiting` from the earlier draft is not used. How long a ticket must be still before it is marked `static` is not
+decided; it is a setting to tune later.
