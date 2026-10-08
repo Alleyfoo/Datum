@@ -1,0 +1,78 @@
+"""Dispositions: what a person decides about an arriving file. There are three.
+
+- import: the file fits an active schema, and an approver admits it. Admission records the file
+  as accepted for its company and file kind under that schema version (see accepted.py).
+- create_schema: the file needs a schema, or a new version of one. A worker drafts it and an
+  approver confirms it; the confirmation is the create-schema gate (schemas.py).
+- drop: the file is not needed. A worker or an approver drops it with a reason. It stays in the
+  inbox and the ticket records that it was dropped and why; nothing is deleted.
+
+A worker can drop; an approver is needed to admit. Each decision is a document about the ticket
+and every step is a journal entry. Writing admitted rows to extracts/ (Publish) is not built yet.
+"""
+
+from __future__ import annotations
+
+from typing import Optional
+
+from babel.record import queue
+from babel.record.store import Store, require, text
+
+from . import accepted
+
+DISPOSITIONS = ("import", "create_schema", "drop")
+#: what a proposal of each kind must name
+PAYLOAD = {
+    "import": ("company_id", "source_id", "file_kind", "schema_version"),
+    "create_schema": ("company_id", "file_kind", "version"),
+}
+
+
+def drop(store: Store, ticket: int, actor: str, reason: str, *, role: Optional[str] = None) -> dict:
+    """A worker or an approver drops the file. The ticket is done; the file stays where it is."""
+    reason = text(reason, "reason")
+    with store.transaction() as db:
+        item = store.hold(db, ticket, actor)
+        acting = store.acting_role(db, actor, role)
+        require(acting in ("worker", "approver"), "role_missing", "a worker or an approver drops a file")
+        decision = store.document(
+            db, actor, "decision", f"Dropped: #{ticket}",
+            f"Dropped by {actor} ({acting}): {reason}\nThe file stays in the inbox; nothing is deleted.",
+            data={"decision": "dropped", "disposition": "drop", "ticket": ticket, "by": actor,
+                  "role": acting, "reason": reason, "subject": item["data"].get("subject")},
+            about=ticket, role=acting)
+        data = {k: v for k, v in item["data"].items() if k != "proposal"}
+        data.update(resolution="dropped", decisions=data.get("decisions", []) + [decision])
+        return store.update(db, ticket, actor, role=acting, action="dropped",
+                            note={"reason": reason, "decision": decision}, data=data, status="done")
+
+
+def propose(store: Store, ticket: int, actor: str, disposition: str, reason: str, *, payload: dict,
+            role: Optional[str] = None) -> dict:
+    """Ask an approver for an import or a new schema. Dropping needs no approver: use drop()."""
+    require(disposition in PAYLOAD, "invalid_disposition",
+            f"an approver decides {sorted(PAYLOAD)}; the dispositions are {DISPOSITIONS}")
+    missing = [key for key in PAYLOAD[disposition] if payload.get(key) in (None, "")]
+    require(not missing, "invalid_argument", f"a {disposition} proposal must name {', '.join(missing)}")
+    return queue.propose(store, ticket, actor, disposition, reason, payload=payload, role=role)
+
+
+def admit(store: Store, ticket: int, approver: str, reason: str) -> dict:
+    """An approver admits the file an import proposal names: it becomes an accepted file."""
+    accepted.ready(store)
+
+    def effect(db, item, proposal):
+        p = proposal["payload"]
+        row = accepted.record(store, db, company_id=p["company_id"], file_kind=p["file_kind"],
+                              source_id=p["source_id"], schema_version=p["schema_version"],
+                              ticket=item["number"], admitted_by=approver)
+        return {"data": {"resolution": "imported"}, "record": {"accepted": row},
+                "summary": (f"{p['source_id']} is accepted as {p['file_kind']} version "
+                            f"{p['schema_version']} for {p['company_id']}.")}
+
+    return queue.approve(store, ticket, approver, reason, effect=effect, expect="import")
+
+
+def reject(store: Store, ticket: int, approver: str, reason: str) -> dict:
+    """An approver turns down an import or a schema proposal; the ticket goes back to the workers."""
+    return queue.reject(store, ticket, approver, reason)

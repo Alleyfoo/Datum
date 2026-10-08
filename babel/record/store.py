@@ -128,6 +128,18 @@ class Store:
         finally:
             db.close()
 
+    def ensure(self, script: str) -> None:
+        """Create a module's own tables (CREATE ... IF NOT EXISTS statements) once per store."""
+        done = self.__dict__.setdefault("_ensured", set())
+        if script in done:
+            return
+        db = self._connect()
+        try:
+            db.executescript(script)
+        finally:
+            db.close()
+        done.add(script)
+
     # -- connections and the journal -------------------------------------------------------
 
     def _connect(self) -> sqlite3.Connection:
