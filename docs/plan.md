@@ -341,6 +341,37 @@ Collectors (mail, folder watchers) are modules too, with the same contract. They
 a schedule and write only to a customer's `inbox/`. They never write to `extracts/`, the
 schema or the product data.
 
+### What happens to an arriving file
+
+A file that arrives for a known customer goes into that customer's `inbox/` and opens a
+ticket. The ticket asks the person to choose one of three dispositions:
+
+- **Import.** The file's content already fits an approved schema for this customer. The
+  content is extracted (through an OCR or parsing module if it is a scan or a PDF) into
+  `extracts/`, and each row keeps its source file and location.
+- **Create schema.** The file does not fit yet. A new mapping for this customer is drafted
+  (by the assistant, from the file, as options with evidence), and a person confirms it
+  with their name recorded. Only then does the import run. A new schema for the customer
+  is a schema change, so it always has an approver.
+- **Drop.** The file is not needed (a duplicate, spam, out of scope). It stays in `inbox/`
+  and is marked dropped with the reason. Nothing is deleted.
+
+A PDF starts as unstructured data. Whether it can be imported depends on an extraction
+module being established for that kind of document. Until one exists, the only
+dispositions are create-schema-later or drop.
+
+### Establishing a customer (separate process)
+
+A file from a company with no folder is never placed in an inbox. It opens an
+establishment ticket instead, handled as its own process:
+
+1. The company is identified (name, identifiers, how its files are recognised).
+2. A person creates the customer folder and records who approved it and why.
+3. Only after that can collectors deliver files for the company.
+
+Until a company is established, its files are held outside every customer folder, and the
+held files are listed on the establishment ticket.
+
 ## Steps to a meaningful demo
 
 Each step ends with something a viewer can watch. The demo is meaningful when steps 1 to 5
