@@ -64,7 +64,7 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 | Plan | 19 | decisions still open (P1–P19) |
 | Bugs | 5 | four open (B1–B4, one confirmed by probe), one fixed (B5) without a regression test |
 
-**Next up, in order.** The intake chain comes first because everything else depends on it:
+**Next up.** The build starts from [build-plan.md](build-plan.md): the owner confirms gaps G1 to G12 first, and the defect fixes (B1, B4, B5) can start at once. The intake chain comes next:
 
 1. Read the staging and preserve rules (R1, R2, R4, R5), then build the inbox preserve and
    staging step (C1, C2).
@@ -127,6 +127,7 @@ Proposed, awaiting the owner's confirmation: the customer folder layout in
 |---|---|
 | [plan.md](plan.md) | this page: purpose, principles, board, phases, decisions |
 | [backlog.md](backlog.md) | every item with its category, source and dependencies |
+| [build-plan.md](build-plan.md) | gaps to confirm before the build, what can start now, execution rules and definition of done |
 | [positioning.md](positioning.md) | where the system sits beside the ERP, the escalation ladder, exception types, measures |
 | [intake.md](intake.md) | the import definition, the arriving-file flow, dispositions, modules, establishment |
 | [customer-layout.md](customer-layout.md) | customer folders and shared product data (proposed) |

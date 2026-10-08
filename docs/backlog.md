@@ -72,6 +72,7 @@ Each ported file records its origin in [provenance.md](provenance.md).
 | C22 | Claude Desktop connection | C12 | [demo.md](demo.md) step 7 |
 | C23 | Second domain sketch on the same core | C1–C9 | [demo.md](demo.md) step 8 |
 | C24 | Collectors (mail, folder watcher) as modules: write only to `inbox/` | C10, P9 | [intake.md](intake.md#modules) |
+| C25 | Synthetic weekly stock export, plus a variant with one renamed column (fixtures) | D2 | [build-plan.md](build-plan.md) G8 |
 
 ### Defects from the lab (fix while porting)
 
