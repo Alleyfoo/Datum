@@ -48,8 +48,9 @@ with origins recorded, rather than merging the labs.
    See [positioning.md](positioning.md).
 7. **Preserve, reveal, define, then map.** Raw evidence is never changed, staging decides no
    meaning, and meaning is defined by a named person. See [intake.md](intake.md).
-8. **Minimum allowed access, per identity.** Each user and each background job gets the fewest
-   rights it needs, and the server checks them on every call (P6 in the board).
+8. **Minimum allowed access, per identity (open).** Each user and each background job should get
+   the fewest rights it needs, checked on every call. The environment is not known yet, so this
+   is a principle, not a design (P6).
 
 ## The board
 
@@ -63,6 +64,7 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 | Code | 24 | defined here, to build (C1–C24), including 4 defects from the lab |
 | Plan | 19 | decisions still open (P1–P19) |
 | Bugs | 5 | four open (B1–B4, one confirmed by probe), one fixed (B5) without a regression test |
+| Research | 1 | the import research pass, before the trial and the create-schema gate are designed |
 
 **Next up.** The build starts from [build-plan.md](build-plan.md): the owner confirms gaps G1 to G12 first, and the defect fixes (B1, B4, B5) can start at once. The intake chain comes next:
 
@@ -71,11 +73,12 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 2. Build the folder hook and the strict trial (C3, C4).
 3. Extend the case store into the ticket spine (R15, C5), then the approval queue (C6) and the
    three dispositions (C7).
-4. Decide the open items the intake chain needs: P1 (file identity), P2 (ticket grouping),
+4. Run the import research pass (`build-plan.md` section 5) before C4 and C8 are designed.
+5. Decide the open items the intake chain needs: P1 (file identity), P2 (ticket grouping),
    P7 (who approves). These block C4 and C8.
 
 **Blocked on decisions:** the wrong-file check (P1), the create-schema approver rule (P7), the
-collector (P9, with P6 identity), and the first real export (P17, P16).
+collector (P9), the identity items (P6, environment unknown), and the first real export (P17, P16).
 
 ## Phases (each ends with something you can show)
 
@@ -110,6 +113,12 @@ Decided by the owner, 2026-10-08:
   passes with zero refusals, earlier files still pass, the full rule list is on the ticket, and a
   person who did not draft it confirms.
 - **Collection can be automatic; admission is never automatic.**
+- **Schema means the headers of a file kind.** Mapping a header to its meaning is a separate stage.
+- **The old repositories stay frozen.** Their data is imported with provenance; their code is not extended.
+- **Tickets are modelled on Subroutine** (`github.com/simonholliday/subroutine`): one numbering
+  scheme, decisions as documents, `blocks`, leases on claims, attributed journal. Whether to use
+  it as the backend is open (build-plan G10).
+- **Identity is open** and kept as a design principle until the environment is known.
 
 Proposed, awaiting the owner's confirmation: the customer folder layout in
 [customer-layout.md](customer-layout.md).

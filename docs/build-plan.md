@@ -9,16 +9,16 @@ confirm before the item they affect is built. Everything else is settled in
 
 | ID | Gap | Proposal | Blocks |
 |---|---|---|---|
-| G1 | The word "schema" means two things: the domain's meaning (canonical) and one customer's mapping of their file to it. The plan does not separate them. | **Proposal:** a domain pack declares canonical entities, owned by the domain owner. A customer's schema is a versioned mapping from one file kind's staged columns to canonical fields, with its approver recorded. The registry in `babel/schema` holds canonical entities; mappings live under `customers/<id>/schema/`. | C4, C8, C9 |
-| G2 | Decision "extend `desk/cases.py`" conflicts with the lab being a frozen archive. | **Proposal:** port the case store into `babel/record` with its origin recorded, and extend it there. The lab is not edited. | C5 |
+| G1 | Resolved by the owner: "schema" means the headers of a file kind (names, order, types). Mapping a header to its meaning is the Map stage, not the schema. | **Decided:** a file kind's schema is its header declaration, versioned per customer, with its approver recorded. Canonical meaning is declared by the domain pack and referenced by the mapping. | C4, C8, C9 |
+| G2 | Resolved by the owner: the old repository stays frozen; its data is imported, not its code extended. | **Decided:** the case store is ported into `babel/record` with its origin recorded. Data from the lab is copied in as import, with provenance, never edited in place. | C5, C15 |
 | G3 | Where state lives is not stated. | **Proposal:** SQLite for state (tickets, ledger, decisions, audit), as `mcp-messy-data` does; files for raw evidence, staging and extracts. | C1, C5 |
-| G4 | Identity model is not designed (P6). | **Proposal:** interactive use runs as the Windows user. The hook and collectors run as named service identities. A policy file maps each identity to allowed tools and paths. The server checks it on every call and logs each denial. | C12, C3, C24 |
+| G4 | Resolved by the owner: identity is not set and the environment is unknown. | **Open, kept as a design principle, not built.** Principle 8 in `plan.md` says access is minimum per identity. Items that depend on an identity (C12, C22, C24) wait until the environment is known. The hook and collectors are built to run with no identity assumption beyond the file system they are given. | C12, C22, C24 |
 | G5 | One server or several, per role? | **Proposal:** one MCP server; per-call identity check (G4) decides which tools answer. Role tool lists are then a policy, not separate processes. | C12, C22 |
 | G6 | How the folder hook detects a complete file is not specified. | **Proposal:** polling from the standard library, with a stability window: a file is complete when its size and modification time are unchanged for a set interval. No OS-specific watcher dependency. | C3 |
 | G7 | Excel reader is not chosen. | **Proposal:** `openpyxl` in read-only mode, pinned to a version. Staging reads cell values and their types, never formulas evaluated by the reader. | C2 |
-| G8 | "This week's stock export" (demo step 3) has no source. | **Proposal:** a new code item C25: a generator that writes a synthetic stock export from the snapshot, plus a variant with one renamed column. Both are committed as fixtures. | C25, demo step 3 |
+| G8 | Synthetic data generators exist. | **Decided:** reuse them. Messy-data `fixtures/synthetic/make_fixtures.py` makes messy workbooks; the lab's `predictive_lab/world.py` pattern (seeded generation) is already followed by D2. C25 adapts the messy-data generator to the weekly stock export and its renamed-column variant. | C25, demo step 3 |
 | G9 | A file kind is not declared: which sheet, which header row, which columns are required. | **Proposal:** a file kind declares sheet name, header row, and required columns, as part of its customer mapping (G1). Without a declared kind there is no trial. | C2, C4 |
-| G10 | Ticket fields are not defined (P12). | **Proposal:** `id`, `customer`, `kind` (arrival, new_schema, mismatch, establishment, exception), `status` (open, in_progress, waiting, closed), `owner`, `evidence` (references to raw, staging and extract rows), `options`, `decision`, `decided_by`, `decided_at`, and an append-only `history`. | C5, C6 |
+| G10 | Ticket model. The owner points to Subroutine (`github.com/simonholliday/subroutine`) as a similar system. | **Proposal:** model the ticket on Subroutine's concepts: one numbering scheme for tasks and documents; decisions and findings as documents; `blocks` dependencies; claims as leases that expire when the worker stops; an attributed append-only journal; comments record what happened, documents record conclusions. Store in SQLite as Subroutine does. Open question for the owner: use Subroutine itself as the backend, or copy its model. | C5, C6 |
 | G11 | No test strategy. | **Proposal:** synthetic fixtures committed to the repo; golden files for staging output and trial results; fixed seeds for generated data; a recorded tool-call format (JSON: call, arguments, result) for replays. | all |
 | G12 | Dependencies are not chosen. | **Proposal:** standard library, `openpyxl`, `pytest`, and nothing else until a build item needs it. Each addition is recorded in `pyproject.toml` with a reason. | all |
 
@@ -68,7 +68,25 @@ Phase 2 (the customer-service slice) is done when a recorded replay runs from a 
 with no live model and the approval queue shows the ticket and its decision (demo steps 1, 2 and
 5 in [demo.md](demo.md)).
 
-## 5. What the owner needs to confirm before the build starts
+## 5. Research pass before the import design
+
+Owner decision: the import system needs a research pass before its design is fixed. It runs
+before C4 (the trial) and C8 (the create-schema gate), and writes its findings to
+`docs/research/import.md`. Questions it must answer, from the messy-data and lab material:
+
+1. Which header drifts happen in real supplier files (renamed, added, removed, reordered,
+   merged cells, multiple header rows), and how often does each occur in the lab's evidence?
+2. What minimum header declaration is enough to tell a file kind apart from another, without
+   looking at values?
+3. How are formula cells and cached values handled when the file is produced by software and
+   not by a person?
+4. What does the trial need to report per cell for a person to decide in under a minute?
+5. How does a lease (claim) on a ticket behave when the person holding it stops working?
+
+The research pass has no code output. It ends with a decision list that feeds back into this
+document.
+
+## 6. What the owner needs to confirm before the build starts
 
 In order of how many items they unblock: G3 (state), G1 (canonical versus customer schema),
 G9 (file kinds), G4 (identity), G2 (port, not extend), G6 and G7 (hook and reader), G10 (ticket

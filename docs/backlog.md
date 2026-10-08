@@ -72,7 +72,7 @@ Each ported file records its origin in [provenance.md](provenance.md).
 | C22 | Claude Desktop connection | C12 | [demo.md](demo.md) step 7 |
 | C23 | Second domain sketch on the same core | C1–C9 | [demo.md](demo.md) step 8 |
 | C24 | Collectors (mail, folder watcher) as modules: write only to `inbox/` | C10, P9 | [intake.md](intake.md#modules) |
-| C25 | Synthetic weekly stock export, plus a variant with one renamed column (fixtures) | D2 | [build-plan.md](build-plan.md) G8 |
+| C25 | Synthetic weekly stock export and renamed-column variant, adapted from the messy-data generator | D2 | [build-plan.md](build-plan.md) G8 |
 
 ### Defects from the lab (fix while porting)
 
@@ -103,13 +103,13 @@ found, so it can be reproduced before it is fixed.
 | P3 | OCR engine and which document kinds it covers | PDFs and scans cannot be imported without it. Prefer a local, self-hosted tool, per the owner's convention | Which document kinds come first? |
 | P4 | Forecast methods per demand group, and the evaluation rule | The per-group decision is made; the methods are not | Which groups, which methods? |
 | P5 | Anomaly thresholds: what is unusual enough to open an analysis ticket | Drives C15 | What is the threshold, per part and per customer? |
-| P6 | Identity-scoped access: how a Windows profile maps to a tool list, what a background job may do, how the server enforces it | Every role and collector depends on it | Who gets which tools? |
+| P6 | Identity-scoped access. Open: the environment is not known yet. Kept as a design principle. | Blocks C12, C22, C24 only | Which environment will this run in? |
 | P7 | Who approves a new customer folder and a new schema: one person or two | Sets the approver rule in C8 and C11 | Same person or two? |
 | P8 | Customer layout: pilot size, shared part numbers, who reads a folder | Decides whether the item master is one table | See [customer-layout.md](customer-layout.md#open-questions-for-the-owner) |
 | P9 | Mailbox collector: which account, what it may read, what it may write | Mail is the first collector | Which mailbox, which folder? |
 | P10 | Tolerance for "fits" | Zero is the rule now | Later, after real files exist |
 | P11 | Demo hosting: the repository is private and the public demo needs a public repo | Blocks step 7 | Public demo or private demo? |
-| P12 | Fields a ticket must hold | Shapes C5 | Which fields does the service team need? |
+| P12 | Ticket model: copy Subroutine's concepts, or use Subroutine as the backend (see build-plan G10) | Shapes C5 | Copy or use? |
 | P13 | Python version: `pyproject.toml` says 3.12+, the machine runs 3.11 | Affects tooling only | Which to target? |
 | P14 | Unit conversion scope | Units are recorded, not converted | Which conversions are needed? |
 | P15 | Exception types: agree the list, owner and decision for each | Defines the first cases | See [positioning.md](positioning.md#exception-types-initial-list-to-be-agreed) |
