@@ -59,23 +59,31 @@ def test_every_state_change_is_an_attributed_journal_entry(store):
     assert store.journal(task)[2]["details"] == {"status": {"before": "open", "after": "in_progress"}}
 
 
+def _past_the_lease(store, clock):
+    """Move the clock a minute past the store's lease, with no write in between."""
+    clock.advance(seconds=store.lease.total_seconds() + 60)
+
+
 def test_a_claim_keeps_others_out_until_its_lease_runs_out(store, clock):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
+    claimed_at = clock()
     assert _code(store.claim, task, "pia") == "claim_conflict"
-    clock.advance(minutes=31)  # ville stopped working: nothing renewed the lease
+    _past_the_lease(store, clock)  # ville stopped working: nothing renewed the lease
     assert not store.get(task)["lease_active"]
     store.claim(task, "pia")
     assert store.get(task)["claimed_by"] == "pia"
-    assert store.journal(task)[-1]["details"] == {"previous": "ville", "expired_at": "2026-10-08T09:30:00+00:00"}
+    expired_at = (claimed_at + store.lease).isoformat(timespec="seconds")
+    assert store.journal(task)[-1]["details"] == {"previous": "ville", "expired_at": expired_at}
 
 
 def test_writes_by_the_holder_renew_the_lease(store, clock):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
-    clock.advance(minutes=20)
+    two_thirds = store.lease.total_seconds() * 2 / 3
+    clock.advance(seconds=two_thirds)
     store.comment(task, "ville", "Still on it.")
-    clock.advance(minutes=20)  # forty minutes after the claim, twenty after the comment
+    clock.advance(seconds=two_thirds)  # past the lease counted from the claim, inside it from the comment
     assert store.get(task)["lease_active"]
     assert _code(store.claim, task, "pia") == "claim_conflict"
 
@@ -83,7 +91,7 @@ def test_writes_by_the_holder_renew_the_lease(store, clock):
 def test_a_holder_whose_lease_ran_out_must_claim_again(store, clock):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
-    clock.advance(minutes=31)
+    _past_the_lease(store, clock)
     assert _code(store.set_status, task, "ville", "in_progress") == "claim_expired"
     store.claim(task, "ville")
     assert store.set_status(task, "ville", "in_progress")["status"] == "in_progress"

@@ -122,7 +122,7 @@ def test_an_approver_waits_for_another_holders_lease(store, clock):
     task = _proposed(store)
     store.claim(task, "pia")
     assert _code(queue.approve, store, task, "anna", "fits") == "claim_conflict"
-    clock.advance(minutes=31)
+    clock.advance(seconds=store.lease.total_seconds() + 60)  # a minute past pia's lease, with no write
     assert queue.approve(store, task, "anna", "fits")["status"] == "done"
 
 
