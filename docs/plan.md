@@ -185,9 +185,15 @@ run from a clean checkout with no live model, from recorded runs.
 8. **A second domain sketch.** A different kind of data goes through the same schema and
    ticket flow, to test that the core holds.
 
-## Decisions needed
+## Decisions
 
-- Ticket spine: extend the existing case store (recommended) or build a new one.
-- Forecast method for the analyst: the simplest well-calibrated method wins; the lab's
-  evidence suggests the choice is close.
-- Hosting: the demo needs a public repository, and this one is private.
+Decided by the owner, 2026-10-08:
+
+- **Ticket spine:** extend the existing case store (`desk/cases.py` in the lab). One store
+  for consultations, imports and analysis; no third store.
+- **Forecasting is per problem group, not one method.** Demand patterns differ (steady
+  wear parts, lumpy breakdown parts, rare parts, new parts), so the analyst picks a method
+  per group from the pattern, and each group's method is evaluated on its own. The method
+  choice itself is a recorded, reviewable decision on the ticket.
+- **Sharing:** the code stays private for now. A distilled version (the method, the
+  schema and the demo story, without the full code) comes after the build is finished.
