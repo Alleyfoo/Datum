@@ -21,6 +21,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | R4 | Preview before apply, per-cell mapping results, before/after record hashes: rules read | [provenance.md](provenance.md#rules-read-read-items) | `17eedfe` |
 | R5 | Reference workbooks as `MANUAL_REFERENCE` evidence: rules read | [provenance.md](provenance.md#rules-read-read-items) | `17eedfe` |
 | C25 | Synthetic weekly stock export and renamed-header variant, from a seed | `domains/spare_parts/exports.py`, `tests/fixtures/` | `f37d29d` |
+| C1 | Inbox preserve: hash, read-only copy, content-derived id, append-only ledger | `babel/intake/inbox.py` | `de3d592` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -49,7 +50,6 @@ Each ported file records its origin in [provenance.md](provenance.md).
 
 | ID | Item | Depends on | Spec |
 |---|---|---|---|
-| C1 | Inbox preserve: hash, read-only copy, content-derived id, idempotent ledger | — | [intake.md](intake.md#the-import-definition) (Preserve) |
 | C2 | Staging step: text cells with type codes, no coercion, row provenance, fingerprint, verify | R1 | [intake.md](intake.md#the-import-definition) (Reveal) |
 | C3 | Folder hook: wait for complete file, hash check, open ticket, run trial | C1, C2 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C4 | Trial: strict fit (zero refusals), per-cell results, failure classes 2–4 | C2, R4 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
