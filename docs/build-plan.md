@@ -166,5 +166,15 @@ chemicals); it is not needed for spare parts or furniture.
 | T-release | Returns to `open` when not concluded | If the handler releases the ticket without a decision, it returns to `open`. |
 | T-meaning | `in_progress` means the ticket has been given to an agent for processing | Opening a ticket hands it to an agent. `in_progress` stays until the ticket is concluded (a decision recorded) or released (back to `open`). The log records the agent, the time it was handed over, and the outcome. |
 
-Still open: what happens if the agent stops without releasing. Options: the ticket stays `in_progress` until a
+**Stale tickets (decided in principle, process not built).** A ticket that stays `in_progress` after its
+agent stops is found by a separate check, not by the agent itself. That check is run by the manager agent
+(the supervisory role from Shop-flow ADR 0019, outside the normal flow). It opens the stale ticket to inspect
+it: it reads the journal, decides whether the work can be resumed, and records what it found. If resuming is
+not possible, the ticket goes back to `open`, or to a person. The manager never concludes a ticket; only a
+person or a worker records a decision.
+
+Still open: whether the manager may release a ticket to `open` on its own, or may only propose it.
+Recommendation: it may release, because a released ticket loses nothing and waits for a worker. It may not conclude.
+
+Earlier note, still open: what happens if the agent stops without releasing. Options: the ticket stays `in_progress` until a
 person releases it, or it returns to `open` after a set time.
