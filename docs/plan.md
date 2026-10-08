@@ -113,3 +113,81 @@ Every ported file records its origin commit in `docs/provenance.md`.
 - Forecast method for the analyst: LightGBM, TSB or both. The lab's evidence says they
   are close; the simplest well-calibrated method should win.
 - Hosting for the demo (Streamlit Community Cloud needs a public repo; this repo is private).
+
+## Still missing, in plain words
+
+The core idea is one ticket for every piece of work: a customer call, a file that arrives,
+an unusual number that needs looking at. The ticket holds the context. A consultant (the
+assistant) works the ticket through a fixed set of operations; a person signs off anything
+that leaves the company. Nothing below exists in this repository yet.
+
+**The ticket spine**
+1. One ticket type for all work. Today the lab has an analyst case store, a desk journal
+   and a proposals file; they must become one ticket with status, owner and history.
+   Recommended: extend `desk/cases.py` rather than add a third store.
+2. Consultant work on a ticket: open it, read what is already known, act, write back.
+   The current service tools are not tied to a ticket.
+3. An approval queue inside the ticket flow. Today proposals are only reviewed from a
+   command-line script.
+
+**Cleaning with schema (data owner side)**
+4. A schema registry in the core: what an entity is, its fields, units and keys. Today
+   the spare-parts fields are hand-written in the data module.
+5. Recognising a file by its shape, mapping it to the schema, and refusing what does not
+   fit. Exists only for one test workbook. A second format and a person-confirmed mapping
+   for unknown changes are missing.
+6. Cleaning rules that are generic: types, units, ranges, duplicate keys. Partly done in
+   the lab for one schema; not generic.
+7. Every import is a ticket. Clean rows load; refused rows stay on the ticket with the
+   reason; an unusual value opens an analysis ticket automatically. Entirely missing.
+8. Event history in the synthetic company: requests, deliveries and stock movements. The
+   current demo data is a snapshot, so no trends can be shown yet.
+
+**Analyst side**
+9. Analysis tools over the schema: lead-time spread, demand forecast, anomaly flags. The
+   lab has the forecasting experiments, but not as tools on the core schema. The forecast
+   method is still open (see below).
+10. Findings and a pre-order proposal written to the ticket. Partly there in the case tools.
+11. Automatic ticket creation from anomalies. Missing; the lab marks it as later work.
+
+**Across the stack**
+12. Traceability: every number traces to a source cell. Partly done in the lab for one format.
+13. Role tool lists: each role sees only its own tools. Today there is one server with
+    all tools.
+14. The known defects in the list above are fixed while porting (date check, open
+    questions across pages, substitute conflicts).
+15. A demo surface that shows the flow: plant view, the conversation, the shared ticket,
+    the approval queue. The lab's Streamlit demo is a starting point; Babel-Tower has none.
+16. Hosting and a Claude Desktop connection. Last, after the demo works from a clean checkout.
+
+## Steps to a meaningful demo
+
+Each step ends with something a viewer can watch. The demo is meaningful when steps 1 to 5
+run from a clean checkout with no live model, from recorded runs.
+
+1. **The company.** Synthetic company with its history, and the schema it is described in.
+2. **A call becomes a ticket.** A customer's conveyor stops. The consultant opens the ticket,
+   asks "has it stopped?", runs the tools and rules, passes the checks, and the reply waits
+   in the approval queue. The person approves; the ticket records who and when.
+3. **A file arrives.** This week's stock export is recognised and loaded. A file with a
+   renamed column is refused, the refusal sits on its own ticket, and the mapping is
+   confirmed by a person before rows load.
+4. **An unusual number opens a ticket.** An order of 40 against a usual 2 becomes an
+   analysis ticket. The analyst consultant checks lead times and the forecast, records a
+   finding and proposes a pre-order for a buyer to approve.
+5. **The loop closes.** The service ticket for the same part shows the open analysis
+   ticket. The gap from the earlier answer (a competing claim on incoming stock) is now
+   a recorded finding, and the next service answer uses it. This is the payoff: one
+   record, several roles.
+6. **Live mode.** A local model runs the same consultant role, and the recorded runs are
+   refreshed from real sessions.
+7. **Connection.** The real server connects to a desktop assistant.
+8. **A second domain sketch.** A different kind of data goes through the same schema and
+   ticket flow, to test that the core holds.
+
+## Decisions needed
+
+- Ticket spine: extend the existing case store (recommended) or build a new one.
+- Forecast method for the analyst: the simplest well-calibrated method wins; the lab's
+  evidence suggests the choice is close.
+- Hosting: the demo needs a public repository, and this one is private.
