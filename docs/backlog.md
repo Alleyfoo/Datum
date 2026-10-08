@@ -24,6 +24,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | C1 | Inbox preserve: hash, read-only copy, content-derived id, append-only ledger | `babel/intake/inbox.py` | `de3d592` |
 | C2 | Staging: text cells with type codes, no coercion, row provenance, fingerprint, verify | `babel/intake/staging.py` | `ef55cb0` |
 | C5 | Ticket spine on the Subroutine model: one number space, documents, `blocks`, leases, attributed append-only journal, roles | `babel/record/store.py` | `ad403b5` |
+| C6 | Approval queue inside the ticket flow: proposals park a ticket; a named approver decides with a reason | `babel/record/queue.py` | `095eea6` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -39,7 +40,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | R12 | Deterministic execution with no LLM reachable | Governed Data Lab `src/execution/` |
 | R13 | MCP tiers declared in the protocol | Shopflow-furniture `src/shopflow/mcp_server.py` |
 | R14 | Unknown path: observe, propose, human confirms, source established | Learning Lab (establishment flow) |
-| R15 | Case store, evidence, typed findings, claims | Predictive-Spare-Parts-Lab `desk/cases.py`, `case_evidence.py`, `evidence_intake.py` |
+| R15 | Case store, evidence, typed findings, claims. Partly read: `desk/cases.py` at `fa3836f`, its concepts ported in C5; `case_evidence.py` and `evidence_intake.py` not yet | Predictive-Spare-Parts-Lab `desk/cases.py`, `case_evidence.py`, `evidence_intake.py` |
 | R16 | Bounded workbook reading, recognition, refusal, provenance | Predictive-Spare-Parts-Lab `desk/source_contract.py`, `source_publication.py` |
 | R17 | Answer checks | Predictive-Spare-Parts-Lab `desk/expert.py` |
 | R18 | Availability, lead time, service plan rules; menus | Predictive-Spare-Parts-Lab `desk/tools.py`, `views.py`, `mcp_server.py` |
@@ -54,7 +55,6 @@ Each ported file records its origin in [provenance.md](provenance.md).
 |---|---|---|---|
 | C3 | Folder hook: wait for complete file, hash check, open ticket, run trial | C1, C2 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C4 | Trial: strict fit (zero refusals), per-cell results, failure classes 2–4 | C2, R4 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
-| C6 | Approval queue inside the ticket flow (replaces the command-line review script) | C5 | [demo.md](demo.md) |
 | C7 | Dispositions: import, create schema, drop; each writes its own record | C5, C4 | [intake.md](intake.md#dispositions) |
 | C8 | Create-schema gate: draft, regression check, full rule listing, a non-drafter confirms | R3, C7 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C9 | Schema versioning (N+1) and rejection of agent-named approvals | R2, R3 | [intake.md](intake.md#the-import-definition) (Define) |
