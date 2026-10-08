@@ -1,4 +1,6 @@
-# Plan
+# Plan: Datum (working name)
+
+The repository is still named Babel-Tower. The product name is Datum: a reference point that every measurement is taken from.
 
 Status: agreed direction, 2026-10-07. Phase 1 built on 2026-10-08. Everything else is
 planned, and the board below says which parts are read, coded or still to decide.
@@ -48,6 +50,9 @@ with origins recorded, rather than merging the labs.
    See [positioning.md](positioning.md).
 7. **Preserve, reveal, define, then map.** Raw evidence is never changed, staging decides no
    meaning, and meaning is defined by a named person. See [intake.md](intake.md).
+9. **Data is the map of the environment.** One record holds the measured territory. Each role
+   draws its own map of it for its use case. Every map is a view of the same record, not a copy,
+   and it states its datum: the as-of time, the source, and what is not known.
 8. **Minimum allowed access, per identity (open).** Each user and each background job should get
    the fewest rights it needs, checked on every call. The environment is not known yet, so this
    is a principle, not a design (P6).
@@ -99,8 +104,9 @@ needs from the owner, in [backlog.md](backlog.md#plan-needs-a-decision-or-design
 
 Decided by the owner, 2026-10-08:
 
-- **Ticket spine:** extend the existing case store (`desk/cases.py` in the lab). One store for
-  consultations, imports and analysis; no third store.
+- **Ticket spine:** one store for consultations, imports and analysis, built in this repository.
+  The lab's case store (`desk/cases.py`) is ported here and extended here. The lab is frozen and
+  is not edited; this repository is not frozen.
 - **Forecasting is per problem group, not one method.** Demand patterns differ (steady wear
   parts, lumpy breakdown parts, rare parts, new parts), so the analyst picks a method per group
   from the pattern, and each group's method is evaluated on its own. The choice is a recorded,
@@ -108,6 +114,15 @@ Decided by the owner, 2026-10-08:
 - **Sharing:** the code stays private for now. A distilled version (the method, the schema and
   the demo story, without the full code) comes after the build is finished.
 - **Zero refusals** is the rule for "fits". A tolerance is a later decision (P10).
+- **Schemas can be amended.** An amendment is a new version. Accepted files keep their version;
+  the amended version applies to new files.
+- **Drafting:** anyone with access to the company's folder may draft a schema. Confirmation needs
+  a named person; the drafter may confirm.
+- **Cleaning is a stage of its own.** Default: trim whitespace in every text cell and header. Other
+  transformations (case, format, units) are declared per field in the schema, and every change is
+  recorded against its cell.
+- **Email is out of scope** until a real mailbox exists.
+- **Merge** to `main` happens once the owner agrees the idea is settled.
 - **The create-schema gate is strict:** a draft becomes active only when the file it came from
   passes with zero refusals, earlier files still pass, the full rule list is on the ticket, and a
   person who did not draft it confirms.

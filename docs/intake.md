@@ -14,7 +14,7 @@ built on the sequence `Preserve → Reveal → Define → Map → Validate → P
 | Stage | What happens | Where it lives here |
 |---|---|---|
 | **Preserve** | The arrival is copied in, hashed and made read-only. Its id is derived from its content, so registering the same bytes twice does nothing new. | `inbox/` (raw, never edited) |
-| **Reveal** | Staging: every cell stored as text with a one-character type code (empty, string, number, bool, date, formula, error). Nothing is trimmed, parsed, coerced, de-duplicated or renamed. Blank and total rows are kept and flagged. Each row keeps its source file, sheet and exact spreadsheet row. Column ids are mechanical; source headers are data, not identifiers. | staging area of the trial |
+| **Reveal** | Staging: every cell stored as text with a one-character type code (empty, string, number, bool, date, formula, error). Nothing is trimmed, parsed, coerced, de-duplicated or renamed. Staging is never changed by cleaning. Blank and total rows are kept and flagged. Each row keeps its source file, sheet and exact spreadsheet row. Column ids are mechanical; source headers are data, not identifiers. | staging area of the trial |
 | **Define** | The schema is the organisation's statement of meaning. It is versioned: a change creates version N+1 and leaves N intact. An agent may propose; only a named human approves, and the system rejects approvals under an agent name. | the create-schema process |
 | **Map** | Each source cell gets a result: the target value, its status, the rule chain and the reason. Nothing is written to the record. | the trial's per-row results |
 | **Validate** | Checks run on the mapping (for example, counts, required fields, conservation). A failed check stops the run. | the verification in the routing |
@@ -131,12 +131,14 @@ handled the same way.
 
 **The create-schema gate is strict.** A draft becomes active only when all of these hold:
 
-- the file it was drafted from passes it with zero refusals;
-- every file the customer already accepted under the previous version still passes it
-  (no regression);
+- the file it was drafted from passes it with zero refusals, after cleaning (below);
+- files the customer already accepted stay accepted under the version they were accepted with.
+  A new version is not checked against them, so an amendment never blocks old files. Old files
+  are re-checked only when someone asks;
 - the draft's rules are listed in full on the ticket, not summarised, so the approver sees
   exactly what they are approving;
-- a person who is not the drafter confirms it, with their name and the reason recorded.
+- a person with access to the company's folder confirms it, with their name and the reason
+  recorded. A confirmer may be the drafter. The approver role confirms and admits.
 
 Nothing is activated by the assistant, by a timeout or by the hook.
 
@@ -174,3 +176,28 @@ ticket instead, handled as its own process:
 
 Until a company is established, its files are held outside every customer folder, and the
 held files are listed on the establishment ticket.
+
+## Cleaning: a stage of its own, driven by the schema
+
+Cleaning sits between Reveal and the trial. It is not part of staging, and it is not hidden in
+the schema check.
+
+- **Default for every text cell and every header: trim leading and trailing whitespace.** The
+  owner decided this for all sources.
+- **Other transformations are declared per field in the schema:** case (for example, upper case
+  for a part number), format (for example, a date pattern), units. A field with no declaration
+  gets only the default.
+- **Every change is recorded** against its cell: the original text, the transformed text and the
+  rule that made the change. Raw and staging are not changed.
+- **The trial runs on cleaned values.** The zero-refusal rule applies after cleaning.
+- **Headers are cleaned too.** Whitespace in a header is not significant, so a header with a
+  stray space still matches.
+
+Only a declared transformation changes a value. Nothing is guessed.
+
+## Scope notes
+
+- **Email** is not in scope yet. Collectors and mail routing are designed later, when a real
+  mailbox exists.
+- **Schemas can be amended.** An amendment is a new version. Files accepted under an earlier
+  version keep that version (see the gate above).
