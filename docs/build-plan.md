@@ -100,9 +100,9 @@ fields). Each is a yes, a change, or a different answer.
 | Q2 | Plan only | Polling is the planned hook mechanism. Not built now; the hook's first version is manual trigger. |
 | Q3 | Yes | `openpyxl`, read-only, pinned. |
 | Q4 | Yes, Excel only | Only Excel is supported. OCR and PDF are a later question, decided when they are implemented. |
-| Q5 | Yes, with a change of meaning | The wrong-file check is: the file's headers must match the schema of the company it is filed under. Sender identity is not used for now. |
+| Q5 | Yes, with a change of meaning. Sender identity is optional: a file dragged into a folder has no sender, and the process is the same. | The wrong-file check is: the file's headers must match the schema of the company it is filed under. Sender identity is not used for now. |
 | Q6 | Open | One test company exists, so one ticket per file is enough. Grouping waits for real cases. |
-| Q7 | Not required | The confirmer may be the drafter. The gate still needs a named person and a recorded reason. |
+| Q7 | Not required | The confirmer may be the drafter. The gate still needs a named person and a recorded reason. Roles: a worker drafts, an approver (manager) confirms; one person may hold both. |
 | Q8 | Yes | No mail collector in the demo. |
 | Q9 | Yes | Demo runs locally, repository private. |
 | Q10 | No preference: Python 3.11 | Target 3.11, the version installed here. `pyproject.toml` changes to `requires-python = ">=3.11"`. |
@@ -113,7 +113,7 @@ fields). Each is a yes, a change, or a different answer.
 | Q15 | Yes | Five exception types as listed. |
 | Q16 | Deferred | Demo uses one customer. The shared item master question waits for the first pilot. |
 | Q17 | Yes, tuned later | The threshold is a placeholder until real data exists. The assistant proposes tuning values from the data; a person approves them. |
-| Q18 | Yes | Identity stays a principle. |
+| Q18 | Yes, with roles | Identity stays a principle for the real environment. The demo uses two Subroutine roles: approver and worker. |
 | Q19 | Yes | The import research pass runs before the trial and the create-schema gate are designed. |
 
 **On Python.** Never moving off 3.11 has no immediate cost: 3.11 receives security fixes into

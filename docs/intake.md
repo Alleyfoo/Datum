@@ -72,7 +72,8 @@ schema or the product data.
 ## What happens to an arriving file
 
 A file that arrives for a known customer goes into that customer's `inbox/` and opens a
-ticket. A folder hook detects the arrival: a trigger module that fires when a file is
+ticket. The file may arrive by a collector or be dragged into the folder by a person. The process is
+the same either way: the sender is recorded if it is known, and it is not needed for the trial. A folder hook detects the arrival: a trigger module that fires when a file is
 created in an `inbox/` folder and does nothing else. On each arrival the hook:
 
 1. waits until the file is complete (a partly written file is not processed);
@@ -83,6 +84,10 @@ created in an `inbox/` folder and does nothing else. On each arrival the hook:
    by the result (below).
 
 Staging writes nothing to `extracts/`, the schema or product data.
+
+**Roles in the ticket.** A worker processes the ticket and may draft a schema or a disposition.
+An approver confirms a schema and admits data. The same person may hold both roles, as the owner
+decided; the record still names who drafted and who confirmed.
 
 **Routing by the hook's trial.**
 

@@ -125,6 +125,12 @@ Decided by the owner, 2026-10-08:
 - **Storage:** SQLite for state; files for raw, staging and extracts. Excel is the only supported
   format for now; OCR and PDF are decided when they are implemented.
 - **Wrong-file check:** a file's headers must match the schema of the company it is filed under.
+- **Roles come from Subroutine.** Two roles for the demo: *approver* (manager: confirms schemas,
+  decides dispositions and admissions) and *worker* (processes tickets and drafts). Role
+  assignment in Subroutine is the demo's access model; a real environment's identity is still open.
+- **Sender identity is optional.** A file can be dragged into a customer folder with no sender
+  known. The process is the same either way: the trial, the ticket and the disposition do not
+  depend on where the file came from. The sender is recorded when it exists.
 - **Python:** 3.11 is the target.
 - **Demo:** one customer, local, private repository, connected through MCP. Identity and the mail
   collector are left out of the demo. Unit conversion and multi-warehouse optimisation wait.

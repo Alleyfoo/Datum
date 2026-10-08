@@ -103,7 +103,7 @@ found, so it can be reproduced before it is fixed.
 | P3 | OCR engine and which document kinds it covers | PDFs and scans cannot be imported without it. Prefer a local, self-hosted tool, per the owner's convention | Which document kinds come first? |
 | P4 | Forecast methods per demand group, and the evaluation rule | The per-group decision is made; the methods are not | Which groups, which methods? |
 | P5 | Anomaly thresholds: what is unusual enough to open an analysis ticket | Drives C15 | What is the threshold, per part and per customer? |
-| P6 | Identity-scoped access. Open: the environment is not known yet. Kept as a design principle. | Blocks C12, C22, C24 only | Which environment will this run in? |
+| P6 | Identity-scoped access. Demo: two Subroutine roles (approver, worker). Real environment: still open. | Blocks C24 and real-environment access only | Which environment will this run in? |
 | P7 | Who approves a new customer folder and a new schema: one person or two | Sets the approver rule in C8 and C11 | Same person or two? |
 | P8 | Customer layout: pilot size, shared part numbers, who reads a folder | Decides whether the item master is one table | See [customer-layout.md](customer-layout.md#open-questions-for-the-owner) |
 | P9 | Mailbox collector: which account, what it may read, what it may write | Mail is the first collector | Which mailbox, which folder? |
