@@ -11,8 +11,8 @@ Starting one opens it at once, which hands it to the agent working the call: cla
 - each check run on a drafted answer;
 - the proposed reply, through the approval queue (C6). Nothing is sent: an approver decides.
 
-The domain pack supplies the subject, the facts and the texts; this module keeps them and draws
-the receipt. It knows no domain, calls no model and reads no clock of its own.
+The domain pack supplies the subject, the facts and the texts; this module keeps them, pages the
+questions and draws the receipt. It knows no domain, calls no model and reads no clock of its own.
 """
 
 from __future__ import annotations
@@ -27,6 +27,8 @@ from . import queue
 from .store import Store, require
 
 TYPE = "consultation"
+#: questions shown per page; the open questions are always counted over all of them
+PAGE = 20
 #: the ticket statuses a person searches by (build-plan section 12), as the store keeps them
 STATUSES = {"open": ("open",), "in_progress": ("in_progress",), "closed": ("done",)}
 #: the store's statuses in the words a person reads
@@ -168,6 +170,23 @@ def tickets(store: Store, status: str) -> List[dict]:
     return [item for item in store.items("task") if item["status"] in STATUSES[status]]
 
 
+def view(store: Store, number: int, offset: int = 0, limit: int = PAGE) -> dict:
+    """One consultation with a page of its questions.
+
+    The open and the answered questions are taken from all the questions, never from the page:
+    the lab's get_case took them from the paged slice, so an open question on another page went
+    missing (backlog C13).
+    """
+    require(type(offset) is int and offset >= 0 and type(limit) is int and 1 <= limit <= PAGE,
+            "invalid_argument", f"offset must be 0 or more and limit 1 to {PAGE}")
+    item = get(store, number)
+    questions = item["data"]["questions"]
+    return {"item": item, "questions": questions[offset:offset + limit], "offset": offset,
+            "total": len(questions), "next_offset": offset + limit if offset + limit < len(questions) else None,
+            "open_questions": [q for q in questions if q["status"] == "open"],
+            "answered_questions": [q for q in questions if q["status"] == "answered"]}
+
+
 # -- text --------------------------------------------------------------------------------
 
 #: receipts and cards are wrapped to this width, so a chat shows them as drawn
@@ -235,6 +254,50 @@ def holder(item: dict) -> str:
     return f", with {item['claimed_by']}" if item["status"] == "in_progress" and item["claimed_by"] else ""
 
 
+def _question_line(q: dict) -> str:
+    if q["status"] == "open":
+        state = f"open: waits for the person: {q['ask']}"
+    elif "facts" in q:
+        state = f"answered: {q['rule']}"
+    else:
+        state = f"was waiting for the person: {q['ask']}; answered in {q['answered_in']}"
+    return f"{q['n']:>4}  {q['title']}  ·  {state}"
+
+
+def view_text(page: dict) -> str:
+    """A consultation as a card: who has it, the person's answers, a page of questions, the open
+    questions of all, the checks and the reply."""
+    item = page["item"]
+    data = item["data"]
+    out = [f"#{item['number']} consultation · {SHOWN[item['status']]}{holder(item)}", item["title"]]
+    person = [(name, f"{fact['text']}, answered by {fact['by']}") for name, fact in data["person"].items()]
+    out += ["", lines_text(person, "From the person") if person else "From the person: nothing yet"]
+    shown = page["questions"]
+    if shown:
+        first, last = page["offset"] + 1, page["offset"] + len(shown)
+        out += ["", f"Questions {first}-{last} of {page['total']}"
+                + (f" (next page from {page['next_offset'] + 1})" if page["next_offset"] is not None else "")]
+        out += [_question_line(q) for q in shown]
+    else:
+        out += ["", f"Questions: none on this page ({page['total']} in all)"]
+    waiting = page["open_questions"]
+    out.append(f"Open questions, of all {page['total']}: "
+               + (", ".join(f"{q['n']} ({q['ask']})" for q in waiting) if waiting else "none"))
+    ran = data["checks"]
+    out.append("Checks: " + (f"{len(ran)} run; the last " + ("passed" if ran[-1]["ok"] else "failed")
+                             if ran else "none run"))
+    out.append("Reply: " + _approval(item))
+    return "\n".join(out)
+
+
 def ticket_line(item: dict) -> str:
     """One ticket in a list: number, type, title, status and who has it."""
     return f"#{item['number']:<4} {item['type']:<13} {item['title']}  ·  {SHOWN[item['status']]}{holder(item)}"
+
+
+def ticket_card(store: Store, item: dict) -> str:
+    """A ticket shown on its own: a consultation as its card, any other ticket by its lines."""
+    if item["type"] == TYPE:
+        return view_text(view(store, item["number"]))
+    return "\n".join([f"#{item['number']} {item['type']} · {SHOWN[item['status']]}{holder(item)}",
+                      item["title"], *([item["body"]] if item["body"] else [])])

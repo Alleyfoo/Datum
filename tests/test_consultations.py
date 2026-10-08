@@ -1,5 +1,5 @@
 """Consultations as tickets: one per call, opened to an agent, released back to open, every write
-attributed."""
+attributed; questions paged, with the open ones counted over all of them."""
 
 import pytest
 
@@ -79,6 +79,28 @@ def test_a_question_waits_for_the_person_and_is_answered_when_asked_again(store)
     assert (first["status"], first["answered_in"]) == ("answered", 2)
     assert second["from_person"] == ["machine stopped: yes (breakdown), answered by ville"]
     assert cons.latest_answer(item) == second
+
+
+def test_open_questions_are_counted_over_all_questions_not_the_page(store):
+    # backlog C13: the lab's get_case took open questions from the paged slice
+    number = _start(store)
+    cons.ask_person(store, number, "ville", "Availability", "Availability of P-1 for M-1",
+                    waiting_for="stopped", ask="Has M-1 stopped?")
+    for _ in range(23):
+        _answer(store, number)
+    cons.ask_person(store, number, "ville", "Service demand", "Service demand for M-1",
+                    waiting_for="machine", ask="Which machine?")
+    first, second = cons.view(store, number), cons.view(store, number, offset=cons.PAGE)
+    assert ([q["n"] for q in first["questions"]], first["next_offset"]) == (list(range(1, 21)), 20)
+    assert ([q["n"] for q in second["questions"]], second["next_offset"]) == (list(range(21, 26)), None)
+    for page in (first, second):
+        assert [q["n"] for q in page["open_questions"]] == [1, 25]
+        assert len(page["answered_questions"]) == 23 and page["total"] == 25
+    # what the paged slice alone would have said: each page misses an open question
+    assert [q["n"] for q in first["questions"] if q["status"] == "open"] == [1]
+    assert [q["n"] for q in second["questions"] if q["status"] == "open"] == [25]
+    assert "Open questions, of all 25: 1 (Has M-1 stopped?), 25 (Which machine?)" in cons.view_text(second)
+    assert _code(cons.view, store, number, limit=cons.PAGE + 1) == "invalid_argument"
 
 
 def test_a_proposed_reply_waits_for_an_approver_and_nothing_is_sent(store):
