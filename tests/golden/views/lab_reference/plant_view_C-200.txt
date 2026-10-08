@@ -1,0 +1,9 @@
+Power plant customer · CHP plant, Western Sweden              Fri 2026-10-02
+
+ #  AREA         MACHINE                           CRIT  STATUS
+ 1  Reception    FR-01  Fuel reception conveyor    A     ●
+ 2  Screening    SC-11  Fuel screen screw          B     ▲  low: SP-1601 (0 of 4)
+ 3  Storage      BC-11  Silo feed conveyor         A     ●
+ 4  Boiler feed  BC-12  Boiler feed conveyor       A     ●
+
+● covered   ▲ low   ✖ none in stock   ? no parts list

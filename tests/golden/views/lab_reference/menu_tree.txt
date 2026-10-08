@@ -1,0 +1,191 @@
+[
+  (
+    'Finland',
+    [
+      (
+        'C-100',
+        'Sawmill customer',
+        [
+          (
+            1,
+            'BC-01',
+            'Bark conveyor',
+            'critical',
+            [
+              ('a', 'SP-1001', 'Conveyor belt EP630/4, 800 mm, per m', False, 'ok'),
+              ('b', 'SP-1101', 'Carrying idler 3-roll set, 800 mm', False, 'ok'),
+              ('c', 'SP-1201', 'Drive pulley, lagged, 500 mm', True, 'critical'),
+              ('d', 'SP-1301', 'Spherical roller bearing 22216', True, 'ok'),
+              ('e', 'SP-1401', 'Primary belt scraper blade, 800 mm', False, 'ok'),
+              ('f', 'SP-1501', 'Helical bevel gearbox, 15 kW', True, 'critical'),
+            ],
+          ),
+          (
+            2,
+            'CR-01',
+            'Bark crusher',
+            'critical',
+            [
+              ('a', 'SP-1801', 'Crusher hammer set', True, 'ok'),
+              ('b', 'SP-1303', 'Spherical roller bearing 22220', True, 'critical'),
+            ],
+          ),
+          (
+            3,
+            'BC-02',
+            'Crusher discharge conveyor',
+            'low',
+            [
+              ('a', 'SP-1002', 'Conveyor belt EP800/4, 1000 mm, per m', False, 'ok'),
+              ('b', 'SP-1104', 'Impact idler set, 1000 mm', False, 'low'),
+              ('c', 'SP-1203', 'Drive pulley, lagged, 630 mm', True, 'ok'),
+              ('d', 'SP-1301', 'Spherical roller bearing 22216', True, 'ok'),
+              ('e', 'SP-1402', 'Primary belt scraper blade, 1000 mm', False, 'ok'),
+              ('f', 'SP-1502', 'Electric motor 15 kW IE3', True, 'ok'),
+            ],
+          ),
+          (
+            4,
+            'SC-01',
+            'Screen feed screw',
+            'low',
+            [
+              ('a', 'SP-1601', 'Screw flight section, 400 mm', False, 'low'),
+            ],
+          ),
+          (
+            5,
+            'BC-03',
+            'Chip return conveyor',
+            'ok',
+            [
+              ('a', 'SP-1001', 'Conveyor belt EP630/4, 800 mm, per m', False, 'ok'),
+              ('b', 'SP-1102', 'Return idler, 800 mm', False, 'ok'),
+              ('c', 'SP-1202', 'Tail pulley, 400 mm', False, 'ok'),
+              ('d', 'SP-1301', 'Spherical roller bearing 22216', True, 'ok'),
+            ],
+          ),
+          (
+            6,
+            'BC-04',
+            'Stockpile conveyor',
+            'ok',
+            [
+              ('a', 'SP-1001', 'Conveyor belt EP630/4, 800 mm, per m', False, 'ok'),
+              ('b', 'SP-1503', 'Flexible coupling, size 5', True, 'ok'),
+            ],
+          ),
+          (
+            7,
+            'BE-01',
+            'Boiler feed elevator',
+            'low',
+            [
+              ('a', 'SP-1701', 'Elevator bucket, 300 mm', False, 'low'),
+            ],
+          ),
+          (
+            8,
+            'BC-05',
+            'Boiler day-bin conveyor',
+            'ok',
+            [
+              ('a', 'SP-1001', 'Conveyor belt EP630/4, 800 mm, per m', False, 'ok'),
+              ('b', 'SP-1401', 'Primary belt scraper blade, 800 mm', False, 'ok'),
+              ('c', 'SP-1301', 'Spherical roller bearing 22216', True, 'ok'),
+            ],
+          ),
+        ],
+      ),
+      (
+        'C-300',
+        'Pulp mill customer',
+        [
+          (
+            9,
+            'CH-01',
+            'Chip unloading conveyor',
+            'ok',
+            [
+              ('a', 'SP-1002', 'Conveyor belt EP800/4, 1000 mm, per m', False, 'ok'),
+              ('b', 'SP-1402', 'Primary belt scraper blade, 1000 mm', False, 'ok'),
+            ],
+          ),
+          (
+            10,
+            'CH-02',
+            'Chip pile reclaim screw',
+            'critical',
+            [
+              ('a', 'SP-1601', 'Screw flight section, 400 mm', True, 'critical'),
+              ('b', 'SP-1502', 'Electric motor 15 kW IE3', True, 'ok'),
+            ],
+          ),
+          (
+            11,
+            'CH-03',
+            'Digester feed conveyor',
+            'ok',
+            [
+              ('a', 'SP-1002', 'Conveyor belt EP800/4, 1000 mm, per m', False, 'ok'),
+              ('b', 'SP-1203', 'Drive pulley, lagged, 630 mm', True, 'ok'),
+              ('c', 'SP-1301', 'Spherical roller bearing 22216', True, 'ok'),
+            ],
+          ),
+        ],
+      ),
+    ],
+  ),
+  (
+    'Sweden',
+    [
+      (
+        'C-200',
+        'Power plant customer',
+        [
+          (
+            12,
+            'FR-01',
+            'Fuel reception conveyor',
+            'ok',
+            [
+              ('a', 'SP-1002', 'Conveyor belt EP800/4, 1000 mm, per m', False, 'ok'),
+              ('b', 'SP-1301', 'Spherical roller bearing 22216', True, 'ok'),
+              ('c', 'SP-1402', 'Primary belt scraper blade, 1000 mm', False, 'ok'),
+            ],
+          ),
+          (
+            13,
+            'SC-11',
+            'Fuel screen screw',
+            'low',
+            [
+              ('a', 'SP-1601', 'Screw flight section, 400 mm', False, 'low'),
+            ],
+          ),
+          (
+            14,
+            'BC-11',
+            'Silo feed conveyor',
+            'ok',
+            [
+              ('a', 'SP-1002', 'Conveyor belt EP800/4, 1000 mm, per m', False, 'ok'),
+              ('b', 'SP-1203', 'Drive pulley, lagged, 630 mm', True, 'ok'),
+              ('c', 'SP-1301', 'Spherical roller bearing 22216', True, 'ok'),
+            ],
+          ),
+          (
+            15,
+            'BC-12',
+            'Boiler feed conveyor',
+            'ok',
+            [
+              ('a', 'SP-1001', 'Conveyor belt EP630/4, 800 mm, per m', False, 'ok'),
+              ('b', 'SP-1503', 'Flexible coupling, size 5', True, 'ok'),
+            ],
+          ),
+        ],
+      ),
+    ],
+  ),
+]

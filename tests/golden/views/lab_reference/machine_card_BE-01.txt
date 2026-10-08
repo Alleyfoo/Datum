@@ -1,0 +1,6 @@
+BE-01 Boiler feed elevator · bucket elevator · criticality A
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1701  Elevator bucket, 300 mm              60   40    0  ▲  due 2026-12-02
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list

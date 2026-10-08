@@ -1,0 +1,7 @@
+BC-04 Stockpile conveyor · belt conveyor · criticality B
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1001  Conveyor belt EP630/4, 800 mm,…       9   60    0  ●
+ 2  SP-1503  Flexible coupling, size 5 ★           1    2    2  ●
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list

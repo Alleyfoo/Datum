@@ -1,0 +1,8 @@
+line_status('SP-1001', 18, False) = 'ok'
+line_status('SP-1301', 4, True) = 'ok'
+line_status('SP-1203', 1, True) = 'ok'
+line_status('SP-1104', 4, False) = 'low'
+line_status('SP-1601', 3, False) = 'low'
+line_status('SP-1301', 10, True) = 'low'
+line_status('SP-1201', 1, True) = 'critical'
+line_status('SP-1201', 0, False) = 'ok'

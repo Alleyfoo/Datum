@@ -1,0 +1,45 @@
+<style>
+.dk{font-size:14px;padding:.5rem 0}
+.dk h3{margin:14px 0 6px;font-size:15px;font-weight:500}
+.dk .co{font-size:14px;margin:12px 0 2px;color:var(--text-primary)}
+.dk .cu{font-size:13px;color:var(--text-secondary);margin:6px 0}
+.dk .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.dk .c{border:0.5px solid var(--border);border-radius:12px;padding:10px 12px;background:var(--surface-2);cursor:pointer;text-align:left;font:inherit;color:var(--text-primary);display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.dk .c:hover{border-color:var(--border-strong)}
+.dk .c.on{border:1.5px solid var(--border-accent);background:var(--bg-accent)}
+.dk .s{font-size:12px;color:var(--text-secondary);font-family:var(--font-mono)}
+.dk .p{font-size:12px;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.dk .ok{background:var(--bg-success);color:var(--text-success)}.dk .low{background:var(--bg-warning);color:var(--text-warning)}.dk .critical{background:var(--bg-danger);color:var(--text-danger)}.dk .unknown{background:var(--surface-1);color:var(--text-secondary)}
+.dk .bar{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dk .go{font:inherit;padding:8px 18px;border-radius:var(--radius);border:0.5px solid var(--border-accent);background:var(--bg-accent);color:var(--text-accent);cursor:pointer}
+.dk .go:disabled{opacity:.4;cursor:default}
+</style>
+<div class="dk">
+<h2 class="sr-only">Spare parts desk: pick a machine, a part and a question, then ask.</h2>
+<h3>Which machine?</h3>
+<div id="dkM"></div><div id="dkP"></div><div id="dkQ"></div>
+<div class="bar"><button type="button" class="go" id="dkGo" disabled>Ask the desk</button><span class="s" id="dkCode"></span></div>
+</div>
+<script>
+const D=[["Finland",[["Sawmill customer","C-100",[[1,"BC-01","Bark conveyor","critical",[["a","SP-1001","Conveyor belt EP630/4, 800 mm, per m",false,"ok"],["b","SP-1101","Carrying idler 3-roll set, 800 mm",false,"ok"],["c","SP-1201","Drive pulley, lagged, 500 mm",true,"critical"],["d","SP-1301","Spherical roller bearing 22216",true,"ok"],["e","SP-1401","Primary belt scraper blade, 800 mm",false,"ok"],["f","SP-1501","Helical bevel gearbox, 15 kW",true,"critical"]]],[2,"CR-01","Bark crusher","critical",[["a","SP-1801","Crusher hammer set",true,"ok"],["b","SP-1303","Spherical roller bearing 22220",true,"critical"]]],[3,"BC-02","Crusher discharge conveyor","low",[["a","SP-1002","Conveyor belt EP800/4, 1000 mm, per m",false,"ok"],["b","SP-1104","Impact idler set, 1000 mm",false,"low"],["c","SP-1203","Drive pulley, lagged, 630 mm",true,"ok"],["d","SP-1301","Spherical roller bearing 22216",true,"ok"],["e","SP-1402","Primary belt scraper blade, 1000 mm",false,"ok"],["f","SP-1502","Electric motor 15 kW IE3",true,"ok"]]],[4,"SC-01","Screen feed screw","low",[["a","SP-1601","Screw flight section, 400 mm",false,"low"]]],[5,"BC-03","Chip return conveyor","ok",[["a","SP-1001","Conveyor belt EP630/4, 800 mm, per m",false,"ok"],["b","SP-1102","Return idler, 800 mm",false,"ok"],["c","SP-1202","Tail pulley, 400 mm",false,"ok"],["d","SP-1301","Spherical roller bearing 22216",true,"ok"]]],[6,"BC-04","Stockpile conveyor","ok",[["a","SP-1001","Conveyor belt EP630/4, 800 mm, per m",false,"ok"],["b","SP-1503","Flexible coupling, size 5",true,"ok"]]],[7,"BE-01","Boiler feed elevator","low",[["a","SP-1701","Elevator bucket, 300 mm",false,"low"]]],[8,"BC-05","Boiler day-bin conveyor","ok",[["a","SP-1001","Conveyor belt EP630/4, 800 mm, per m",false,"ok"],["b","SP-1401","Primary belt scraper blade, 800 mm",false,"ok"],["c","SP-1301","Spherical roller bearing 22216",true,"ok"]]]]],["Pulp mill customer","C-300",[[9,"CH-01","Chip unloading conveyor","ok",[["a","SP-1002","Conveyor belt EP800/4, 1000 mm, per m",false,"ok"],["b","SP-1402","Primary belt scraper blade, 1000 mm",false,"ok"]]],[10,"CH-02","Chip pile reclaim screw","critical",[["a","SP-1601","Screw flight section, 400 mm",true,"critical"],["b","SP-1502","Electric motor 15 kW IE3",true,"ok"]]],[11,"CH-03","Digester feed conveyor","ok",[["a","SP-1002","Conveyor belt EP800/4, 1000 mm, per m",false,"ok"],["b","SP-1203","Drive pulley, lagged, 630 mm",true,"ok"],["c","SP-1301","Spherical roller bearing 22216",true,"ok"]]]]]]],["Sweden",[["Power plant customer","C-200",[[12,"FR-01","Fuel reception conveyor","ok",[["a","SP-1002","Conveyor belt EP800/4, 1000 mm, per m",false,"ok"],["b","SP-1301","Spherical roller bearing 22216",true,"ok"],["c","SP-1402","Primary belt scraper blade, 1000 mm",false,"ok"]]],[13,"SC-11","Fuel screen screw","low",[["a","SP-1601","Screw flight section, 400 mm",false,"low"]]],[14,"BC-11","Silo feed conveyor","ok",[["a","SP-1002","Conveyor belt EP800/4, 1000 mm, per m",false,"ok"],["b","SP-1203","Drive pulley, lagged, 630 mm",true,"ok"],["c","SP-1301","Spherical roller bearing 22216",true,"ok"]]],[15,"BC-12","Boiler feed conveyor","ok",[["a","SP-1001","Conveyor belt EP630/4, 800 mm, per m",false,"ok"],["b","SP-1503","Flexible coupling, size 5",true,"ok"]]]]]]]];
+const L={ok:'covered',low:'low',critical:'none in stock',unknown:'no parts list'};
+const Q=[['B','Availability','machine stopped'],['P','Availability','planned service'],['L','Lead time','when can it arrive'],['S','Service demand','whole machine']];
+const st={m:null,p:null,q:null},$=i=>document.getElementById(i);
+const pill=s=>`<span class="p ${s}">${L[s]}</span>`;
+const card=(on,attr,top,main,s)=>`<button type="button" class="c${on?' on':''}" ${attr}><span><span class="s">${top}</span><br>${main}</span>${s?pill(s):''}</button>`;
+function code(){if(!st.m||!st.q)return'';if(st.q==='S')return st.m[0]+' S';return st.p?st.m[0]+st.p+' '+st.q:''}
+function draw(){
+let h='';for(const[co,firms]of D){h+=`<div class="co">${co}</div>`;for(const[name,cid,ms]of firms){h+=`<div class="cu">${name} (${cid})</div><div class="g">`;for(const m of ms)h+=card(st.m&&st.m[0]===m[0],`data-m="${m[0]}"`,`${m[0]} · ${m[1]}`,m[2],m[3]);h+='</div>'}}
+$('dkM').innerHTML=h;
+let p='';if(st.m&&st.q!=='S'&&st.m[4].length){p=`<h3>Which part on ${st.m[1]}?</h3><div class="g">`;for(const x of st.m[4])p+=card(st.p===x[0],`data-p="${x[0]}"`,`${x[0]} · ${x[1]}${x[3]?' · critical':''}`,x[2],x[4]);p+='</div>'}
+$('dkP').innerHTML=p;
+let q='';if(st.m){q='<h3>What does the customer ask?</h3><div class="g">';for(const[k,a,b]of Q)if(st.m[4].length||k==='S')q+=card(st.q===k,`data-q="${k}"`,b,a,'');q+='</div>'}
+$('dkQ').innerHTML=q;
+const c=code();$('dkCode').textContent=c?'code: '+c:'';$('dkGo').disabled=!c;
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{for(const[,f]of D)for(const[,,ms]of f)for(const m of ms)if(m[0]==b.dataset.m)st.m=m;st.p=st.m[4].length===1?'a':null;if(!st.m[4].length)st.q='S';draw()});
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{st.p=b.dataset.p;draw()});
+document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{st.q=b.dataset.q;draw()});
+}
+$('dkGo').onclick=()=>{const c=code();if(!c)return;if(typeof sendPrompt==='function')sendPrompt(c);else $('dkCode').textContent='Type this code in the chat: '+c};
+draw();
+</script>
