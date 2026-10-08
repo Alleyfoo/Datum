@@ -1,35 +1,10 @@
 import sqlite3
-from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from babel.record.store import RecordError, Store, agent_like
+from babel.record.store import RecordError, agent_like
 
-
-class Clock:
-    def __init__(self):
-        self.at = datetime(2026, 10, 8, 9, 0, tzinfo=timezone.utc)
-
-    def __call__(self):
-        return self.at
-
-    def advance(self, **delta):
-        self.at += timedelta(**delta)
-
-
-@pytest.fixture
-def clock():
-    return Clock()
-
-
-@pytest.fixture
-def store(tmp_path, clock):
-    s = Store(tmp_path / "state" / "babel.sqlite", clock=clock)
-    s.add_user("anna", ["approver"])
-    s.add_user("ville", ["worker"])
-    s.add_user("pia", ["approver", "worker"])
-    s.add_user("hook", kind="service")
-    return s
+# the clock and store fixtures are in conftest.py
 
 
 def _code(call, *args, **kwargs):

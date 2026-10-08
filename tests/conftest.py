@@ -1,10 +1,13 @@
 import io
 import re
 import zipfile
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 from openpyxl import Workbook
+
+from babel.record.store import Store
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -15,6 +18,35 @@ def data_root(tmp_path):
     root = tmp_path / "data"
     (root / "customers" / "C-100").mkdir(parents=True)
     return root
+
+
+class Clock:
+    """A clock the test moves by hand, so leases run out when the test says so."""
+
+    def __init__(self):
+        self.at = datetime(2026, 10, 8, 9, 0, tzinfo=timezone.utc)
+
+    def __call__(self):
+        return self.at
+
+    def advance(self, **delta):
+        self.at += timedelta(**delta)
+
+
+@pytest.fixture
+def clock():
+    return Clock()
+
+
+@pytest.fixture
+def store(tmp_path, clock):
+    """A record with an approver (anna), a worker (ville), one person holding both (pia) and the hook."""
+    s = Store(tmp_path / "state" / "babel.sqlite", clock=clock)
+    s.add_user("anna", ["approver"])
+    s.add_user("ville", ["worker"])
+    s.add_user("pia", ["approver", "worker"])
+    s.add_user("hook", kind="service")
+    return s
 
 
 @pytest.fixture

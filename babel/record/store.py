@@ -288,8 +288,12 @@ class Store:
         return number
 
     def update(self, db, number: int, actor: str, *, role: Optional[str] = None,
-               expected_version: Optional[int] = None, action: str = "updated", **fields) -> dict:
-        """Change fields of an item inside an open transaction; one journal entry per call."""
+               expected_version: Optional[int] = None, action: str = "updated",
+               note: Optional[dict] = None, **fields) -> dict:
+        """Change fields of an item inside an open transaction; one journal entry per call.
+
+        `note` adds details to that entry, such as the reason a person gave.
+        """
         item = self._item(db, number)
         require(expected_version is None or expected_version == item["version"], "version_conflict",
                 f"#{number} is at version {item['version']}, not {expected_version}")
@@ -299,13 +303,15 @@ class Store:
             statuses = TASK_STATUSES if item["kind"] == "task" else ("current",)
             require(fields["status"] in statuses, "invalid_status", f"status must be one of {statuses}")
         changes = {k: v for k, v in fields.items() if v != item[k]}
-        if not changes:
+        if not changes and not note:
             return item
-        columns = {k: (_encode(v) if k == "data" else v) for k, v in changes.items()}
-        assignments = ", ".join(f"{k}=?" for k in columns)
-        db.execute(f"UPDATE items SET {assignments}, updated_at=?, version=version+1 WHERE number=?",
-                   (*columns.values(), self.now(), number))
-        details = {k: {"before": item[k], "after": v} for k, v in changes.items() if k != "data"}
+        if changes:
+            columns = {k: (_encode(v) if k == "data" else v) for k, v in changes.items()}
+            assignments = ", ".join(f"{k}=?" for k in columns)
+            db.execute(f"UPDATE items SET {assignments}, updated_at=?, version=version+1 WHERE number=?",
+                       (*columns.values(), self.now(), number))
+        details = dict(note or {})
+        details.update({k: {"before": item[k], "after": v} for k, v in changes.items() if k != "data"})
         if "data" in changes:
             details["data"] = sorted(k for k in set(item["data"]) | set(changes["data"])
                                      if item["data"].get(k) != changes["data"].get(k))
