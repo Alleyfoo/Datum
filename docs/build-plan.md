@@ -155,3 +155,13 @@ Previous wording, kept for reference: roles come from the Windows profile. A man
 The approver and worker roles are mapped from the profile. Subroutine's role model is removed from the
 design. A stricter role model may be needed later for regulated goods (for example medicines or
 chemicals); it is not needed for spare parts or furniture.
+
+## 10. Ticket state on open
+
+| ID | Answer | What it means |
+|---|---|---|
+| T-open | Opening a ticket sets it to `in_progress` | When a person opens an open ticket, its status becomes `in_progress`, and the log records who opened it and when. Opening a ticket that is already `in_progress` changes nothing. |
+
+Not yet decided: whether a ticket returns to `open` when its last person closes it without a decision, and
+whether merely viewing a ticket counts as opening it. Until decided, opening means the person worked it
+from the ticket view.
