@@ -136,6 +136,20 @@ def test_two_requests_on_one_line_and_day_keep_their_own_issues_in_either_order(
             ("MV-00001", "RQ-0001", -1), ("MV-00002", "RQ-0002", -3)]
 
 
+def test_two_receipts_on_one_line_and_day_each_point_to_their_own_delivery():
+    # B3: the delivery was found by (part, warehouse, date), so both receipts pointed to the first one
+    day = date(2026, 6, 1)
+    for offered in ([(day, 3), (day, 5)], [(day, 5), (day, 3)]):
+        deliveries, movements = ledger({("SP-X", "FI"): 10}, [], {("SP-X", "FI"): offered})
+        assert [(d["delivery_id"], d["qty"], d["delivered_on"]) for d in deliveries] == [
+            ("DL-0001", 3, day), ("DL-0002", 5, day)]
+        assert [(m["kind"], m["source"], m["qty"], m["occurred_on"]) for m in movements] == [
+            ("receipt", "DL-0001", 3, day), ("receipt", "DL-0002", 5, day)]
+        tables = {"stock_level": [{"part_no": "SP-X", "warehouse": "FI", "on_hand": 10}],
+                  "request": [], "delivery": deliveries, "stock_movement": movements}
+        assert conservation(tables) == []
+
+
 def _build_on(monkeypatch, held, history=None):
     """Run build() on one snapshot object the test keeps hold of."""
     monkeypatch.setattr(world_module, "snapshot", lambda: held)

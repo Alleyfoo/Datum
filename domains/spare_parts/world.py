@@ -207,10 +207,11 @@ def ledger(stock: Dict[StockLine, int], requests: Iterable[dict], receipts: Rece
     """Deliveries and stock movements: each stock line replayed backwards from today's on hand.
 
     Issues add stock back, and a receipt is kept as a delivery only where the balance can cover
-    it, so the opening balance can never go negative. Every movement names its source by id: an
-    issue carries the id of the request it fills, read from the request itself, so the link does
-    not depend on the order of the requests or on any object's identity. No randomness: the same
-    input gives the same ledger.
+    it, so the opening balance can never go negative. Every movement is made from the record it
+    moves stock for and carries that record's id: an issue its request's request_id, a receipt
+    its delivery's delivery_id. Nothing is looked up afterwards by object identity, list order,
+    or (part, warehouse, date), so two receipts of one line on one day each keep their own
+    delivery. No randomness: the same input gives the same ledger.
     """
     requests = list(requests)
     deliveries: List[dict] = []
@@ -231,31 +232,19 @@ def ledger(stock: Dict[StockLine, int], requests: Iterable[dict], receipts: Rece
                 balance += -qty  # walking back in time, an issue had taken stock out
             elif balance - qty >= 0:
                 balance -= qty  # walking back, a receipt had put stock in
-                movements.append({"part_no": part_no, "warehouse": wh, "qty": qty, "kind": "receipt",
-                                  "occurred_on": day, "source": None})
                 deliveries.append({"part_no": part_no, "warehouse": wh, "qty": qty, "delivered_on": day})
 
-    # ids are assigned in date order, after the ledger is complete
-    deliveries.sort(key=lambda d: (d["delivered_on"], d["part_no"], d["warehouse"]))
+    # ids are assigned in date order, after the ledger is complete; each delivery is then received once
+    deliveries.sort(key=lambda d: (d["delivered_on"], d["part_no"], d["warehouse"], d["qty"]))
     for n, d in enumerate(deliveries, start=1):
         d["delivery_id"] = f"DL-{n:04d}"
+    movements += [{"part_no": d["part_no"], "warehouse": d["warehouse"], "qty": d["qty"], "kind": "receipt",
+                   "occurred_on": d["delivered_on"], "source": d["delivery_id"]} for d in deliveries]
 
-    # issues of one line on one day are ordered by their request ids, so no list order decides a movement id
+    # movements of one kind on one line and day are ordered by their sources' ids, not by any list order
     movements.sort(key=lambda m: (m["occurred_on"], m["part_no"], m["warehouse"], m["kind"] == "issue",
-                                  m["source"] or ""))
-    delivery_by_key = {}
-    for d in deliveries:
-        delivery_by_key.setdefault((d["part_no"], d["warehouse"], d["delivered_on"]), d["delivery_id"])
-    rows = []
-    for n, m in enumerate(movements, start=1):
-        if m["kind"] == "issue":
-            source_id = m["source"]
-        else:
-            source_id = delivery_by_key[(m["part_no"], m["warehouse"], m["occurred_on"])]
-        rows.append({"movement_id": f"MV-{n:05d}", "part_no": m["part_no"], "warehouse": m["warehouse"],
-                     "qty": m["qty"], "kind": m["kind"], "occurred_on": m["occurred_on"],
-                     "source": source_id})
-    return deliveries, rows
+                                  m["source"]))
+    return deliveries, [{"movement_id": f"MV-{n:05d}", **m} for n, m in enumerate(movements, start=1)]
 
 
 def generate_history(tables: Dict[str, List[dict]], seed: int = SEED) -> Dict[str, List[dict]]:
