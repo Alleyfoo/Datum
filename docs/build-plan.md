@@ -285,3 +285,5 @@ that offers a signed data processing agreement with documented zero retention, a
 | RD-2 | Finish everything first | No real-data run until the build and the demo are finished. |
 | RD-3 | Stays out of this repository | The file is not copied into Babel-Tower and is not read by the build. Any later run uses a copy kept outside the repositories, chosen by the owner. |
 | RD-4 | Flag: the sibling repo tracks it | `mcp-messy-data` tracks `messy-data.xlsx`, `answers.xlsx` and several fixtures in git, although its README says no real source data is committed. Whether that is a problem depends on what the file contains; the owner should check it. The sibling repo is not edited. |
+
+| RD-5 | Not used | The real workbooks are not used. The project uses synthetic data only until real data is approved. The tracking question in RD-4 is left to the owner; the sibling repo is not edited. |
