@@ -1,26 +1,37 @@
 """Cleaning: a stage of its own, between staging (Reveal) and the trial, driven by the schema.
 
 The owner's decisions (intake.md, "Cleaning: a stage of its own, driven by the schema"; build-plan
-section 7, P21 and D-clean):
+section 7, P21 and D-clean; build-plan section 20, P20):
 
+- F1, the calculation, for every source and before every other rule: a formula cell's value is
+  calculated first, and the value is then processed like any other value (P20). Nothing here
+  calculates a formula and no formula engine is used: the calculated value is the one the file
+  saved for the cell (its cached value), which staging keeps beside the row with the value's own
+  type code. The cell takes that code, so the rules below and the trial treat it as that value,
+  and the formula stays beside the row. The change is recorded with the formula as the original
+  text and the saved value as the transformed one. A formula the file saved no value for keeps
+  code f and no value: nothing is guessed, and the trial refuses it as formula_not_calculated
+  (R6). openpyxl reads an empty saved text the same as no saved value, so a formula whose result
+  is an empty text is refused the same way.
 - T1, the default for every source: leading and trailing whitespace is trimmed from every text
   cell and every header, on every sheet. A text of only whitespace becomes an empty cell and is
   handled as empty from then on: a required value is missing, an optional one is empty, and a row
   of nothing else is a blank row. A header is a text cell of its row, so a header with a stray
   space matches its declared name (P21).
-- A field may declare a transformation in the schema; a field with none gets only T1. The one
-  declaration built is case (upper or lower), numbered T2, T3, ... in column order. It is applied
-  after T1 to the text cells under the field's header, below the declared header row of the
-  declared sheet.
+- A field may declare a transformation in the schema; a field with none gets only the defaults, F1
+  and T1. The one declaration built is case (upper or lower), numbered T2, T3, ... in column order.
+  It is applied after T1 to the text cells under the field's header, below the declared header row
+  of the declared sheet.
 - Every change is recorded against its cell: sheet, row and column, the original text, the
   transformed text and the rule that made the change. A cell changed by two rules has two
   records, in the order the rules ran.
 
-Only these rules change a value; nothing is guessed. Text cells are the cells staging coded `s`;
-numbers, dates, booleans, formulas and errors are left alone, and no row or column is added or
-removed. Cleaning reads staged datasets and returns cleaned copies: staging is never written. A
-cleaned dataset keeps the staged ids and provenance, and its fingerprint is taken over the cleaned
-rows, so a dataset that cleaning left alone keeps its staged fingerprint.
+Only these rules change a value; nothing is guessed. Text cells are the cells coded `s` once F1 has
+run, so a formula that saved a text is trimmed like any text; numbers, dates, booleans, errors and
+formulas with no saved value are left alone, and no row or column is added or removed. Cleaning
+reads staged datasets and returns cleaned copies: staging is never written. A cleaned dataset keeps
+the staged ids, provenance and formulas, and its fingerprint is taken over the cleaned rows, so a
+dataset that cleaning left alone keeps its staged fingerprint.
 
 The records are stored beside staging, in customers/<company>/cleaning/<source id>/<key>/ as
 changes.jsonl and manifest.json. The key is the first 16 hex digits of the schema's digest, since
@@ -38,7 +49,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from babel.schema.headers import TRIM_RULE, Column, HeaderSchema
+from babel.schema.headers import CALCULATION_RULE, DEFAULT_RULES, TRIM_RULE, Column, HeaderSchema
 
 from .inbox import customer_dir
 from .staging import Dataset, Row, column_id, fingerprint
@@ -59,10 +70,10 @@ class Change:
     sheet: str
     row: int
     column: str
-    rule: str  # T1 (the default trim) or a field's declared rule, T2, T3, ...
-    transform: str  # trim | upper | lower
-    original: str
-    transformed: str
+    rule: str  # F1 (the calculation), T1 (the default trim) or a field's declared rule, T2, T3, ...
+    transform: str  # calculated | trim | upper | lower
+    original: str  # the text before the change; for F1, the formula
+    transformed: str  # the text after it; for F1, the value the file saved for the formula
     code: str  # the cell's type code after the change: "e" once a text is empty
 
 
@@ -107,9 +118,15 @@ def _clean(dataset: Dataset, schema: Optional[HeaderSchema]) -> Tuple[Dataset, L
     for row in dataset.rows:
         texts, codes = list(row.texts), list(row.codes)
         for i, code in enumerate(row.codes):
-            if code != "s":
-                continue
             where = (dataset.sheet, row.source_row, column_id(i + 1))
+            if code == "f":
+                formula, saved = row.formulas[where[2]]
+                if saved == "e":
+                    continue  # no saved value: nothing is calculated here, and the trial refuses it (R6)
+                codes[i] = saved  # F1: the saved value, with its own type; staging already holds its text
+                changes.append(Change(*where, CALCULATION_RULE[0], "calculated", formula, texts[i], saved))
+            if codes[i] != "s":
+                continue
             trimmed = texts[i].strip()
             if trimmed != texts[i]:
                 codes[i] = "s" if trimmed else "e"
@@ -132,7 +149,7 @@ def _clean(dataset: Dataset, schema: Optional[HeaderSchema]) -> Tuple[Dataset, L
 
 
 def clean(datasets: Sequence[Dataset], schema: Optional[HeaderSchema] = None) -> Cleaned:
-    """Clean one file's staged sheets for a schema; with no schema, only the default (T1) runs."""
+    """Clean one file's staged sheets for a schema; with no schema, only the defaults (F1, T1) run."""
     if not datasets:
         raise CleaningError("nothing_to_clean", "cleaning needs the staged sheets of one file")
     sources = {d.source_id for d in datasets}
@@ -145,7 +162,7 @@ def clean(datasets: Sequence[Dataset], schema: Optional[HeaderSchema] = None) ->
         changes += found
         prints[dataset.sheet] = {"dataset_id": dataset.dataset_id, "staged": dataset.fingerprint,
                                  "cleaned": result.fingerprint}
-    rules = schema.cleaning_rules() if schema is not None else [TRIM_RULE]
+    rules = schema.cleaning_rules() if schema is not None else list(DEFAULT_RULES)
     return Cleaned(sources.pop(), schema.digest() if schema is not None else None, tuple(rules),
                    tuple(cleaned), tuple(changes), prints)
 

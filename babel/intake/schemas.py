@@ -126,11 +126,13 @@ def current_version(db, company_id: str, file_kind: str) -> Optional[int]:
 def suggest(dataset: Dataset, header_row: int = 1) -> Tuple[Optional[HeaderSchema], List[dict]]:
     """A draft read off a staged sheet, with the evidence for each column, for a worker to check.
 
-    The sheet is read as the default cleaning (T1) leaves it, since a trial will see it that way:
-    header names come trimmed, and a text of only whitespace counts as empty. A column's type is
-    proposed only when every value below the header row has the same kind; a column that is ever
-    empty is proposed as optional. With any column undecided there is no draft, only the evidence.
-    No case is proposed: a declared transformation is a person's choice.
+    The sheet is read as the default rules (F1, T1) leave it, since a trial will see it that way:
+    a formula counts as the value the file saved for it, header names come trimmed, and a text of
+    only whitespace counts as empty. A column's type is proposed only when every value below the
+    header row has the same kind (a formula with no saved value has none, so its column stays
+    undecided); a column that is ever empty is proposed as optional. With any column undecided
+    there is no draft, only the evidence. No case is proposed: a declared transformation is a
+    person's choice.
     """
     dataset = cleaning.clean([dataset]).datasets[0]
     header = dataset.row(header_row)

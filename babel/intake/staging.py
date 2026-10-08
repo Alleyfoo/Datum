@@ -8,6 +8,10 @@ Staging decides no meaning. Every cell is kept as its text plus a one-character 
        and the cached value's own code are kept beside the row
     x  Excel error literal (#N/A, #REF!, ...)
 
+Staging decides nothing about a formula: it keeps the formula and the value the file saved for
+it, as raw evidence. Taking that value as the cell's calculated value is the first step of the
+cleaning stage (cleaning.py, F1, owner answer P20), which never writes staging.
+
 Nothing is trimmed, parsed, coerced, de-duplicated or renamed. Column ids are mechanical
 (c001, c002, ...), and a header is only the text of a row. Every row keeps its source id,
 sheet, source row and ordinal; a row of empty cells is kept and flagged blank. Only the empty

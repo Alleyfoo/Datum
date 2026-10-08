@@ -4,13 +4,15 @@ The owner's decision: a schema is the set of a file's column headers (names, ord
 one file kind, per company. What a header means is the Map stage, not the schema. The declaration
 also says where its headers are: the sheet and the header row.
 
-The cleaning stage runs before the trial (babel/intake/cleaning.py): it trims leading and trailing
-whitespace from every text cell and header (T1, the owner's default for all sources), and applies
-the transformations a field declares. The one declaration built is case, upper or lower; a field
-with none gets only the default. Headers are then compared exactly: whitespace at either end is
-not significant (owner answer P21), anything else is. No similarity, synonym or position is used to
-make a file fit. The rule list below is the full statement of what cleaning does and what the trial
-checks; it is what an approver confirms, so it is written out in full and never summarised.
+The cleaning stage runs before the trial (babel/intake/cleaning.py). It first takes each formula
+cell as its calculated value, the value the file saved for it (F1, owner answer P20), then trims
+leading and trailing whitespace from every text cell and header (T1, the owner's default for all
+sources), and applies the transformations a field declares. The one declaration built is case,
+upper or lower; a field with none gets only the defaults. Headers are then compared exactly:
+whitespace at either end is not significant (owner answer P21), anything else is. No similarity,
+synonym or position is used to make a file fit. The rule list below is the full statement of what
+happens to the values before the trial and what the trial checks; it is what an approver confirms,
+so it is written out in full and never summarised.
 """
 
 from __future__ import annotations
@@ -22,10 +24,18 @@ from typing import List, NamedTuple, Optional, Tuple
 
 TYPES = ("text", "int", "decimal", "bool", "date", "datetime")
 CASES = ("upper", "lower")
+#: the calculation, for every source, before the cleaning rules (owner answer P20)
+CALCULATION_RULE = ("F1", "calculation, before cleaning: a formula cell counts as its calculated value, the value "
+                          "the file saved for it (its cached value), with that value's own type; the value is "
+                          "then cleaned and checked like any other, and the formula is kept beside the row. "
+                          "Nothing calculates a formula here: a formula the file saved no value for has no "
+                          "value (R6)")
 #: the default cleaning rule, for every source
 TRIM_RULE = ("T1", "cleaning, before the checks: leading and trailing whitespace is trimmed from every "
                    "text cell and every header, on every sheet; a text of only whitespace becomes an "
                    "empty cell")
+#: what every source gets before the trial, in this order; a field's declared rules follow
+DEFAULT_RULES = (CALCULATION_RULE, TRIM_RULE)
 TYPE_RULES = {
     "text": "a string with at least one non-space character, kept as cleaning leaves it",
     "int": "a number cell holding a whole number",
@@ -89,9 +99,9 @@ class HeaderSchema:
         return [(f"T{n}", column) for n, column in enumerate((c for c in self.columns if c.case), start=2)]
 
     def cleaning_rules(self) -> List[Tuple[str, str]]:
-        """What the cleaning stage does before the trial, as (rule id, statement): the default, then
-        each field's declared transformation."""
-        rules = [TRIM_RULE]
+        """What the cleaning stage does before the trial, as (rule id, statement): the defaults (the
+        calculation F1, then the trim T1), then each field's declared transformation."""
+        rules = list(DEFAULT_RULES)
         for rule_id, column in self.transforms():
             rules.append((rule_id, f'cleaning, after T1: the text cells under the header "{column.name}", below '
                                    f'row {self.header_row} of the sheet "{self.sheet}", are turned to '
@@ -105,7 +115,7 @@ class HeaderSchema:
             ("R1", f'the headers are on the sheet named "{self.sheet}"'),
             ("R2", f"the headers are on row {self.header_row}"),
             ("R3", f"the header row holds exactly these {len(self.columns)} headers, in this order, "
-                   f"compared exactly after cleaning (T1): {listed}"),
+                   f"compared exactly after the calculation and cleaning (F1, T1): {listed}"),
         ]
         for ordinal, column in enumerate(self.columns, start=1):
             need = "required" if column.required else "may be empty"
@@ -114,8 +124,9 @@ class HeaderSchema:
         rules += [
             ("R4", f"every row below row {self.header_row} is a data row; a blank row is refused"),
             ("R5", "no cell outside the declared columns holds a value"),
-            ("R6", "no cell under a declared header is a formula, even with a cached value, "
-                   "or an Excel error"),
+            ("R6", "no cell under a declared header is an Excel error, or a formula the file saved no "
+                   "value for (F1 had nothing to take): its value is missing, so it is refused even where "
+                   "the column may be empty"),
             ("R7", "the file fits only with zero refusals"),
         ]
         return rules

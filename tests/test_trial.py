@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from babel.intake import inbox, staging, trial
+from babel.intake import cleaning, inbox, staging, trial
 from babel.schema.headers import Column, HeaderError, HeaderSchema
 from domains.spare_parts.exports import stock_export
 
@@ -112,6 +112,34 @@ def test_every_refused_cell_is_listed_with_its_rule(data_root, tmp_path, workboo
     assert result.evidence == {"accepted_files_checked": ["src_export"]}
     text = trial.report(result, STOCK)
     assert "row 5, c002 'Description': blank_text (rule C2); text '   ', type code s" in text
+
+
+def test_a_formula_with_a_saved_number_is_tried_as_that_number(data_root, tmp_path, workbook):
+    # P20: a formula counts as the value the file saved for it, then is cleaned and tried like any other value
+    rows = [HEADER, ["SP-1", "Part one", "FI", "=2+3", DAY], ["SP-2", "Part two", "SE", 4, DAY]]
+    _, sheets = _sheets(data_root, _write(tmp_path, workbook, rows, cached={("Stock", "D2"): 5}))
+    assert (sheets[0].rows[1].codes[3], sheets[0].rows[1].texts[3]) == ("f", "5")  # staged as the file holds it
+    result = trial.run(cleaning.clean(sheets, STOCK).datasets, STOCK)
+    assert (result.outcome, result.refusals) == ("fits", [])
+    assert [(c.row, c.code, c.value) for c in result.cells if c.header == "On hand"] == [(2, "n", 5), (3, "n", 4)]
+    assert STOCK.rule_text().startswith("F1  calculation, before cleaning")
+
+
+def test_a_formula_with_no_saved_value_is_refused_with_its_own_code(data_root, tmp_path, workbook):
+    # P20: nothing calculates it, so its value is missing: refused as not calculated, even where empty is allowed
+    optional = HeaderSchema("Stock", 1, STOCK.columns[:3] + (Column("On hand", "int", required=False),)
+                            + STOCK.columns[4:])
+    rows = [HEADER, ["SP-1", "Part one", "FI", "=2+3", DAY], ["SP-2", "Part two", "SE", None, DAY]]
+    _, sheets = _sheets(data_root, _write(tmp_path, workbook, rows))
+    required = trial.run(cleaning.clean(sheets, STOCK).datasets, STOCK)
+    assert [(c.row, c.column, c.reason, c.rule) for c in required.refusals] == [
+        (2, "c004", "formula_not_calculated", "R6"), (3, "c004", "missing_value", "C4")]
+    may_be_empty = trial.run(cleaning.clean(sheets, optional).datasets, optional)
+    assert may_be_empty.outcome == "value_problem"
+    assert [(c.row, c.column, c.reason, c.rule) for c in may_be_empty.refusals] == [
+        (2, "c004", "formula_not_calculated", "R6")]
+    assert ("row 2, c004 'On hand': formula_not_calculated (rule R6); text '', type code f"
+            in trial.report(may_be_empty, optional))
 
 
 def test_an_optional_column_may_be_empty(data_root, tmp_path, workbook):

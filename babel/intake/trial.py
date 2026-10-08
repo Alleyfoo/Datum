@@ -6,6 +6,11 @@ gets a result: accepted with its typed value, or refused with a reason and the r
 file fits only with zero refusals. Header similarity, a guessed synonym or a position match never
 makes a file fit, and the trial itself trims and coerces nothing.
 
+A formula cell reaches the trial as its calculated value, the value the file saved for it, which
+cleaning took before anything else (F1, owner answer P20), so it is checked like any other value.
+Only a formula the file saved no value for still has code f: its value is missing, and it is
+refused as formula_not_calculated (R6), even under a column that may be empty.
+
 A file that does not fit is classified by deterministic checks, in this order:
 
 1. wrong_file: fewer than half of the declared headers appear on any row of any sheet. The file is
@@ -153,8 +158,8 @@ def _cell(sheet: str, row: int, ordinal: int, column: Column, text: str, code: s
     def accept(value) -> Cell:
         return Cell(sheet, row, where, column.name, text, code, "accepted", rule, None, value)
 
-    if code == "f":
-        return refuse("formula_cell", "R6")
+    if code == "f":  # a formula the file saved no value for: cleaning's F1 had nothing to take
+        return refuse("formula_not_calculated", "R6")
     if code == "x":
         return refuse("error_cell", "R6")
     if code == "e":

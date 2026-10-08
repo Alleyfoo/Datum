@@ -6,7 +6,7 @@ import pytest
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
-from babel.intake import inbox, staging
+from babel.intake import cleaning, inbox, staging
 from babel.intake.staging import StagingError
 from domains.spare_parts.exports import HEADERS
 
@@ -86,6 +86,22 @@ def test_nothing_is_trimmed_coerced_or_dropped(data_root, tmp_path, workbook):
     assert nut.formulas == {"c006": ("=C4*2", "e")}  # no cached value in the file
     assert washer.texts[:3] == (" A-102", "Washer", "0012") and washer.codes == "sss" + "e" * 4
     assert not any(row.blank for row in (header, bolt, nut, washer))
+
+
+def test_the_staging_output_keeps_each_formula_and_the_value_the_file_saved(data_root, tmp_path, workbook):
+    # P20: staging keeps the raw evidence; the calculation (cleaning, F1) reads it and never writes it
+    source_id, dataset = _staged(data_root, _awkward(tmp_path / "awkward.xlsx", workbook), sheet="Data")
+    rows_file = staging.staging_dir(data_root, "C-100", source_id) / dataset.dataset_id / "rows.jsonl"
+    before = rows_file.read_bytes()
+    stored = [json.loads(line) for line in before.decode("utf-8").splitlines()]
+    bolt, nut = stored[1], stored[3]
+    assert (bolt["codes"][5], bolt["texts"][5], bolt["formulas"]) == ("f", "24", {"c006": ["=C2*2", "n"]})
+    assert (nut["codes"][5], nut["texts"][5], nut["formulas"]) == ("f", "", {"c006": ["=C4*2", "e"]})
+    cleaned = cleaning.clean([dataset]).datasets[0]
+    assert (cleaned.rows[1].codes[5], cleaned.rows[1].formulas) == ("n", {"c006": ("=C2*2", "n")})
+    assert (cleaned.rows[3].codes[5], cleaned.rows[3].texts[5]) == ("f", "")  # nothing saved, nothing taken
+    assert rows_file.read_bytes() == before
+    assert staging.verify(data_root, "C-100", source_id, dataset.dataset_id)["reproducible"]
 
 
 def test_blank_rows_are_flagged_in_the_stored_rows(data_root, tmp_path, workbook):

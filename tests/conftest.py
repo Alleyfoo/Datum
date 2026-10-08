@@ -3,6 +3,7 @@ import re
 import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 import pytest
 from openpyxl import Workbook
@@ -58,8 +59,9 @@ def workbook():
 def write_workbook(path, sheets, cached=None):
     """Write {sheet name: [rows]} to an .xlsx.
 
-    `cached` maps (sheet name, cell) to a number stored as that formula cell's cached
-    value, the way Excel saves a calculated workbook; openpyxl itself never writes one.
+    `cached` maps (sheet name, cell) to a number or a text stored as that formula cell's cached
+    value, the way Excel saves a calculated workbook (a text result is marked t="str"); openpyxl
+    itself never writes one.
     """
     book = Workbook()
     book.remove(book.active)
@@ -76,7 +78,9 @@ def write_workbook(path, sheets, cached=None):
             parts = {info.filename: src.read(info.filename) for info in src.infolist()}
         for (name, cell), value in cached.items():
             part = f"xl/worksheets/sheet{names.index(name) + 1}.xml"
-            xml, count = re.subn(rf'(<c r="{cell}"[^>]*><f>[^<]*</f>)<v></v>', rf"\g<1><v>{value}</v>",
+            kind = ' t="str"' if isinstance(value, str) else ""
+            xml, count = re.subn(rf'(<c r="{cell}"[^>]*)(><f>[^<]*</f>)<v></v>',
+                                 lambda found: f"{found[1]}{kind}{found[2]}<v>{escape(str(value))}</v>",
                                  parts[part].decode("utf-8"))
             assert count == 1, f"no empty formula value at {name}!{cell}"
             parts[part] = xml.encode("utf-8")

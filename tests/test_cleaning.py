@@ -106,6 +106,36 @@ def test_a_value_of_only_spaces_becomes_empty_and_is_handled_as_empty(data_root,
     assert [c.value for c in result.cells if c.header == "Warehouse"] == ["FI", None]
 
 
+def test_a_formula_that_saved_a_text_is_calculated_then_cleaned_like_any_text(data_root, tmp_path, workbook):
+    # P20: the calculation (F1) runs first, then the trim (T1), then the field's declared case (T2)
+    upper = HeaderSchema("Stock", 1, (Column("Item", "text", case="upper"),) + STOCK.columns[1:])
+    rows = [list(STOCK.names), ['=LOWER(" SP-7 ")', "Part seven", "FI", 1, DAY]]
+    path = workbook(tmp_path / "text.xlsx", {"Stock": rows}, cached={("Stock", "A2"): " sp-7 "})
+    _, sheets = _staged(data_root, path)
+    cleaned = cleaning.clean(sheets, upper)
+    assert _changes(cleaned) == [
+        (2, "c001", "F1", "calculated", '=LOWER(" SP-7 ")', " sp-7 "),
+        (2, "c001", "T1", "trim", " sp-7 ", "sp-7"),
+        (2, "c001", "T2", "upper", "sp-7", "SP-7"),
+    ]
+    result = trial.run(cleaned.datasets, upper)
+    assert result.fits and [c.value for c in result.cells if c.header == "Item"] == ["SP-7"]
+
+
+def test_the_hook_tries_a_formula_as_its_saved_value_and_names_the_record(data_root, store, tmp_path, workbook):
+    v1 = Versioned("C-100", "stock_export", 1, STOCK)
+    rows = [list(STOCK.names), ["SP-1001", "Conveyor belt", "FI", "=50+7", DAY]]
+    path = workbook(tmp_path / "formula.xlsx", {"Stock": rows}, cached={("Stock", "D2"): 57})
+    arrival = hook.trigger(data_root, "C-100", path, store=store, schemas=lambda company: [v1])
+    assert (arrival.outcome, arrival.schema_version) == ("fits", 1)
+    finding = store.get(arrival.finding)
+    assert finding["data"]["cleaning"]["by_rule"] == {"F1": 1}
+    assert finding["data"]["verification"]["trial_reproduced"]
+    _, stored = cleaning.stored(data_root, "C-100", arrival.source_id, STOCK)
+    assert [(c["row"], c["column"], c["rule"], c["original"], c["transformed"], c["code"]) for c in stored] == [
+        (2, "c004", "F1", "=50+7", "57", "n")]
+
+
 def test_the_hook_cleans_before_the_trial_and_the_finding_names_the_records(data_root, store, tmp_path, workbook):
     v1 = Versioned("C-100", "stock_export", 1, STOCK)
     arrival = hook.trigger(data_root, "C-100", _messy(tmp_path, workbook), store=store, schemas=lambda company: [v1])
