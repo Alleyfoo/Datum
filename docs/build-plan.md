@@ -210,3 +210,14 @@ decided; it is a setting to tune later.
 Both report only through tickets. Neither changes stock, a schema, or the record. Whether these are two agents
 or one agent with two roles is open. Recommendation: two agents with separate scopes, so the process watcher
 never reads business data it has no use for.
+
+## 14. The manager, as decided
+
+| ID | Answer | What it means |
+|---|---|---|
+| M-one | One manager | There is one manager: a separate, higher-level LLM, started twice a day. Section 13's two-agent split is withdrawn. |
+| M-input | All data | Each run is given the full data view and the state of the tickets. |
+| M-output | Conclusions as tickets | The run returns conclusions. Each conclusion that needs action becomes a ticket: process problems (stale or static tickets, failing schemas) and business findings (unusual orders, stock risk) alike. |
+| M-limits | Same limits as before | The manager may release a ticket with its history kept. It may not conclude a ticket, and it changes no stock, schema or record. |
+
+The earlier worry (a process watcher reading business data it does not need) is set aside, since the owner has decided.
