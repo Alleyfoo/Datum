@@ -1,6 +1,6 @@
 # Slice: the customer-service consultation
 
-**Status:** scope for the next build run. Not started. Owner to confirm the open points at the end before the run starts.
+**Status:** scope for the next build run. Not started. The owner has answered the open points (section "Owner answers" at the end).
 
 ## What the slice is
 
@@ -28,7 +28,7 @@ derives open questions from all questions, not the page; substitute stock is che
 
 | Tool | Does | Writes |
 |---|---|---|
-| `search(text)` | finds customers, machines and parts by id, name or description; applies the 0/1/many rule (one match opens; several are listed for the person to choose; none is reported) | nothing |
+| `search(text, status?)` | finds customers, machines and parts by id, name or description; applies the 0/1/many rule (one match opens; several are listed for the person to choose; none is reported). With `status`, it also finds tickets of that status (`open`, `in_progress`, `closed`), so "what is waiting" is a status filter | nothing |
 | `open_consultation(customer, machine?, part?)` | starts a consultation as a ticket (kind `consultation`), one number space | the ticket, status `in_progress` |
 | `ask(consultation, question)` | answers Availability, Lead time or Service demand with the facts and the rule that applies | a receipt entry |
 | `stopped(consultation, state)` | the person's answer: `stopped` or `planned`. Required before an availability answer; never guessed | a fact on the ticket, attributed |
@@ -53,7 +53,8 @@ derives open questions from all questions, not the page; substitute stock is che
 7. **Every consultation is a ticket.** One ticket per consultation, with the status moving from `open` to `in_progress` when the
    consultation opens (the agreed rule), and back to `open` when released unconcluded.
 8. **Determinism.** Same inputs, same text, every run. No model call inside a tool.
-9. `python -m pytest` passes; no existing test is weakened.
+9. **Status filter.** `search(status="open")` lists open tickets only; `status="in_progress"` lists tickets with an agent; a test covers each status and a search with no match.
+10. `python -m pytest` passes; no existing test is weakened.
 
 ## Not in this slice
 
@@ -62,11 +63,8 @@ derives open questions from all questions, not the page; substitute stock is che
 - Live model runs. The consultant is Claude through MCP, used by the owner; the tests use no model.
 - Customer-facing sending. Replies are proposals only.
 
-## Open points for the owner (answer before the run)
+## Owner answers (fifth round)
 
-1. **Receipt default.** Show the full receipt, or fold it away and show it on request? Recommendation: show it in full in the
-   golden file, fold it in the conversation view later.
-2. **"Stopped" as an argument.** The `stopped` question is a required tool argument, so the consultant must ask the person first.
-   Recommendation: yes.
-3. **Search scope.** Does search include open tickets and pending approvals ("what is waiting for me")? Recommendation: not in this
-   slice.
+1. **Receipt default: answered.** Show the full receipt in the golden file; fold it in the conversation view later.
+2. **"Stopped" as an argument: answered.** Required; the consultant must ask the person first.
+3. **Search scope: answered.** Search filters by ticket status (see the `search` tool and criterion 9). Pending approvals are not separately searched in this slice.
