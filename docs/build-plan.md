@@ -221,3 +221,22 @@ never reads business data it has no use for.
 | M-limits | Same limits as before | The manager may release a ticket with its history kept. It may not conclude a ticket, and it changes no stock, schema or record. |
 
 The earlier worry (a process watcher reading business data it does not need) is set aside, since the owner has decided.
+
+## 15. The manager: reference and model
+
+| ID | Answer | What it means |
+|---|---|---|
+| R-ref | Reference is Parts-Service-Desk's main analyst | The manager is the design in `Parts-Service-Desk` (`desk/analyst.py`, PRODUCT.md D10 and D11). It is part of this project's scaffolding. The Learning Lab supervisor is a related experiment, not the reference. |
+| R-model | No local models in the design | Local models were for tests only. The owner judges them not good enough for decisions, so none runs the manager. The evaluation's 9B result (2 of 3 runs, under the bar of 4 of 5) confirms it. |
+| R-run | Timed run, no complex setup | The manager runs on a timer, twice a day, like the scheduled runs in Claude work. Same role and limits as before. No extra infrastructure. |
+| R-code | Take the code we need | The owner's code can be taken into this repository, with origin recorded in `docs/provenance.md`. |
+
+**Flag for the owner.** The model that passed the evaluation (`glm-5.3-flash:cloud`) is cloud-hosted: each run
+sends the day's data to a provider. Our `CLAUDE.md` asks for local, self-hosted tools where possible, and the
+data rules say customer data stays out of the repository. Synthetic data is fine now. Before any real company
+data is sent to a cloud model, that needs an explicit decision: which provider, what data leaves, and under
+what agreement.
+
+**Correction to the earlier summary.** glm-5.3-flash was the only model to pass the bar. The 9B passed 2 of 3
+runs, which is below the bar, so it did not qualify. "Only one that could run it" is accurate for the bar; "the
+9B cannot run it at all" is not.

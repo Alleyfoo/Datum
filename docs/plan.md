@@ -140,6 +140,9 @@ Decided by the owner, 2026-10-08:
 - **Identity is open** and kept as a design principle until the environment is known.
 - **The system is modular.** It is both a demo that tells the story and the start of real work, so
   each part is replaceable as the real environment becomes known.
+- **The manager** is the main analyst from Parts-Service-Desk: twice a day, tickets only, every ticket cites
+  its evidence and is checked. Model: cloud-hosted glm-5.3-flash, the only model that passed the evaluation.
+  No local models in the design; they were for tests. Runs on a timer, no extra infrastructure. See build-plan.md section 15.
 - **Ticket model is copied from Subroutine** (yes, decided), into our own SQLite store.
 - **Storage:** SQLite for state; files for raw, staging and extracts. Excel is the only supported
   format for now; OCR and PDF are decided when they are implemented.
