@@ -191,6 +191,61 @@ def test_a_stale_version_is_refused(store):
     assert _code(store.set_status, task, "ville", "needs_input", expected_version=version) == "version_conflict"
 
 
+def test_opening_an_open_ticket_hands_it_to_the_opener(store):
+    # T-open (build-plan section 10): opening sets in_progress, and the log says who and when
+    task = store.add_task("hook", "A customer called")
+    opened = store.open_ticket(task, "ville")
+    assert (opened["status"], opened["claimed_by"], opened["lease_active"]) == ("in_progress", "ville", True)
+    entries = [(e["actor"], e["role"], e["action"], e["details"]) for e in store.journal(task)]
+    assert entries[1:] == [("ville", "worker", "claimed", {}),
+                           ("ville", "worker", "opened", {"status": {"before": "open", "after": "in_progress"}})]
+    assert store.journal(task)[-1]["at"] == store.now()
+
+
+def test_opening_a_ticket_already_in_progress_changes_nothing(store):
+    task = store.add_task("hook", "A customer called")
+    store.open_ticket(task, "ville")
+    before = (store.get(task), len(store.journal(task)))
+    for opener in ("ville", "pia"):
+        assert store.open_ticket(task, opener) == before[0]
+    assert (store.get(task), len(store.journal(task))) == before
+
+
+def test_a_ticket_waiting_on_a_decision_or_done_is_not_opened(store):
+    parked = store.add_task("hook", "Waits on an approver")
+    store.claim(parked, "ville")
+    store.set_status(parked, "ville", "needs_input")
+    store.release(parked, "ville")
+    done = store.add_task("hook", "Finished")
+    store.claim(done, "ville")
+    store.set_status(done, "ville", "done")
+    assert _code(store.open_ticket, parked, "pia") == "not_open"
+    assert _code(store.open_ticket, done, "pia") == "not_open"
+    assert store.get(parked)["status"] == "needs_input"
+
+
+def test_released_without_a_decision_a_ticket_goes_back_to_open(store):
+    # T-release (build-plan section 10): the history stays, and the next handler can open it
+    task = store.add_task("hook", "A customer called")
+    store.open_ticket(task, "ville")
+    released = store.release(task, "ville")
+    assert (released["status"], released["claimed_by"], released["lease_until"]) == ("open", None, None)
+    assert store.journal(task)[-1]["details"] == {"status": {"before": "in_progress", "after": "open"}}
+    assert [t["number"] for t in store.ready("pia")] == [task]
+    assert store.open_ticket(task, "pia")["claimed_by"] == "pia"
+    assert [e["action"] for e in store.journal(task)] == [
+        "created", "claimed", "opened", "released", "claimed", "opened"]
+
+
+def test_a_lease_that_runs_out_leaves_the_ticket_in_progress(store, clock):
+    # Q-stale (build-plan section 20): only a release returns it to open
+    task = store.add_task("hook", "A customer called")
+    store.open_ticket(task, "ville")
+    clock.advance(seconds=store.lease.total_seconds() + 60)
+    item = store.get(task)
+    assert (item["status"], item["claimed_by"], item["lease_active"]) == ("in_progress", "ville", False)
+
+
 def test_anyone_may_comment_even_on_a_finished_task(store):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")

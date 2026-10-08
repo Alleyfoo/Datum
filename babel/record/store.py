@@ -9,7 +9,10 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
 - a `blocks` link keeps a task out of the ready list until its blocker is done;
 - a claim is a lease: it runs out by itself, one day after its holder's last write (owner answer
   P22, build-plan section 20), every write by its holder renews it, finishing releases it, and a
-  holder whose lease ran out must claim again.
+  holder whose lease ran out must claim again;
+- opening an open ticket hands it to an agent: claimed, and `in_progress`; released without a
+  decision, it goes back to `open` (owner answers T-open and T-release, build-plan section 10). A
+  lease that runs out leaves the status as it is (owner answer Q-stale, section 20).
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -386,11 +389,41 @@ class Store:
             return self.let_go(db, number, actor)
 
     def let_go(self, db, number: int, actor: str) -> dict:
+        """Hand the claim back. A ticket released while `in_progress` has no decision yet, so it
+        returns to `open` for the next handler (owner answer T-release, build-plan section 10); the
+        journal entry records the change and the history stays. A parked ticket stays parked."""
         item = self._item(db, number)
         require(item["claimed_by"] == actor, "release_forbidden", f"only the holder can release #{number}")
-        db.execute("UPDATE items SET claimed_by=NULL, lease_until=NULL WHERE number=?", (number,))
-        self.write_journal(db, number, actor, self.acting_role(db, actor), "released", {})
+        details = {}
+        if item["status"] == "in_progress":
+            db.execute("UPDATE items SET status='open', claimed_by=NULL, lease_until=NULL, updated_at=?,"
+                       " version=version+1 WHERE number=?", (self.now(), number))
+            details = {"status": {"before": "in_progress", "after": "open"}}
+        else:
+            db.execute("UPDATE items SET claimed_by=NULL, lease_until=NULL WHERE number=?", (number,))
+        self.write_journal(db, number, actor, self.acting_role(db, actor), "released", details)
         return self._item(db, number)
+
+    def open_ticket(self, number: int, actor: str, *, role: Optional[str] = None) -> dict:
+        """Open a ticket: hand it to the actor (owner answers T-open and T-meaning, build-plan section 10).
+
+        An open ticket is claimed by the actor and becomes `in_progress`, and the journal records
+        who opened it and when. Opening a ticket that is already `in_progress` changes nothing. A
+        ticket that waits on a decision, or is done, is not opened.
+        """
+        with self.transaction() as db:
+            return self.opening(db, number, actor, role)
+
+    def opening(self, db, number: int, actor: str, role: Optional[str] = None) -> dict:
+        """`open_ticket` inside an open transaction."""
+        item = self._item(db, number)
+        require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
+        if item["status"] == "in_progress":
+            return item
+        require(item["status"] == "open", "not_open",
+                f"#{number} is {item['status']}: only an open ticket is opened")
+        self.take(db, number, actor, role)
+        return self.update(db, number, actor, role=role, action="opened", status="in_progress")
 
     # -- what people do on a ticket -----------------------------------------------------------
 
