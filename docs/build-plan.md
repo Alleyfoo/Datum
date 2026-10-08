@@ -92,32 +92,32 @@ In order of how many items they unblock: G3 (state), G1 (canonical versus custom
 G9 (file kinds), G4 (identity), G2 (port, not extend), G6 and G7 (hook and reader), G10 (ticket
 fields). Each is a yes, a change, or a different answer.
 
-## 6. Yes or no
+## 6. Owner answers (recorded 2026-10-08)
 
-Each question below needs a yes or a no. The recommendation is the answer this plan assumes
-unless you say otherwise. Answers are recorded in [plan.md](plan.md) under "Decisions made".
-
-| ID | Question | Recommended |
+| ID | Answer | What it means for the build |
 |---|---|---|
-| Q1 | Is the state (tickets, ledger, decisions) kept in SQLite, with raw, staging and extract files on disk? (G3) | Yes |
-| Q2 | Does the folder hook detect new files by polling, using a stable size and time for a short interval, with no OS watcher? (G6) | Yes |
-| Q3 | Is the Excel reader `openpyxl`, in read-only mode and pinned to one version? (G7) | Yes |
-| Q4 | Does every file kind declare its sheet name, header row and required columns before a trial runs? (G9) | Yes |
-| Q5 | For the wrong-file check, is a file's identity its sender (for mail) or its export header (for a spreadsheet)? (P1) | Yes |
-| Q6 | Does each arriving file get its own ticket, with no grouping per collector run for now? (P2) | Yes |
-| Q7 | Must the person who confirms a new schema differ from the person who drafted it? (P7) | Yes |
-| Q8 | Is the mail collector left out of the demo, and built only when a real mailbox is named? (P9) | Yes |
-| Q9 | Does the demo run locally, with the repository kept private? (P11) | Yes |
-| Q10 | Is Python 3.11 the target, as the machine runs it, and `pyproject.toml` changed to match? (P13) | Yes |
-| Q11 | Is unit conversion left out of the demo, with units recorded only? (P14) | Yes |
-| Q12 | Is multi-warehouse kept as a stated limit: stock moves between FI and SE, with no multi-echelon optimisation? (P18) | Yes |
-| Q13 | Is the first desktop connection Claude Desktop only? (P19) | Yes |
-| Q14 | Is the Excel stock export the only ERP input for the demo? (P17) | Yes |
-| Q15 | Is the starting list of five exception types accepted as it stands? (P15) | Yes |
-| Q16 | Is one shared item master used across customers, rather than one per customer? (P8) | Yes |
-| Q17 | Does an order above three times a customer's usual quantity open an analysis ticket, with the threshold tuned later? (P5) | Yes |
-| Q18 | Is identity kept as a design principle, with no identity code built until the environment is known, and the hook and collectors written to need no identity beyond the file system? (P6, G4) | Yes |
-| Q19 | Does the import research pass (section 5) run before the trial and the create-schema gate are designed? | Yes |
+| Q1 | Yes | SQLite holds tickets, ledger and decisions; files hold raw, staging and extracts. |
+| Q2 | Plan only | Polling is the planned hook mechanism. Not built now; the hook's first version is manual trigger. |
+| Q3 | Yes | `openpyxl`, read-only, pinned. |
+| Q4 | Yes, Excel only | Only Excel is supported. OCR and PDF are a later question, decided when they are implemented. |
+| Q5 | Yes, with a change of meaning | The wrong-file check is: the file's headers must match the schema of the company it is filed under. Sender identity is not used for now. |
+| Q6 | Open | One test company exists, so one ticket per file is enough. Grouping waits for real cases. |
+| Q7 | Not required | The confirmer may be the drafter. The gate still needs a named person and a recorded reason. |
+| Q8 | Yes | No mail collector in the demo. |
+| Q9 | Yes | Demo runs locally, repository private. |
+| Q10 | No preference: Python 3.11 | Target 3.11, the version installed here. `pyproject.toml` changes to `requires-python = ">=3.11"`. |
+| Q11 | Yes | Demo shows principles and a concrete case only. Unit conversion waits. |
+| Q12 | Yes | Multi-warehouse is a stated limit now; optimisation later. |
+| Q13 | Yes | Demo connects through MCP. The owner has MCP set up for all agent systems, so the connection is generic MCP, not Claude-only. |
+| Q14 | Yes | The Excel stock export is the only ERP input. |
+| Q15 | Yes | Five exception types as listed. |
+| Q16 | Deferred | Demo uses one customer. The shared item master question waits for the first pilot. |
+| Q17 | Yes, tuned later | The threshold is a placeholder until real data exists. The assistant proposes tuning values from the data; a person approves them. |
+| Q18 | Yes | Identity stays a principle. |
+| Q19 | Yes | The import research pass runs before the trial and the create-schema gate are designed. |
 
-Decided already, not a question: Subroutine's model is copied (G10); the old repositories stay
-frozen and their data is imported (G2); the schema means the headers of a file kind (G1).
+**On Python.** Never moving off 3.11 has no immediate cost: 3.11 receives security fixes into
+2027, and nothing in the code needs 3.12. The costs come later: libraries drop 3.11 support
+one by one, and newer language and speed features are unavailable. Since the owner has no
+preference, 3.11 is the target until a dependency requires more.
+

@@ -122,9 +122,17 @@ Decided by the owner, 2026-10-08:
 - **The system is modular.** It is both a demo that tells the story and the start of real work, so
   each part is replaceable as the real environment becomes known.
 - **Ticket model is copied from Subroutine** (yes, decided), into our own SQLite store.
+- **Storage:** SQLite for state; files for raw, staging and extracts. Excel is the only supported
+  format for now; OCR and PDF are decided when they are implemented.
+- **Wrong-file check:** a file's headers must match the schema of the company it is filed under.
+- **Python:** 3.11 is the target.
+- **Demo:** one customer, local, private repository, connected through MCP. Identity and the mail
+  collector are left out of the demo. Unit conversion and multi-warehouse optimisation wait.
+- **Thresholds** (for example, the unusual-order rule) are placeholders tuned later from data. The
+  assistant proposes values; a person approves them.
 
 Proposed, awaiting the owner's confirmation: the customer folder layout in
-[customer-layout.md](customer-layout.md). Yes-or-no answers needed: [build-plan.md](build-plan.md) section 6.
+[customer-layout.md](customer-layout.md). Answers recorded in [build-plan.md](build-plan.md) section 6.
 
 ## Defects to fix while porting
 
