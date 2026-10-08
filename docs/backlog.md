@@ -95,6 +95,7 @@ found, so it can be reproduced before it is fixed.
 | B3 | Open, latent | A receipt's delivery is found by `(part, warehouse, date)`. If two receipts for the same key land on the same day, the lookup returns the first delivery for both. | Code review. Not reproduced: receipts are spaced 40 to 70 days apart. | Carry the delivery id through the ledger, as in B2. |
 | B4 | Open, test weakness | `test_snapshot_is_not_mutated_by_build` compares two freshly built snapshots, so it cannot detect a mutation of shared data. | Code review of the test. | Keep one snapshot object, call `build` on it, and compare it to a deep copy taken before. |
 | B5 | Fixed (`0f48e76`), no regression test | The ledger replayed a same-day issue before its receipt, so the opening balance could be negative. | Found by the conservation test on seed 2026, and fixed by ordering receipts before issues on the same day. | Add a regression test with a same-day receipt and issue for one stock line. |
+| B6 | Open, latent | `menu_tree` letters a machine's parts with `zip(string.ascii_lowercase, ...)`, so a machine with more than 26 parts loses the rest from the text menu, its codes and the widget, without a word. Kept as the lab has it, so the port's text equals the lab's. | Code review while porting `desk/views.py`. Not reproduced: the most parts on one machine is 6. | Give parts past `z` a code of their own, or refuse such a machine with a reason; add a test with 27 parts. |
 
 ## Plan (needs a decision or design first)
 
