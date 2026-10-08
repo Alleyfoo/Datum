@@ -27,7 +27,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Iterable, List, Optional
 
 ROLES = ("approver", "worker")
 USER_KINDS = ("person", "agent", "service")
