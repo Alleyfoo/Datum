@@ -1,0 +1,7 @@
+CH-02 Chip pile reclaim screw · screw conveyor · criticality A
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1601  Screw flight section, 400 mm ★        4    0    0  ✖  due 2026-11-01
+ 2  SP-1502  Electric motor 15 kW IE3 ★            1    1    0  ●
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list

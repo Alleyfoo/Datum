@@ -1,0 +1,107 @@
+ServiceData
+customers:
+  'C-100': Customer(customer_id='C-100', name='Sawmill customer', site='Sawmill, Central Finland', country='Finland')
+  'C-200': Customer(customer_id='C-200', name='Power plant customer', site='CHP plant, Western Sweden', country='Sweden')
+  'C-300': Customer(customer_id='C-300', name='Pulp mill customer', site='Pulp mill, Eastern Finland', country='Finland')
+machines:
+  'BC-01': Machine(machine_id='BC-01', customer_id='C-100', name='Bark conveyor', type='Belt conveyor', area='Debarking', criticality='A', x0=0.5, y0=4, x1=3.5, y1=4)
+  'CR-01': Machine(machine_id='CR-01', customer_id='C-100', name='Bark crusher', type='Crusher', area='Crushing', criticality='A', x0=5.2, y0=4, x1=6.2, y1=4)
+  'BC-02': Machine(machine_id='BC-02', customer_id='C-100', name='Crusher discharge conveyor', type='Belt conveyor', area='Crushing', criticality='A', x0=6.9, y0=4, x1=8.8, y1=2)
+  'SC-01': Machine(machine_id='SC-01', customer_id='C-100', name='Screen feed screw', type='Screw conveyor', area='Screening', criticality='B', x0=10.3, y0=2, x1=11.7, y1=2)
+  'BC-03': Machine(machine_id='BC-03', customer_id='C-100', name='Chip return conveyor', type='Belt conveyor', area='Screening', criticality='B', x0=12.3, y0=2, x1=13.7, y1=4.6)
+  'BC-04': Machine(machine_id='BC-04', customer_id='C-100', name='Stockpile conveyor', type='Belt conveyor', area='Storage', criticality='B', x0=15.3, y0=2, x1=17.7, y1=0.6)
+  'BE-01': Machine(machine_id='BE-01', customer_id='C-100', name='Boiler feed elevator', type='Bucket elevator', area='Boiler feed', criticality='A', x0=19.5, y0=0.6, x1=19.5, y1=4.6)
+  'BC-05': Machine(machine_id='BC-05', customer_id='C-100', name='Boiler day-bin conveyor', type='Belt conveyor', area='Boiler feed', criticality='A', x0=20.2, y0=4.6, x1=22.8, y1=4.6)
+  'FR-01': Machine(machine_id='FR-01', customer_id='C-200', name='Fuel reception conveyor', type='Belt conveyor', area='Reception', criticality='A', x0=0.5, y0=3, x1=4.5, y1=3)
+  'SC-11': Machine(machine_id='SC-11', customer_id='C-200', name='Fuel screen screw', type='Screw conveyor', area='Screening', criticality='B', x0=6, y0=3, x1=8, y1=3)
+  'BC-11': Machine(machine_id='BC-11', customer_id='C-200', name='Silo feed conveyor', type='Belt conveyor', area='Storage', criticality='A', x0=9.5, y0=3, x1=13.5, y1=5)
+  'BC-12': Machine(machine_id='BC-12', customer_id='C-200', name='Boiler feed conveyor', type='Belt conveyor', area='Boiler feed', criticality='A', x0=15, y0=5, x1=19, y1=5)
+  'CH-01': Machine(machine_id='CH-01', customer_id='C-300', name='Chip unloading conveyor', type='Belt conveyor', area='Chip yard', criticality='B', x0=0.5, y0=2, x1=4.5, y1=2)
+  'CH-02': Machine(machine_id='CH-02', customer_id='C-300', name='Chip pile reclaim screw', type='Screw conveyor', area='Chip yard', criticality='A', x0=5.5, y0=2, x1=7.5, y1=2)
+  'CH-03': Machine(machine_id='CH-03', customer_id='C-300', name='Digester feed conveyor', type='Belt conveyor', area='Digester feed', criticality='A', x0=9, y0=2, x1=13, y1=4.5)
+parts:
+  'SP-1001': Part(part_no='SP-1001', description='Conveyor belt EP630/4, 800 mm, per m', category='Belt', wear_part=True, lead_time_days=42, service_interval_months=36, substitutes=())
+  'SP-1002': Part(part_no='SP-1002', description='Conveyor belt EP800/4, 1000 mm, per m', category='Belt', wear_part=True, lead_time_days=49, service_interval_months=36, substitutes=())
+  'SP-1101': Part(part_no='SP-1101', description='Carrying idler 3-roll set, 800 mm', category='Idler', wear_part=True, lead_time_days=14, service_interval_months=24, substitutes=())
+  'SP-1102': Part(part_no='SP-1102', description='Return idler, 800 mm', category='Idler', wear_part=True, lead_time_days=14, service_interval_months=24, substitutes=())
+  'SP-1104': Part(part_no='SP-1104', description='Impact idler set, 1000 mm', category='Idler', wear_part=True, lead_time_days=28, service_interval_months=18, substitutes=())
+  'SP-1201': Part(part_no='SP-1201', description='Drive pulley, lagged, 500 mm', category='Pulley', wear_part=False, lead_time_days=70, service_interval_months=None, substitutes=())
+  'SP-1202': Part(part_no='SP-1202', description='Tail pulley, 400 mm', category='Pulley', wear_part=False, lead_time_days=56, service_interval_months=None, substitutes=())
+  'SP-1203': Part(part_no='SP-1203', description='Drive pulley, lagged, 630 mm', category='Pulley', wear_part=False, lead_time_days=84, service_interval_months=None, substitutes=())
+  'SP-1301': Part(part_no='SP-1301', description='Spherical roller bearing 22216', category='Bearing', wear_part=True, lead_time_days=7, service_interval_months=24, substitutes=('SP-1311',))
+  'SP-1311': Part(part_no='SP-1311', description='Spherical roller bearing 22216, alternative make', category='Bearing', wear_part=True, lead_time_days=10, service_interval_months=24, substitutes=('SP-1301',))
+  'SP-1303': Part(part_no='SP-1303', description='Spherical roller bearing 22220', category='Bearing', wear_part=True, lead_time_days=7, service_interval_months=24, substitutes=())
+  'SP-1401': Part(part_no='SP-1401', description='Primary belt scraper blade, 800 mm', category='Scraper', wear_part=True, lead_time_days=10, service_interval_months=6, substitutes=())
+  'SP-1402': Part(part_no='SP-1402', description='Primary belt scraper blade, 1000 mm', category='Scraper', wear_part=True, lead_time_days=10, service_interval_months=6, substitutes=())
+  'SP-1501': Part(part_no='SP-1501', description='Helical bevel gearbox, 15 kW', category='Drive', wear_part=False, lead_time_days=98, service_interval_months=None, substitutes=())
+  'SP-1502': Part(part_no='SP-1502', description='Electric motor 15 kW IE3', category='Drive', wear_part=False, lead_time_days=35, service_interval_months=None, substitutes=())
+  'SP-1503': Part(part_no='SP-1503', description='Flexible coupling, size 5', category='Drive', wear_part=True, lead_time_days=14, service_interval_months=36, substitutes=())
+  'SP-1601': Part(part_no='SP-1601', description='Screw flight section, 400 mm', category='Screw', wear_part=True, lead_time_days=45, service_interval_months=18, substitutes=())
+  'SP-1701': Part(part_no='SP-1701', description='Elevator bucket, 300 mm', category='Elevator', wear_part=True, lead_time_days=30, service_interval_months=30, substitutes=())
+  'SP-1801': Part(part_no='SP-1801', description='Crusher hammer set', category='Crusher', wear_part=True, lead_time_days=63, service_interval_months=12, substitutes=())
+stock:
+  ('SP-1001', 'FI'): 60
+  ('SP-1002', 'SE'): 25
+  ('SP-1101', 'FI'): 18
+  ('SP-1101', 'SE'): 6
+  ('SP-1102', 'FI'): 4
+  ('SP-1102', 'SE'): 2
+  ('SP-1104', 'FI'): 2
+  ('SP-1202', 'FI'): 1
+  ('SP-1203', 'SE'): 1
+  ('SP-1301', 'FI'): 2
+  ('SP-1301', 'SE'): 4
+  ('SP-1311', 'FI'): 3
+  ('SP-1401', 'FI'): 3
+  ('SP-1402', 'SE'): 2
+  ('SP-1502', 'FI'): 1
+  ('SP-1503', 'FI'): 2
+  ('SP-1503', 'SE'): 2
+  ('SP-1701', 'FI'): 40
+  ('SP-1801', 'FI'): 1
+bom:
+  BomLine(machine_id='BC-01', part_no='SP-1001', qty_installed=18, critical=False, last_replaced=datetime.date(2024, 4, 3))
+  BomLine(machine_id='BC-01', part_no='SP-1101', qty_installed=12, critical=False, last_replaced=datetime.date(2025, 2, 1))
+  BomLine(machine_id='BC-01', part_no='SP-1201', qty_installed=1, critical=True, last_replaced=None)
+  BomLine(machine_id='BC-01', part_no='SP-1301', qty_installed=4, critical=True, last_replaced=datetime.date(2024, 11, 2))
+  BomLine(machine_id='BC-01', part_no='SP-1401', qty_installed=1, critical=False, last_replaced=datetime.date(2026, 3, 3))
+  BomLine(machine_id='BC-01', part_no='SP-1501', qty_installed=1, critical=True, last_replaced=None)
+  BomLine(machine_id='CR-01', part_no='SP-1801', qty_installed=1, critical=True, last_replaced=datetime.date(2025, 11, 2))
+  BomLine(machine_id='CR-01', part_no='SP-1303', qty_installed=2, critical=True, last_replaced=datetime.date(2024, 8, 3))
+  BomLine(machine_id='BC-02', part_no='SP-1002', qty_installed=14, critical=False, last_replaced=datetime.date(2025, 10, 2))
+  BomLine(machine_id='BC-02', part_no='SP-1104', qty_installed=4, critical=False, last_replaced=datetime.date(2025, 5, 3))
+  BomLine(machine_id='BC-02', part_no='SP-1203', qty_installed=1, critical=True, last_replaced=None)
+  BomLine(machine_id='BC-02', part_no='SP-1301', qty_installed=4, critical=True, last_replaced=datetime.date(2025, 12, 2))
+  BomLine(machine_id='BC-02', part_no='SP-1402', qty_installed=1, critical=False, last_replaced=datetime.date(2026, 5, 3))
+  BomLine(machine_id='BC-02', part_no='SP-1502', qty_installed=1, critical=True, last_replaced=None)
+  BomLine(machine_id='SC-01', part_no='SP-1601', qty_installed=3, critical=False, last_replaced=datetime.date(2025, 3, 3))
+  BomLine(machine_id='BC-03', part_no='SP-1001', qty_installed=12, critical=False, last_replaced=datetime.date(2026, 2, 1))
+  BomLine(machine_id='BC-03', part_no='SP-1102', qty_installed=3, critical=False, last_replaced=datetime.date(2024, 9, 2))
+  BomLine(machine_id='BC-03', part_no='SP-1202', qty_installed=1, critical=False, last_replaced=None)
+  BomLine(machine_id='BC-03', part_no='SP-1301', qty_installed=2, critical=True, last_replaced=datetime.date(2024, 12, 2))
+  BomLine(machine_id='BC-04', part_no='SP-1001', qty_installed=9, critical=False, last_replaced=datetime.date(2025, 8, 2))
+  BomLine(machine_id='BC-04', part_no='SP-1503', qty_installed=1, critical=True, last_replaced=datetime.date(2024, 4, 3))
+  BomLine(machine_id='BE-01', part_no='SP-1701', qty_installed=60, critical=False, last_replaced=datetime.date(2024, 6, 3))
+  BomLine(machine_id='BC-05', part_no='SP-1001', qty_installed=8, critical=False, last_replaced=datetime.date(2026, 6, 2))
+  BomLine(machine_id='BC-05', part_no='SP-1401', qty_installed=1, critical=False, last_replaced=datetime.date(2026, 4, 3))
+  BomLine(machine_id='BC-05', part_no='SP-1301', qty_installed=2, critical=True, last_replaced=datetime.date(2025, 7, 3))
+  BomLine(machine_id='FR-01', part_no='SP-1002', qty_installed=20, critical=False, last_replaced=datetime.date(2025, 2, 1))
+  BomLine(machine_id='FR-01', part_no='SP-1301', qty_installed=4, critical=True, last_replaced=datetime.date(2024, 10, 2))
+  BomLine(machine_id='FR-01', part_no='SP-1402', qty_installed=1, critical=False, last_replaced=datetime.date(2026, 4, 3))
+  BomLine(machine_id='SC-11', part_no='SP-1601', qty_installed=4, critical=False, last_replaced=datetime.date(2025, 6, 3))
+  BomLine(machine_id='BC-11', part_no='SP-1002', qty_installed=16, critical=False, last_replaced=datetime.date(2026, 1, 1))
+  BomLine(machine_id='BC-11', part_no='SP-1203', qty_installed=1, critical=True, last_replaced=None)
+  BomLine(machine_id='BC-11', part_no='SP-1301', qty_installed=2, critical=True, last_replaced=datetime.date(2025, 1, 2))
+  BomLine(machine_id='BC-12', part_no='SP-1001', qty_installed=10, critical=False, last_replaced=datetime.date(2024, 1, 3))
+  BomLine(machine_id='BC-12', part_no='SP-1503', qty_installed=1, critical=True, last_replaced=datetime.date(2023, 11, 3))
+  BomLine(machine_id='CH-01', part_no='SP-1002', qty_installed=12, critical=False, last_replaced=datetime.date(2024, 6, 3))
+  BomLine(machine_id='CH-01', part_no='SP-1402', qty_installed=1, critical=False, last_replaced=datetime.date(2026, 8, 2))
+  BomLine(machine_id='CH-02', part_no='SP-1601', qty_installed=4, critical=True, last_replaced=datetime.date(2025, 5, 3))
+  BomLine(machine_id='CH-02', part_no='SP-1502', qty_installed=1, critical=True, last_replaced=None)
+  BomLine(machine_id='CH-03', part_no='SP-1002', qty_installed=18, critical=False, last_replaced=datetime.date(2023, 12, 3))
+  BomLine(machine_id='CH-03', part_no='SP-1203', qty_installed=1, critical=True, last_replaced=None)
+  BomLine(machine_id='CH-03', part_no='SP-1301', qty_installed=2, critical=True, last_replaced=datetime.date(2025, 10, 2))
+incoming:
+  Incoming(po='PO-4711', part_no='SP-1301', qty=6, warehouse='FI', due=datetime.date(2026, 10, 14))
+  Incoming(po='PO-4718', part_no='SP-1601', qty=4, warehouse='FI', due=datetime.date(2026, 10, 22))
+  Incoming(po='PO-4720', part_no='SP-1203', qty=1, warehouse='FI', due=datetime.date(2026, 11, 26))

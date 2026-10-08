@@ -1,0 +1,13 @@
+Sawmill customer · Sawmill, Central Finland                   Fri 2026-10-02
+
+ #  AREA         MACHINE                           CRIT  STATUS
+ 1  Debarking    BC-01  Bark conveyor              A     ✖  none in stock: SP-1201, SP-1501
+ 2  Crushing     CR-01  Bark crusher               A     ✖  none in stock: SP-1303
+ 3               BC-02  Crusher discharge convey…  A     ▲  low: SP-1104 (2 of 4)
+ 4  Screening    SC-01  Screen feed screw          B     ▲  low: SP-1601 (0 of 3)
+ 5               BC-03  Chip return conveyor       B     ●
+ 6  Storage      BC-04  Stockpile conveyor         B     ●
+ 7  Boiler feed  BE-01  Boiler feed elevator       A     ▲  low: SP-1701 (40 of 60)
+ 8               BC-05  Boiler day-bin conveyor    A     ●
+
+● covered   ▲ low   ✖ none in stock   ? no parts list

@@ -1,0 +1,9 @@
+BC-03 Chip return conveyor · belt conveyor · criticality B
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1001  Conveyor belt EP630/4, 800 mm,…      12   60    0  ●
+ 2  SP-1102  Return idler, 800 mm                  3    4    2  ●  overdue since 2026-09-02
+ 3  SP-1202  Tail pulley, 400 mm                   1    1    0  ●
+ 4  SP-1301  Spherical roller bearing 22216 ★      2    2    4  ●  due 2026-12-02
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list

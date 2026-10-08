@@ -2,6 +2,9 @@
 
 golden/views/lab_reference/ holds the lab's own output, captured once from the lab at fa3836f
 (scripts/capture_lab_reference.py) and never regenerated. The port must give the same text.
+
+golden/views/*.txt holds the port's own output, written by scripts/regen_golden.py. These tests
+only read it: a missing or stale golden fails, it is never written here.
 """
 
 import difflib
@@ -15,7 +18,9 @@ from domains.spare_parts import build, views
 from domains.spare_parts.data import demo, from_tables
 from view_screens import screens, service_data_text
 
-LAB = Path(__file__).parent / "golden" / "views" / "lab_reference"
+GOLDEN = Path(__file__).parent / "golden" / "views"
+GOLDEN_NAMES = sorted(path.stem for path in GOLDEN.glob("*.txt"))
+LAB = GOLDEN / "lab_reference"
 LAB_NAMES = sorted(path.stem for path in LAB.glob("*.txt"))
 
 
@@ -73,3 +78,22 @@ def test_the_widget_gives_every_card_the_code_of_the_text_menu():
                 codes.update({f"{n}{p[0]}": (machine_id, p[1]) for p in parts})
     assert codes == views.desk_menu(data)[1]
     assert "__DESK__" not in html and "sendPrompt(c)" in html
+
+
+def test_the_goldens_are_exactly_the_screens(port):
+    assert sorted(port) == GOLDEN_NAMES, "run scripts/regen_golden.py and review the diff"
+
+
+def test_the_goldens_cover_every_customer_machine_and_country():
+    data = demo()
+    wanted = {"countries", "line_status", "machine_status", "menu_tree", "desk_menu", "desk_widget"}
+    wanted |= {f"plant_view_{customer_id}" for customer_id in data.customers}
+    wanted |= {f"machine_card_{machine_id}" for machine_id in data.machines}
+    wanted |= {f"companies_{country}" for country in views.countries(data)}
+    assert len(data.customers) == 3 and len(data.machines) == 15
+    assert wanted <= set(GOLDEN_NAMES), sorted(wanted - set(GOLDEN_NAMES))
+
+
+@pytest.mark.parametrize("name", GOLDEN_NAMES)
+def test_the_port_gives_its_golden_text(port, name):
+    _same(_read(GOLDEN / f"{name}.txt"), port[name], f"{name}.txt")

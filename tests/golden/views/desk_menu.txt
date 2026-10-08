@@ -1,0 +1,70 @@
+FINLAND
+  Sawmill customer (C-100)
+     1   BC-01  Bark conveyor                   ✖
+          a  SP-1001  Conveyor belt EP630/4, 800 …   ●
+          b  SP-1101  Carrying idler 3-roll set, …   ●
+          c  SP-1201  Drive pulley, lagged, 500 mm ★ ✖
+          d  SP-1301  Spherical roller bearing 22… ★ ●
+          e  SP-1401  Primary belt scraper blade,…   ●
+          f  SP-1501  Helical bevel gearbox, 15 kW ★ ✖
+     2   CR-01  Bark crusher                    ✖
+          a  SP-1801  Crusher hammer set ★           ●
+          b  SP-1303  Spherical roller bearing 22… ★ ✖
+     3   BC-02  Crusher discharge conveyor      ▲
+          a  SP-1002  Conveyor belt EP800/4, 1000…   ●
+          b  SP-1104  Impact idler set, 1000 mm      ▲
+          c  SP-1203  Drive pulley, lagged, 630 mm ★ ●
+          d  SP-1301  Spherical roller bearing 22… ★ ●
+          e  SP-1402  Primary belt scraper blade,…   ●
+          f  SP-1502  Electric motor 15 kW IE3 ★     ●
+     4   SC-01  Screen feed screw               ▲
+          a  SP-1601  Screw flight section, 400 mm   ▲
+     5   BC-03  Chip return conveyor            ●
+          a  SP-1001  Conveyor belt EP630/4, 800 …   ●
+          b  SP-1102  Return idler, 800 mm           ●
+          c  SP-1202  Tail pulley, 400 mm            ●
+          d  SP-1301  Spherical roller bearing 22… ★ ●
+     6   BC-04  Stockpile conveyor              ●
+          a  SP-1001  Conveyor belt EP630/4, 800 …   ●
+          b  SP-1503  Flexible coupling, size 5 ★    ●
+     7   BE-01  Boiler feed elevator            ▲
+          a  SP-1701  Elevator bucket, 300 mm        ▲
+     8   BC-05  Boiler day-bin conveyor         ●
+          a  SP-1001  Conveyor belt EP630/4, 800 …   ●
+          b  SP-1401  Primary belt scraper blade,…   ●
+          c  SP-1301  Spherical roller bearing 22… ★ ●
+  Pulp mill customer (C-300)
+     9   CH-01  Chip unloading conveyor         ●
+          a  SP-1002  Conveyor belt EP800/4, 1000…   ●
+          b  SP-1402  Primary belt scraper blade,…   ●
+    10   CH-02  Chip pile reclaim screw         ✖
+          a  SP-1601  Screw flight section, 400 mm ★ ✖
+          b  SP-1502  Electric motor 15 kW IE3 ★     ●
+    11   CH-03  Digester feed conveyor          ●
+          a  SP-1002  Conveyor belt EP800/4, 1000…   ●
+          b  SP-1203  Drive pulley, lagged, 630 mm ★ ●
+          c  SP-1301  Spherical roller bearing 22… ★ ●
+
+SWEDEN
+  Power plant customer (C-200)
+    12   FR-01  Fuel reception conveyor         ●
+          a  SP-1002  Conveyor belt EP800/4, 1000…   ●
+          b  SP-1301  Spherical roller bearing 22… ★ ●
+          c  SP-1402  Primary belt scraper blade,…   ●
+    13   SC-11  Fuel screen screw               ▲
+          a  SP-1601  Screw flight section, 400 mm   ▲
+    14   BC-11  Silo feed conveyor              ●
+          a  SP-1002  Conveyor belt EP800/4, 1000…   ●
+          b  SP-1203  Drive pulley, lagged, 630 mm ★ ●
+          c  SP-1301  Spherical roller bearing 22… ★ ●
+    15   BC-12  Boiler feed conveyor            ●
+          a  SP-1001  Conveyor belt EP630/4, 800 …   ●
+          b  SP-1503  Flexible coupling, size 5 ★    ●
+
+Reply with one code:  machine number + part letter + question
+  B  Availability, machine stopped      e.g. 1a B
+  P  Availability, planned service      e.g. 1a P
+  L  Lead time                          e.g. 1a L
+  S  Service demand (whole machine)     e.g. 1 S  (no part letter)
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list

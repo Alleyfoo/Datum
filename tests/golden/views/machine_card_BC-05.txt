@@ -1,0 +1,8 @@
+BC-05 Boiler day-bin conveyor · belt conveyor · criticality A
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1001  Conveyor belt EP630/4, 800 mm,…       8   60    0  ●
+ 2  SP-1401  Primary belt scraper blade, 80…       1    3    0  ●  due 2026-10-02
+ 3  SP-1301  Spherical roller bearing 22216 ★      2    2    4  ●
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list
