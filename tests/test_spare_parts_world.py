@@ -5,7 +5,7 @@ import pytest
 
 from domains.spare_parts import build
 from domains.spare_parts import world as world_module
-from domains.spare_parts.world import AS_OF, HISTORY_DAYS, conservation, snapshot
+from domains.spare_parts.world import AS_OF, HISTORY_DAYS, conservation, generate_history, snapshot
 
 
 @pytest.fixture(scope="module")
@@ -64,6 +64,42 @@ def test_a_broken_ledger_is_caught(world):
     moves[0] = dict(moves[0], qty=moves[0]["qty"] + 1)
     broken["stock_movement"] = moves
     assert conservation(broken)
+
+
+def _one_line_company():
+    """One part on one machine, stocked on one line that ends the year at zero.
+
+    With seed 41 the history has a receipt and an issue on the same day, and the
+    balance before that day is smaller than the issue (found by searching seeds).
+    """
+    return {
+        "part": [{"part_no": "SP-X", "description": "Test part", "category": "Test",
+                  "wear_part": True, "lead_time_days": 7, "service_interval_months": 1}],
+        "bom_line": [{"machine_id": "M-1", "part_no": "SP-X", "qty_installed": 4,
+                      "critical": True, "last_replaced": None}],
+        "stock_level": [{"part_no": "SP-X", "warehouse": "FI", "on_hand": 0}],
+    }
+
+
+def test_same_day_receipt_and_issue_replays_without_going_negative():
+    # B5: a same-day issue replayed before its receipt made the balance negative
+    company = _one_line_company()
+    history = generate_history(company, seed=41)
+    moves = sorted(history["stock_movement"], key=lambda m: (m["occurred_on"], m["movement_id"]))
+    opening = company["stock_level"][0]["on_hand"] - sum(m["qty"] for m in moves)
+
+    same_day = sorted({m["occurred_on"] for m in moves if m["kind"] == "receipt"}
+                      & {m["occurred_on"] for m in moves if m["kind"] == "issue"})
+    assert same_day, "the fixture must keep a receipt and an issue on one day"
+    day = same_day[0]
+    before = opening + sum(m["qty"] for m in moves if m["occurred_on"] < day)
+    issued = -sum(m["qty"] for m in moves if m["occurred_on"] == day and m["kind"] == "issue")
+    assert before - issued < 0, "issue-first on that day would go negative"
+
+    assert opening >= 0
+    assert conservation({**company, **history}) == []
+    kinds_that_day = [m["kind"] for m in moves if m["occurred_on"] == day]
+    assert kinds_that_day == sorted(kinds_that_day, key=lambda k: k == "issue")
 
 
 def _build_on(monkeypatch, held, history=None):
