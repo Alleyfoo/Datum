@@ -14,7 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, NamedTuple, Tuple
 
 TYPES = ("text", "int", "decimal", "bool", "date", "datetime")
 TYPE_RULES = {
@@ -106,3 +106,12 @@ class HeaderSchema:
     def digest(self) -> str:
         canonical = json.dumps(self.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+class Versioned(NamedTuple):
+    """One version of one company's schema for one file kind."""
+
+    company_id: str
+    file_kind: str
+    version: int
+    schema: HeaderSchema

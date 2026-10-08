@@ -9,6 +9,10 @@
 
 A worker can drop; an approver is needed to admit. Each decision is a document about the ticket
 and every step is a journal entry. Writing admitted rows to extracts/ (Publish) is not built yet.
+
+An import names the trial finding it rests on: a finding about the same ticket that says the file
+fits that file kind and schema version. Proposing and admitting both check it, so nothing is
+admitted without a verified fit.
 """
 
 from __future__ import annotations
@@ -23,9 +27,25 @@ from . import accepted
 DISPOSITIONS = ("import", "create_schema", "drop")
 #: what a proposal of each kind must name
 PAYLOAD = {
-    "import": ("company_id", "source_id", "file_kind", "schema_version"),
+    "import": ("company_id", "source_id", "file_kind", "schema_version", "finding"),
     "create_schema": ("company_id", "file_kind", "version"),
 }
+
+
+def fitting_finding(store: Store, db, ticket: int, payload: dict) -> dict:
+    """The finding an import rests on: about this ticket, saying this file fits this version."""
+    number = payload.get("finding")
+    row = db.execute("SELECT 1 FROM links l JOIN items f ON f.number=l.source WHERE l.source=? AND"
+                     " l.type='about' AND l.target=? AND f.type='finding'", (number, ticket)).fetchone()
+    data = store._item(db, number)["data"] if row else {}
+    subject = data.get("subject") or {}
+    fits = (data.get("outcome") == "fits" and data.get("file_kind") == payload.get("file_kind")
+            and data.get("schema_version") == payload.get("schema_version")
+            and subject.get("source_id") == payload.get("source_id")
+            and subject.get("company_id") == payload.get("company_id"))
+    require(fits, "no_fitting_trial", f"#{ticket} has no trial finding saying {payload.get('source_id')} fits "
+                                      f"{payload.get('file_kind')} version {payload.get('schema_version')}")
+    return data
 
 
 def drop(store: Store, ticket: int, actor: str, reason: str, *, role: Optional[str] = None) -> dict:
@@ -54,6 +74,9 @@ def propose(store: Store, ticket: int, actor: str, disposition: str, reason: str
             f"an approver decides {sorted(PAYLOAD)}; the dispositions are {DISPOSITIONS}")
     missing = [key for key in PAYLOAD[disposition] if payload.get(key) in (None, "")]
     require(not missing, "invalid_argument", f"a {disposition} proposal must name {', '.join(missing)}")
+    if disposition == "import":
+        with store.reading() as db:
+            fitting_finding(store, db, ticket, payload)
     return queue.propose(store, ticket, actor, disposition, reason, payload=payload, role=role)
 
 
@@ -63,6 +86,7 @@ def admit(store: Store, ticket: int, approver: str, reason: str) -> dict:
 
     def effect(db, item, proposal):
         p = proposal["payload"]
+        fitting_finding(store, db, item["number"], p)
         row = accepted.record(store, db, company_id=p["company_id"], file_kind=p["file_kind"],
                               source_id=p["source_id"], schema_version=p["schema_version"],
                               ticket=item["number"], admitted_by=approver)
