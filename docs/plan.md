@@ -114,6 +114,7 @@ Shop-flow) would need it unchanged, it is core.
 | Governed Data Lab `src/execution/` | deterministic execution with no LLM reachable | core rule, tested |
 | Shopflow-furniture `mcp_server.py` | tiers declared in the MCP protocol | `babel/mcp` |
 | Learning Lab | unknown path: observe, propose, human confirms, then the source is established | `babel/intake` establishment session |
+| `mcp-messy-data` (`C:\Users\pertt\Desktop\cowork\mcp-messy-data`) `docs/DOCTRINE.md`, `ARCHITECTURE.md`, `F4.1`, `F4.2` | the import pipeline: Preserve, Reveal, Define, Map, Validate, Publish; staging that changes nothing; versioned schemas with named approvers; per-cell mapping results; assumptions with scope; executors; reference workbooks as evidence | `babel/intake`, `babel/schema`, `babel/record`. See "Import definition" |
 
 Every ported file records its origin commit in `docs/provenance.md`. Before a piece is
 built again, check whether a sibling repository already has it (the list above). Most of
@@ -287,6 +288,51 @@ done in phase 1.
     the least rights it needs, and every record names who or what acted. Not built, and
     none of the sibling repositories has it: they declare tiers, not identities. Note it
     now so the role design can carry it later.
+
+## Import definition: how a file becomes data
+
+The reference for how imports work is `mcp-messy-data` (`C:\Users\pertt\Desktop\cowork\mcp-messy-data`),
+built on the sequence `Preserve → Reveal → Define → Map → Validate → Publish`. Its
+`docs/DOCTRINE.md` and `docs/ARCHITECTURE.md` are the rules this plan inherits. (The
+`shopflow-furniture` repository covers the shop's own intake and is not the import definition.)
+
+| Stage | What happens | Where it lives here |
+|---|---|---|
+| **Preserve** | The arrival is copied in, hashed and made read-only. Its id is derived from its content, so registering the same bytes twice does nothing new. | `inbox/` (raw, never edited) |
+| **Reveal** | Staging: every cell stored as text with a one-character type code (empty, string, number, bool, date, formula, error). Nothing is trimmed, parsed, coerced, de-duplicated or renamed. Blank and total rows are kept and flagged. Each row keeps its source file, sheet and exact spreadsheet row. Column ids are mechanical; source headers are data, not identifiers. | staging area of the trial |
+| **Define** | The schema is the organisation's statement of meaning. It is versioned: a change creates version N+1 and leaves N intact. An agent may propose; only a named human approves, and the system rejects approvals under an agent name. | the create-schema process |
+| **Map** | Each source cell gets a result: the target value, its status, the rule chain and the reason. Nothing is written to the record. | the trial's per-row results |
+| **Validate** | Checks run on the mapping (for example, counts, required fields, conservation). A failed check stops the run. | the verification in the routing |
+| **Publish** | Only approved rules and decisions produce output. Before and after the run, the decision and record tables are compared, and the run must leave them unchanged. | admission, after the person's choice |
+
+**Worked example** (from `F4.1-MAPPING-EXECUTION.md`): a supplier workbook of 1105 rows, mapped
+to 41 target fields, gives 45 305 cell results. 14 fields were mapped and 14 of 14 validation
+checks passed, with 0 execution errors. The result is a candidate for review, not an approved
+import: it stays `DISCOVERED`, nothing is published, and the record is hashed before and after
+to prove it.
+
+**Rules to carry over:**
+
+- **Assumptions have scope and a lifecycle** (`OBSERVED → PROVISIONAL → APPROVED`, or
+  `REJECTED`, `SUPERSEDED`). A first observation never becomes a permanent rule.
+- **Executors are pure and deterministic.** A rule is a small function with exact arithmetic
+  (the doctrine uses decimals, so `30.5 × 10` is exactly `305`). The same input gives the same
+  output, and the output is reproducible from raw evidence.
+- **Reference workbooks are evidence, not truth.** A reference (for example, a hand-built
+  comparison file) is registered as `MANUAL_REFERENCE`. A mismatch with it is a finding, not
+  an overwrite, and the reference never overrides an approved decision.
+- **Preview before apply.** A rule is previewed (for example, 16 matches, 1089 empty source
+  cells, 0 differences) before it is run.
+- **Roundtable.** Ambiguous meanings are queued as decisions for a person. Each decision
+  becomes a rule once it is approved, and replay from immutable evidence shows its effect.
+- **The system becomes more deterministic as knowledge accumulates,** not more dependent on
+  repeated model work.
+
+**What this changes in the plan.** The trial in the routing is the Reveal and Map stages. It must
+not coerce or trim, and its results must be per cell, not a single pass/fail. The create-schema
+gate is the Define stage, with its versioning and named approver. The arriving file's record
+(hash, source id, rows) is the Preserve stage. Traceability (item 12) comes from the per-row
+provenance, not a later addition.
 
 ## Customer data layout (proposed, to confirm)
 
