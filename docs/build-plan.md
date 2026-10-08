@@ -162,6 +162,9 @@ chemicals); it is not needed for spare parts or furniture.
 |---|---|---|
 | T-open | Opening a ticket sets it to `in_progress` | When a person opens an open ticket, its status becomes `in_progress`, and the log records who opened it and when. Opening a ticket that is already `in_progress` changes nothing. |
 
-Not yet decided: whether a ticket returns to `open` when its last person closes it without a decision, and
-whether merely viewing a ticket counts as opening it. Until decided, opening means the person worked it
-from the ticket view.
+| T-view | Viewing does not change state | Reading a ticket never changes its status. |
+| T-release | Returns to `open` when not concluded | If the handler releases the ticket without a decision, it returns to `open`. |
+| T-meaning | `in_progress` means the ticket has been given to an agent for processing | Opening a ticket hands it to an agent. `in_progress` stays until the ticket is concluded (a decision recorded) or released (back to `open`). The log records the agent, the time it was handed over, and the outcome. |
+
+Still open: what happens if the agent stops without releasing. Options: the ticket stays `in_progress` until a
+person releases it, or it returns to `open` after a set time.
