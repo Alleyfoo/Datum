@@ -1,9 +1,10 @@
-"""The trial: a staged file tried strictly against one header schema.
+"""The trial: a staged and cleaned file tried strictly against one header schema.
 
-These are the Reveal and Map stages for one file. Every cell under a declared header gets a
-result: accepted with its typed value, or refused with a reason and the rule it broke. A file fits
-only with zero refusals. Header similarity, a guessed synonym or a position match never makes a
-file fit, and nothing is trimmed or coerced to make a value pass.
+This is the Map stage for one file. It runs on the values the cleaning stage (cleaning.py) made
+from staging, so the zero-refusal rule applies after cleaning. Every cell under a declared header
+gets a result: accepted with its typed value, or refused with a reason and the rule it broke. A
+file fits only with zero refusals. Header similarity, a guessed synonym or a position match never
+makes a file fit, and the trial itself trims and coerces nothing.
 
 A file that does not fit is classified by deterministic checks, in this order:
 
@@ -31,7 +32,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from babel.schema.headers import Column, HeaderSchema
 
-from . import staging
+from . import cleaning, staging
 from .staging import Dataset, Row, column_id
 
 OUTCOMES = ("fits", "wrong_file", "structural_change", "schema_defect", "value_problem")
@@ -200,11 +201,11 @@ def _values(schema: HeaderSchema, dataset: Dataset) -> Tuple[List[Cell], int]:
 
 def run(datasets: Sequence[Dataset], schema: HeaderSchema, *,
         accepted: Sequence[Tuple[str, Sequence[Dataset]]] = ()) -> Result:
-    """Try one file's staged sheets against a schema.
+    """Try one file's sheets, cleaned for this schema, against it.
 
-    `accepted` holds (source id, staged sheets) for each file the company accepted under this
-    schema's version; they are only read when the file's own values are refused (schema defect
-    check).
+    `accepted` holds (source id, sheets cleaned for this schema) for each file the company accepted
+    under this schema's version; they are only read when the file's own values are refused (schema
+    defect check).
     """
     result = Result("", schema.digest(), fingerprints={d.sheet: d.fingerprint for d in datasets})
     located = _locate(datasets, schema)
@@ -248,9 +249,10 @@ def run(datasets: Sequence[Dataset], schema: HeaderSchema, *,
 def verify(root, company_id: str, source_id: str, sheets: Sequence[Dataset], schema: HeaderSchema,
            result: Result, accepted: Sequence[Tuple[str, Sequence[Dataset]]] = ()) -> dict:
     """Check a result before anyone states it: every sheet rebuilt from the raw file must give its
-    recorded fingerprint, and the trial on the rebuilt sheets must give the same result digest."""
+    staged fingerprint, and the rebuilt sheets, cleaned again for the schema and tried, must give the
+    same result digest. `sheets` are the staged sheets, not the cleaned ones."""
     rebuilt = [staging.rebuild(root, company_id, source_id, d.sheet) for d in sheets]
-    again = run(rebuilt, schema, accepted=accepted)
+    again = run(cleaning.clean(rebuilt, schema).datasets, schema, accepted=accepted)
     return {
         "fingerprints": {d.sheet: {"staged": d.fingerprint, "rebuilt": r.fingerprint} for d, r in zip(sheets, rebuilt)},
         "fingerprints_reproduced": all(d.fingerprint == r.fingerprint for d, r in zip(sheets, rebuilt)),

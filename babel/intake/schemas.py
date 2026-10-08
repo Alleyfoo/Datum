@@ -29,7 +29,7 @@ from babel.record import queue
 from babel.record.store import ROLES, Store, require, text
 from babel.schema.headers import Column, HeaderSchema, Versioned
 
-from . import staging, trial
+from . import cleaning, staging, trial
 from .staging import Dataset
 
 FILE_KIND = re.compile(r"[a-z][a-z0-9_]{0,63}")
@@ -126,10 +126,13 @@ def current_version(db, company_id: str, file_kind: str) -> Optional[int]:
 def suggest(dataset: Dataset, header_row: int = 1) -> Tuple[Optional[HeaderSchema], List[dict]]:
     """A draft read off a staged sheet, with the evidence for each column, for a worker to check.
 
-    A column's type is proposed only when every value below the header row has the same kind;
-    a column that is ever empty is proposed as optional. With any column undecided there is no
-    draft, only the evidence.
+    The sheet is read as the default cleaning (T1) leaves it, since a trial will see it that way:
+    header names come trimmed, and a text of only whitespace counts as empty. A column's type is
+    proposed only when every value below the header row has the same kind; a column that is ever
+    empty is proposed as optional. With any column undecided there is no draft, only the evidence.
+    No case is proposed: a declared transformation is a person's choice.
     """
+    dataset = cleaning.clean([dataset]).datasets[0]
     header = dataset.row(header_row)
     evidence, columns = [], []
     if header is None:
@@ -223,7 +226,8 @@ def confirm(store: Store, root, ticket: int, approver: str, reason: str) -> dict
     1. a named person who holds the approver role, whose name is not agent-like, confirms it with a
        reason (the confirmer may be the drafter: owner answers Q7 and round two);
     2. the draft's full rule list is on the ticket, as written when it was drafted;
-    3. the file it was drafted from passes it with zero refusals.
+    3. the file it was drafted from, cleaned for the draft (its change records stored), passes it
+       with zero refusals.
     Files the company already accepted are not checked: each stays accepted under the version it was
     accepted with, and the new version applies to new files (owner answer P23). Otherwise nothing
     changes, the refusal is journaled, and the version stays a draft. On success the previous active
@@ -239,7 +243,9 @@ def confirm(store: Store, root, ticket: int, approver: str, reason: str) -> dict
         require(rules_on_ticket(db, item["number"], version), "rules_not_on_ticket",
                 f"#{item['number']} does not carry the full rule list of {label}")
         sheets = _sheets(root, company_id, version["drafted_from"])
-        own = trial.run(sheets, schema)
+        cleaned = cleaning.clean(sheets, schema)
+        cleaning.record(root, company_id, cleaned)
+        own = trial.run(cleaned.datasets, schema)
         require(own.fits, "draft_refuses_its_file",
                 f"{label} does not pass the file it was drafted from: {trial.headline(own)}")
         check = trial.verify(root, company_id, version["drafted_from"], sheets, schema, own)
@@ -255,11 +261,11 @@ def confirm(store: Store, root, ticket: int, approver: str, reason: str) -> dict
         subject = item["data"]["subject"]
         finding = store.document(
             db, approver, "finding", f"Trial against {label}: {trial.headline(own)}",
-            trial.report(own, schema) + "\n\nVerified: every sheet rebuilt from the raw file gives its "
-            f"recorded fingerprint, and the trial on the rebuilt sheets gives the same result "
-            f"(digest {check['result_digest'][:16]}).",
+            trial.report(own, schema) + "\n\n" + cleaning.report(cleaned) + "\n\nVerified: every sheet "
+            "rebuilt from the raw file gives its staged fingerprint, and the rebuilt sheets, cleaned and "
+            f"tried again, give the same result (digest {check['result_digest'][:16]}).",
             data={**own.to_dict(), "subject": subject, "file_kind": file_kind, "schema_version": number,
-                  "verification": check},
+                  "cleaning": cleaned.summary(), "verification": check},
             about=item["number"], role="approver")
         name = subject.get("original_name", subject["source_id"])
         return {

@@ -11,11 +11,12 @@ trigger():
 2. preserves the file in the company's inbox; a repeat of known bytes is linked to the ticket of
    its first arrival with a comment, and nothing else happens;
 3. stages every sheet; a file that cannot be read is unclassified, with the reader's error;
-4. tries the file against each active schema of the company and keeps the one it fits, or the
-   closest (choose());
+4. for each active schema of the company, cleans the staged sheets for that schema and stores the
+   change records (cleaning.py), then tries the cleaned file against it; keeps the schema it fits,
+   or the closest (choose());
 5. verifies the result before the ticket states it: every sheet is rebuilt from the raw file and
-   must give its recorded fingerprint, and the trial run on the rebuilt sheets must give the same
-   result digest. A result that does not reproduce is unclassified;
+   must give its staged fingerprint, and the rebuilt sheets, cleaned and tried again, must give the
+   same result digest. A result that does not reproduce is unclassified;
 6. opens one ticket with the routing text and the person's choices, and a finding document with
    the evidence. A file that fits is proposed for import, so it waits for an approver.
 """
@@ -29,7 +30,7 @@ from typing import Callable, List, Optional, Sequence, Tuple
 from babel.record.store import RecordError, Store
 from babel.schema.headers import Versioned
 
-from . import accepted, dispositions, inbox, staging, trial
+from . import accepted, cleaning, dispositions, inbox, staging, trial
 from .inbox import IntakeError
 from .schemas import provider as stored_schemas
 
@@ -73,13 +74,13 @@ def choose(tried: List[Tuple[Versioned, trial.Result]]) -> Tuple[Optional[Versio
 
 
 def _accepted_sheets(root, store: Store, company_id: str, versioned: Versioned):
-    """The staged files accepted under this very version, for the trial's schema-defect check. A
-    file accepted under an earlier version keeps that version, and a newer one is not checked
-    against it (owner answer P23)."""
+    """The files accepted under this very version, cleaned for it, for the trial's schema-defect
+    check. A file accepted under an earlier version keeps that version, and a newer one is not
+    checked against it (owner answer P23)."""
     files = []
     for row in accepted.files(store, company_id, versioned.file_kind, schema_version=versioned.version):
         sheets = staging.datasets(root, company_id, row["source_id"]) or staging.stage_all(root, company_id, row["source_id"])
-        files.append((row["source_id"], sheets))
+        files.append((row["source_id"], cleaning.clean(sheets, versioned.schema).datasets))
     return files
 
 
@@ -163,13 +164,18 @@ def trigger(root, company_id: str, path, *, store: Store, schemas: Optional[Sche
             finding_data={"outcome": "no_schema", "sheets": _first_rows(sheets)})
         return Arrival(ticket, kept.source_id, False, "no_schema", finding=finding)
 
-    tried = [(v, trial.run(sheets, v.schema, accepted=_accepted_sheets(root, store, company_id, v)))
-             for v in active]
+    attempts = []  # (version, its cleaning, the files accepted under it, the trial)
+    for v in active:
+        cleaned = cleaning.clean(sheets, v.schema)
+        cleaning.record(root, company_id, cleaned)
+        files = _accepted_sheets(root, store, company_id, v)
+        attempts.append((v, cleaned, files, trial.run(cleaned.datasets, v.schema, accepted=files)))
+    tried = [(v, r) for v, _, _, r in attempts]
     versioned, result, ambiguity = choose(tried)
     if versioned is None:
         return unclassified(ambiguity, {"tried": [{"file_kind": v.file_kind, "version": v.version,
                                                    "outcome": r.outcome} for v, r in tried]})
-    files = _accepted_sheets(root, store, company_id, versioned)
+    _, cleaned, files, _ = next(a for a in attempts if a[0] is versioned)
     check = trial.verify(root, company_id, kept.source_id, sheets, versioned.schema, result, files)
     if not (check["fingerprints_reproduced"] and check["trial_reproduced"]):
         return unclassified("the trial did not reproduce from the raw file", check)
@@ -182,11 +188,12 @@ def trigger(root, company_id: str, path, *, store: Store, schemas: Optional[Sche
     ticket, finding = _open(
         store, kept, company_id, outcome=result.outcome, routing=routing, versioned=versioned,
         finding_title=f"Trial against {label}: {trial.headline(result)}",
-        finding_body=(trial.report(result, versioned.schema) + "\n\nVerified: every sheet rebuilt from the "
-                      "raw file gives its recorded fingerprint, and the trial on the rebuilt sheets gives the "
-                      f"same result (digest {check['result_digest'][:16]})."),
+        finding_body=(trial.report(result, versioned.schema) + "\n\n" + cleaning.report(cleaned)
+                      + "\n\nVerified: every sheet rebuilt from the raw file gives its staged fingerprint, and "
+                      "the rebuilt sheets, cleaned and tried again, give the same result "
+                      f"(digest {check['result_digest'][:16]})."),
         finding_data={**result.to_dict(), "file_kind": versioned.file_kind, "schema_version": versioned.version,
-                      "verification": check, "tried": others})
+                      "cleaning": cleaned.summary(), "verification": check, "tried": others})
     if result.fits:
         store.claim(ticket, HOOK)
         dispositions.propose(store, ticket, HOOK, "import", f"The file fits {label} with zero refusals.",
