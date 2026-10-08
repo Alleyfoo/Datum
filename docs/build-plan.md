@@ -199,3 +199,14 @@ person releases it, or it returns to `open` after a set time.
 Status list, now: `open`, `in_progress`, `closed`. `static` is a marker on `in_progress`, not a status of its own.
 `waiting` from the earlier draft is not used. How long a ticket must be still before it is marked `static` is not
 decided; it is a setting to tune later.
+
+## 13. Two kinds of manager
+
+| ID | Role | Watches | Creates tickets for | Can release | Can conclude |
+|---|---|---|---|---|---|
+| M-sys | System-side manager | The process: stale and static tickets, repeated failures, schema drift, the health of the queue | Process problems (for example, a static ticket, a schema that fails often) | Yes, with history kept | No |
+| M-analysis | Analysis-side manager | The data: unusual orders, stock that will run out, patterns in exceptions | Business findings (for example, an order far above usual) | Yes, with history kept | No |
+
+Both report only through tickets. Neither changes stock, a schema, or the record. Whether these are two agents
+or one agent with two roles is open. Recommendation: two agents with separate scopes, so the process watcher
+never reads business data it has no use for.
