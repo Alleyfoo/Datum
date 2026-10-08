@@ -268,3 +268,11 @@ that offers a signed data processing agreement with documented zero retention, a
 | R-why | Why glm was tested | The Parts-Service-Desk handoff (decision D13) says glm-5.3-flash:cloud stood in for Claude for work, through the Claude Code harness, because the experiments used cloud models. It was a proxy, not the chosen model. |
 | R-gap | Claude is not evaluated yet | The evaluation (L3-2) measured glm. Claude has not been run through the same feed, prompt, checks and bar. Before the manager goes live, run the same evaluation on Claude (the planned L3-3 is the place). |
 | R-route | Data route still checked | The section 16 rule still applies: before real company data is sent, the written terms for the Claude route must cover no training and the retention used. |
+
+## 18. Manager: status after the Claude evaluation
+
+| ID | Answer | What it means |
+|---|---|---|
+| X-sched | Not yet | The twice-daily timed run is not set up. Next step only when the owner asks. |
+| X-safe | Trusted | The owner accepts Claude's stated data-safety terms. This replaces the open route check in section 16 for Claude, on the owner's decision. The basis is the vendor's stated terms, not an audit done here. |
+| X-bench | A benchmark only | The synthetic feed gives a simple benchmark. Synthetic data cannot supply the range of real cases the manager needs, so the evaluation does not prove production readiness. More real cases are needed before relying on it. |
