@@ -136,3 +136,15 @@ preference, 3.11 is the target until a dependency requires more.
 
 Items the branch must change before merging: the create-schema gate (amendment and folder-access
 drafting), the cleaning stage with its trim default, and demo step 3 as a test.
+
+## 9. Owner answers, third round
+
+| ID | Answer | What it means |
+|---|---|---|
+| R3-1 | Same-version check (option A) | The schema-defect check compares a new version only against files accepted under that version. Confirmed. |
+| R3-1b | One file kind for now | A company may later send several kinds of file (for example, one file for tyres and one for lamps), each with its own schema. Not built now. The model must allow several file kinds per company without a redesign. |
+| R3-2 | Access comes from the host | Folder access is decided by the host system, which already holds the security status. The code asks whether a person may write to the folder and does not keep its own user list or statuses. The host's status is not known yet, so this is an interface with a stub. |
+| R3-2b | Subroutine is not the tool | Subroutine is built for software development, not daily product handling. Its concepts stay as the ticket model, but it is not the backend. Who defines the worker and approver roles now needs a decision (see below). |
+| R3-3 | Log everything | Every action is logged with the actor, the time, the action and the before and after values. Logs are append-only and kept. Refused work is kept too. Logs contain personal data (names), so access and retention rules are needed before real data arrives. |
+
+**Open after this round:** where the worker and approver roles are defined, now that Subroutine is not the tool. The options are a list kept in our own store, or the roles that the host system already provides, mapped to worker and approver.
