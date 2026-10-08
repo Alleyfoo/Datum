@@ -23,6 +23,8 @@ from .world import build
 
 #: the warehouses the desk draws, in column order
 WAREHOUSES = ("FI", "SE")
+#: days to move stock between the FI and SE warehouses: the lab's assumption, kept as it is
+TRANSFER_DAYS = 3
 
 
 @dataclass(frozen=True)
