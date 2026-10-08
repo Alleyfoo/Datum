@@ -25,6 +25,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | C2 | Staging: text cells with type codes, no coercion, row provenance, fingerprint, verify | `babel/intake/staging.py` | `ef55cb0` |
 | C5 | Ticket spine on the Subroutine model: one number space, documents, `blocks`, leases, attributed append-only journal, roles | `babel/record/store.py` | `ad403b5` |
 | C6 | Approval queue inside the ticket flow: proposals park a ticket; a named approver decides with a reason | `babel/record/queue.py` | `095eea6` |
+| C7 | Dispositions import, create schema, drop; each writes its own record (a decision document; admission also an accepted file) | `babel/intake/dispositions.py`, `babel/intake/accepted.py` | `e82f859` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -55,7 +56,6 @@ Each ported file records its origin in [provenance.md](provenance.md).
 |---|---|---|---|
 | C3 | Folder hook: wait for complete file, hash check, open ticket, run trial | C1, C2 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C4 | Trial: strict fit (zero refusals), per-cell results, failure classes 2–4 | C2, R4 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
-| C7 | Dispositions: import, create schema, drop; each writes its own record | C5, C4 | [intake.md](intake.md#dispositions) |
 | C8 | Create-schema gate: draft, regression check, full rule listing, a non-drafter confirms | R3, C7 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C9 | Schema versioning (N+1) and rejection of agent-named approvals | R2, R3 | [intake.md](intake.md#the-import-definition) (Define) |
 | C10 | Module registry: contract, approver, limitations, failures | R9 | [intake.md](intake.md#modules) |
