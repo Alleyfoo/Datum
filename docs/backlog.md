@@ -33,6 +33,8 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | C8 | Create-schema gate: full rule list on the ticket, the drafted file passes, no regression, a named approver with a reason (the drafter may confirm, Q7); agent names refused; nothing activates by timeout or hook | `babel/intake/schemas.py` (`confirm`, `refuse`) | `0e52240` |
 | C27 | Schema amendment: an amendment is a new version; accepted files keep their version and are not checked against it (C8's regression check removed); drafting by anyone with access to the company's folder; demo step 3 as a test | `babel/intake/schemas.py`, `babel/intake/accepted.py`, `babel/intake/hook.py` | `78ad2e7` (tests that pinned the replaced rules changed in `e4328c3`) |
 | C26 | Cleaning stage: trim by default (T1), case declared per field, every change recorded against its cell; staging unchanged; the trial runs on cleaned values | `babel/intake/cleaning.py`, `babel/schema/headers.py` | `017afb1` |
+| D3 | The desk's data (`ServiceData`) read from the company tables; the lab's desk views captured once as reference text | `domains/spare_parts/data.py`, `tests/golden/views/lab_reference/` | `7181e03`, `0c7c97c`, `3813802` |
+| D4 | The desk's text views ported with the lab's exact text: line and machine status, countries, companies, plant view, machine card, menu tree, text menu, widget. Golden files written only by `scripts/regen_golden.py`; tested for identical text across calls and processes, emoji off by default, and no model, randomness or clock (the date is `AS_OF`) | `domains/spare_parts/views.py`, `tools.py`, `tests/golden/views/` | `1c4b4a7`, `1fba3c4`, `420c3ca`, `0761f71`, `53157b3`, `8217786` |
 
 ## Read (defined elsewhere, read and port)
 
@@ -50,7 +52,7 @@ Status of the whole board is summarised in [plan.md](plan.md).
 | R15 | Case store, evidence, typed findings, claims. Partly read: `desk/cases.py` at `fa3836f`, its concepts ported in C5; `case_evidence.py` and `evidence_intake.py` not yet | Predictive-Spare-Parts-Lab `desk/cases.py`, `case_evidence.py`, `evidence_intake.py` |
 | R16 | Bounded workbook reading, recognition, refusal, provenance | Predictive-Spare-Parts-Lab `desk/source_contract.py`, `source_publication.py` |
 | R17 | Answer checks | Predictive-Spare-Parts-Lab `desk/expert.py` |
-| R18 | Availability, lead time, service plan rules; menus | Predictive-Spare-Parts-Lab `desk/tools.py`, `views.py`, `mcp_server.py` |
+| R18 | Availability, lead time, service plan rules; menus. Partly read: `desk/views.py` and `due_date` from `tools.py` at `fa3836f`, ported in D4; the rest of `tools.py` and `mcp_server.py` not yet | Predictive-Spare-Parts-Lab `desk/tools.py`, `views.py`, `mcp_server.py` |
 | R19 | TSB and Croston methods, as-of features | Predictive-Spare-Parts-Lab `predictive_lab/intermittent.py`, `temporal.py` |
 | R20 | Coverage map and proposals with audit log | Spare-Parts-Readiness |
 
@@ -96,6 +98,7 @@ found, so it can be reproduced before it is fixed.
 | B3 | Open, latent | A receipt's delivery is found by `(part, warehouse, date)`. If two receipts for the same key land on the same day, the lookup returns the first delivery for both. | Code review. Not reproduced: receipts are spaced 40 to 70 days apart. | Carry the delivery id through the ledger, as in B2. |
 | B4 | Fixed (`5fd8908`) | `test_snapshot_is_not_mutated_by_build` compares two freshly built snapshots, so it cannot detect a mutation of shared data. | Code review of the test. | Done: the test keeps one snapshot object, makes `build` use it and compares each snapshot table to a deep copy; `test_the_snapshot_check_catches_a_mutation` shows it fails on a mutated table. |
 | B5 | Fixed (`0f48e76`), regression test (`ae20790`) | The ledger replayed a same-day issue before its receipt, so the opening balance could be negative. | Found by the conservation test on seed 2026, and fixed by ordering receipts before issues on the same day. | Done: `test_same_day_receipt_and_issue_replays_without_going_negative` (one-line company, seed 41, receipt and issue on 2026-09-26). |
+| B6 | Open, latent | `menu_tree` letters a machine's parts with `zip(string.ascii_lowercase, ...)`, so a machine with more than 26 parts loses the rest from the text menu, its codes and the widget, without a word. Kept as the lab has it, so the port's text equals the lab's. | Code review while porting `desk/views.py`. Not reproduced: the most parts on one machine is 6. | Give parts past `z` a code of their own, or refuse such a machine with a reason; add a test with 27 parts. |
 
 ## Plan (needs a decision or design first)
 

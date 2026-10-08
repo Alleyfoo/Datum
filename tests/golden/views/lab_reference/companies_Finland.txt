@@ -1,0 +1,4 @@
+[
+  ('C-100', 'Sawmill customer'),
+  ('C-300', 'Pulp mill customer'),
+]

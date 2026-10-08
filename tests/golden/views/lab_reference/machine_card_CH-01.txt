@@ -1,0 +1,7 @@
+CH-01 Chip unloading conveyor · belt conveyor · criticality B
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1002  Conveyor belt EP800/4, 1000 mm…      12    0   25  ●
+ 2  SP-1402  Primary belt scraper blade, 10…       1    0    2  ●
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list

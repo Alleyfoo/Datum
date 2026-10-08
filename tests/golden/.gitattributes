@@ -1,0 +1,2 @@
+# Saved text is compared exactly: keep LF line endings in every checkout.
+* text eol=lf

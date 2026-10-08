@@ -64,11 +64,11 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 
 | Category | Count | What it means |
 |---|---|---|
-| Done | 19 | schema registry (D1); synthetic company and ledger (D2); staging, assumption, versioning, mapping and reference rules read (R1–R5); the intake chain C1–C9, the synthetic stock export (C25), the cleaning stage (C26) and schema amendment (C27), on branch `build/intake-chain` |
+| Done | 21 | schema registry (D1); synthetic company and ledger (D2); the desk's data (D3) and its text views with golden files (D4); staging, assumption, versioning, mapping and reference rules read (R1–R5); the intake chain C1–C9, the synthetic stock export (C25) and the cleaning stage (C26, C27) |
 | Read | 15 | sibling-repo rules and code to read and port (R6–R20; R15 partly read) |
 | Code | 16 | defined here, to build (C10–C24, and the folder watcher C3b), including 4 defects from the lab |
 | Plan | 23 | decisions (P1–P23): P1, P12, P13, P21 and P23 answered, P7 answered for schemas; P20–P23 raised by the intake build |
-| Bugs | 5 | three fixed (B1, B4, and B5 with its regression test); two latent, open (B2, B3) |
+| Bugs | 6 | three fixed (B1, B4, and B5 with its regression test); three open: B2 and B3 (latent), B6 (menu drops a 27th part) |
 | Research | 1 | the import research pass: done, see [research/import.md](research/import.md) |
 
 **Next up.** The intake chain runs end to end on synthetic data: a file is preserved, staged,

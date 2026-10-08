@@ -1,0 +1,8 @@
+Pulp mill customer · Pulp mill, Eastern Finland               Fri 2026-10-02
+
+ #  AREA         MACHINE                           CRIT  STATUS
+ 1  Chip yard    CH-01  Chip unloading conveyor    B     ●
+ 2               CH-02  Chip pile reclaim screw    A     ✖  none in stock: SP-1601
+ 3  Digester fe… CH-03  Digester feed conveyor     A     ●
+
+● covered   ▲ low   ✖ none in stock   ? no parts list

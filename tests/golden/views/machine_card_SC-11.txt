@@ -1,0 +1,6 @@
+SC-11 Fuel screen screw · screw conveyor · criticality B
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1601  Screw flight section, 400 mm          4    0    0  ▲  due 2026-12-02
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list
