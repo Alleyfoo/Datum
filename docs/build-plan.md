@@ -311,3 +311,14 @@ that offers a signed data processing agreement with documented zero retention, a
 ids (B2 `61fde1a`, B3 `9e6ddd9`), the menu letters past z (B6 `f9f102b`) and formula cells taken as the value
 the file saved for them (P20, `447946c`). Building P20 raised one question for the owner, P24 in
 [backlog.md](backlog.md): whether a saved formula value counts when the workbook marks it as not current.
+
+## 21. Owner answer on P24, and the round-four merge
+
+| ID | Answer | What it means |
+|---|---|---|
+| P24 | A null check, in data cleaning | A formula whose result is null is refused, as a rule of the cleaning stage, the way a spreadsheet's COUNTIF would count only filled cells. Declared per field in the schema, so it can be changed by the owner. |
+| Merge | Done | `build/round-four` merged into `main`; 235 tests pass. |
+
+**Caveat on P24.** A null check catches a missing result. It does not catch a placeholder 0 that a program saved
+for a formula marked for recalculation: 0 is not null, so it still passes. That risk is still open and needs the
+workbook's calculation settings, or a separate rule. Decide before any real workbook is read.
