@@ -59,8 +59,8 @@ it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md)
 
 | Category | Count | What it means |
 |---|---|---|
-| Done | 2 | schema registry (D1); synthetic company and ledger (D2) |
-| Read | 20 | sibling-repo rules and code to read and port (R1–R20) |
+| Done | 6 | schema registry (D1); synthetic company and ledger (D2); staging, assumption, mapping and reference rules read (R1, R2, R4, R5) |
+| Read | 16 | sibling-repo rules and code to read and port (R3, R6–R20) |
 | Code | 24 | defined here, to build (C1–C24), including 4 defects from the lab |
 | Plan | 19 | decisions still open (P1–P19) |
 | Bugs | 5 | three fixed (B1, B4, and B5 with its regression test); two latent, open (B2, B3) |

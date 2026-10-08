@@ -12,20 +12,20 @@ Status of the whole board is summarised in [plan.md](plan.md).
 
 ## Done
 
-| ID | Item | Where |
-|---|---|---|
-| D1 | Schema registry: fields, types, keys, row-level refusal, reference checks | `babel/schema/` |
-| D2 | Synthetic spare-parts company with a year of history; stock ledger replays to today | `domains/spare_parts/` |
+| ID | Item | Where | Commit |
+|---|---|---|---|
+| D1 | Schema registry: fields, types, keys, row-level refusal, reference checks | `babel/schema/` | `fcee815` |
+| D2 | Synthetic spare-parts company with a year of history; stock ledger replays to today | `domains/spare_parts/` | `0f48e76` |
+| R1 | Staging rules read: cell type codes, row provenance, fingerprint, verify | [provenance.md](provenance.md#rules-read-read-items) | `17eedfe` |
+| R2 | Assumption lifecycle, decision log, named approver, agent names rejected: rules read | [provenance.md](provenance.md#rules-read-read-items) | `17eedfe` |
+| R4 | Preview before apply, per-cell mapping results, before/after record hashes: rules read | [provenance.md](provenance.md#rules-read-read-items) | `17eedfe` |
+| R5 | Reference workbooks as `MANUAL_REFERENCE` evidence: rules read | [provenance.md](provenance.md#rules-read-read-items) | `17eedfe` |
 
 ## Read (defined elsewhere, read and port)
 
 | ID | Item | Source to read |
 |---|---|---|
-| R1 | Staging rules: cell type codes, row provenance, fingerprint, verify | `mcp-messy-data` `docs/ARCHITECTURE.md` (Staging) |
-| R2 | Assumption lifecycle, decision log, named approver, agent names rejected | `mcp-messy-data` `docs/ARCHITECTURE.md` (Knowledge), `DOCTRINE.md` |
 | R3 | Versioned schemas, N+1 never rewrites N | `mcp-messy-data` `docs/ARCHITECTURE.md` (Canonical) |
-| R4 | Preview before apply; per-cell mapping results; before/after record hashes | `mcp-messy-data` `docs/F4.1-MAPPING-EXECUTION.md` |
-| R5 | Reference workbooks as `MANUAL_REFERENCE` evidence | `mcp-messy-data` `docs/F4.2-EXTRACTION.md` |
 | R6 | Close-of-day worklist: what needs attention, with the evidence on each line | Shop-flow `docs/adr/0019` (Decision 4), `0021`, `src/shopflow/worklist.py` |
 | R7 | Four roles: human, modelling LLM (temporary), established worker, supervisory LLM outside the flow | Shop-flow `docs/adr/0019` (role table, Decision 1) |
 | R8 | Sender recognition as routing; unknown sources refused as an output | Shop-flow `docs/adr/0020` |
