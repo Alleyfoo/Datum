@@ -359,15 +359,35 @@ created in an `inbox/` folder and does nothing else. On each arrival the hook:
 2. hashes the file and checks the hash against the inbox ledger, so a repeated file is
    linked to its first arrival, not imported twice;
 3. opens the ticket;
-4. starts a **staged** import: parse and validate into a staging area, to pre-fill what each
-   disposition would do. Staging writes nothing to `extracts/`, the schema or product data.
+4. tries the customer's existing schema against the file, in staging, and routes the file
+   by the result (below).
 
-The hook does not admit anything. Admission is the person's choice of disposition on the
-ticket, so the hook can be fully automatic without moving the human gate. The hook never
+Staging writes nothing to `extracts/`, the schema or product data.
+
+**Routing by the hook's trial.**
+
+| Trial result | What the ticket says | Person's choice |
+|---|---|---|
+| No schema for this kind of file | "New kind of file: create a schema" | create schema, or drop |
+| Schema exists, file fits | "Fits schema X: ready to import" | import, or drop |
+| Schema exists, file does not fit | "Does not fit schema X: here is what failed" | create a new schema version, or drop |
+
+"Fits" is strict. The file must pass the schema with no refusals. Header similarity, a
+guessed synonym or a position match is never used to make it fit (the rule from the lab's
+source-owner contract). Where a file does not fit, the ticket lists each failed row, field
+and rule, so the person sees exactly what changed.
+
+When no schema exists, the create-schema process starts. The assistant drafts a schema
+from the file, as options with evidence, and the draft waits on the ticket. A person
+confirms it, with their name recorded, before it becomes the customer's schema. A new
+schema version is handled the same way.
+
+The hook does not admit anything. Admission is the person's choice on the ticket, so the
+hook can be fully automatic without moving the human gate. The hook never
 fires on `extracts/`, `schema/` or `product-data/`, which avoids loops. It runs under its own
 named identity with the rights of an inbox writer (see item 17).
 
-The ticket asks the person to choose one of three dispositions:
+The table above sets which choices the ticket offers. The three dispositions are:
 
 - **Import.** The file's content already fits an approved schema for this customer. The
   content is extracted (through an OCR or parsing module if it is a scan or a PDF) into
