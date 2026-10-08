@@ -49,6 +49,15 @@ def test_refuses_rows_that_do_not_fit(row, code):
     assert refusals[0].row_no == 1
 
 
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_decimal_refuses_non_finite_numbers(value):
+    # B1: a non-finite coordinate or quantity must not enter the record silently
+    rows, refusals = _registry().clean("machine", [_machine(power=value)])
+    assert rows == []
+    assert [r.code for r in refusals] == ["non_finite"]
+    assert refusals[0].row_no == 1
+
+
 def test_duplicate_keys_keep_the_first_and_refuse_the_rest():
     rows, refusals = _registry().clean("machine", [_machine(), _machine(power=20)])
     assert len(rows) == 1
