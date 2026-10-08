@@ -52,7 +52,7 @@ Each ported file records its origin in [provenance.md](provenance.md).
 | C2 | Staging step: text cells with type codes, no coercion, row provenance, fingerprint, verify | R1 | [intake.md](intake.md#the-import-definition) (Reveal) |
 | C3 | Folder hook: wait for complete file, hash check, open ticket, run trial | C1, C2 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
 | C4 | Trial: strict fit (zero refusals), per-cell results, failure classes 2–4 | C2, R4 | [intake.md](intake.md#what-happens-to-an-arriving-file) |
-| C5 | Ticket spine: one ticket type with status, owner, history, extended from `desk/cases.py` | R15 | [plan.md](plan.md#decisions) |
+| C5 | Ticket spine: one ticket type with status, owner, history, extended from `desk/cases.py` | R15 | [plan.md](plan.md#decisions-made) |
 | C6 | Approval queue inside the ticket flow (replaces the command-line review script) | C5 | [demo.md](demo.md) |
 | C7 | Dispositions: import, create schema, drop; each writes its own record | C5, C4 | [intake.md](intake.md#dispositions) |
 | C8 | Create-schema gate: draft, regression check, full rule listing, a non-drafter confirms | R3, C7 | [intake.md](intake.md#what-happens-to-an-arriving-file) |

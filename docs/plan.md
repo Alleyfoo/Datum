@@ -131,3 +131,4 @@ Proposed, awaiting the owner's confirmation: the customer folder layout in
 | [customer-layout.md](customer-layout.md) | customer folders and shared product data (proposed) |
 | [demo.md](demo.md) | what the demo shows and the steps to a meaningful demo |
 | [provenance.md](provenance.md) | where each ported piece comes from |
+| [interaction.md](interaction.md) | the search, context, question and answer flow in three client tiers (draft) |
