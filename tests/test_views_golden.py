@@ -5,15 +5,24 @@ golden/views/lab_reference/ holds the lab's own output, captured once from the l
 """
 
 import difflib
+import json
+import re
 from pathlib import Path
 
 import pytest
 
-from domains.spare_parts import build
+from domains.spare_parts import build, views
 from domains.spare_parts.data import demo, from_tables
-from view_screens import service_data_text
+from view_screens import screens, service_data_text
 
 LAB = Path(__file__).parent / "golden" / "views" / "lab_reference"
+LAB_NAMES = sorted(path.stem for path in LAB.glob("*.txt"))
+
+
+@pytest.fixture(scope="module")
+def port():
+    """Every screen the port draws, with the arguments the lab reference was captured with."""
+    return screens(views, demo())
 
 
 def _read(path: Path) -> str:
@@ -40,3 +49,27 @@ def test_the_adapter_refuses_a_warehouse_the_desk_does_not_draw():
     tables["warehouse"] = tables["warehouse"] + [{"code": "NO", "name": "Norwegian warehouse", "country": "Norway"}]
     with pytest.raises(ValueError, match="warehouses"):
         from_tables(tables)
+
+
+def test_the_port_draws_every_screen_the_lab_was_captured_with(port):
+    assert sorted(port) == LAB_NAMES
+
+
+@pytest.mark.parametrize("name", LAB_NAMES)
+def test_the_port_gives_the_lab_text(port, name):
+    _same(_read(LAB / f"{name}.txt"), port[name], f"lab_reference/{name}.txt")
+
+
+def test_the_widget_gives_every_card_the_code_of_the_text_menu():
+    """Ported from the lab's tests/test_mcp.py: a click means what the typed code means."""
+    data = demo()
+    html = views.desk_widget(data)
+    tree = json.loads(re.search(r"const D=(.*);\n", html).group(1))
+    codes = {}
+    for _, firms in tree:
+        for _, _, machines in firms:
+            for n, machine_id, _, _, parts in machines:
+                codes[str(n)] = (machine_id, None)
+                codes.update({f"{n}{p[0]}": (machine_id, p[1]) for p in parts})
+    assert codes == views.desk_menu(data)[1]
+    assert "__DESK__" not in html and "sendPrompt(c)" in html

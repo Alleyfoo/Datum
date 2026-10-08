@@ -9,6 +9,8 @@ Every ported file or value records its origin, so the lab's frozen evidence stay
 | `babel/schema/registry.py` | New | Field and cleaning rules. The lab's `desk/source_contract.py` holds the workbook rules that will be generalised later (phase 3). |
 | `domains/spare_parts/data.py` record classes and `ServiceData` | Predictive-Spare-Parts-Lab `desk/data.py` at `fa3836f` (blob `7be9e2c`) | Field for field, in `0c7c97c`. `from_tables()` is new: the company is read from the schema's tables instead of the lab's literals, and `demo()` is `build()` read through it. Tables with a warehouse other than FI and SE are refused. The lab's `TODAY` is `world.AS_OF`. |
 | `domains/spare_parts/tools.py` `due_date()` | Predictive-Spare-Parts-Lab `desk/tools.py` at `fa3836f` (blob `01979c9`) | Unchanged. The only rule the views need; the rest of the lab's `tools.py` is not ported yet (R18). |
+| `domains/spare_parts/views.py` | Predictive-Spare-Parts-Lab `desk/views.py` at `fa3836f` (blob `05b9803`) | Same text, two changes: the date is `world.AS_OF` (the lab's `TODAY`), and the weekday name comes from a fixed English table instead of `strftime("%a")`, so the text does not follow the process locale. Checked screen by screen against `tests/golden/views/lab_reference/`. |
+| `domains/spare_parts/desk_widget.html` | Predictive-Spare-Parts-Lab `desk/desk_widget.html` at `fa3836f` (blob `1be3088`) | Byte for byte. |
 | `tests/golden/views/lab_reference/` | Output of Predictive-Spare-Parts-Lab `desk/views.py` at `fa3836f` | Captured once in `7181e03` by `scripts/capture_lab_reference.py`, which reads the five desk files with `git show` and runs them outside the lab. Evidence: never regenerated. |
 
 Lab revision used as the reference for this port: `fa3836f` (HEAD at the time of the port).
@@ -23,7 +25,7 @@ When a piece is ported, record the commit read and the commit it lands in.
 | Predictive-Spare-Parts-Lab `desk/cases.py`, `case_evidence.py`, `evidence_intake.py` | case store, immutable evidence, typed findings, claims | `babel/record` |
 | Predictive-Spare-Parts-Lab `desk/source_contract.py`, `source_publication.py` | bounded workbook reading, recognition, refusal, provenance | `babel/intake` |
 | Predictive-Spare-Parts-Lab `desk/expert.py` | answer checks | `babel/checks` |
-| Predictive-Spare-Parts-Lab `desk/tools.py`, `views.py`, `mcp_server.py` | availability, lead time, service plan rules; menus | `domains/spare_parts`, `babel/mcp` |
+| Predictive-Spare-Parts-Lab `desk/tools.py` (all but `due_date`), `mcp_server.py` | availability, lead time, service plan rules; the menus served over MCP | `domains/spare_parts`, `babel/mcp` |
 | Predictive-Spare-Parts-Lab `predictive_lab/intermittent.py`, `temporal.py` | TSB and Croston, as-of features | `babel/analytics` |
 | Spare-Parts-Readiness | coverage map | `domains/spare_parts` view |
 | Shop-flow `docs/adr/0019` (Decision 4), `0021`, `src/shopflow/worklist.py` | close-of-day worklist | `babel/record` |
