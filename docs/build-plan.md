@@ -187,3 +187,13 @@ person releases it, or it returns to `open` after a set time.
 | M-static | System tickets | The manager may open tickets of its own, not tied to an arriving file. Reading: these are system-level tickets, for example a stale ticket, a repeated failure, or a drift in a schema. Confirm the reading. |
 | M-release | May release | The manager may release a ticket to `open`. The release is a journal entry, and the history stays. Nothing is deleted or rewritten. |
 | M-conclude | May not conclude | Only a person or a worker records a decision. |
+
+## 12. Static tickets
+
+| ID | Answer | What it means |
+|---|---|---|
+| S-state | `static` is a state | A ticket that is no longer proceeding, and is set to `open`, becomes `static`. It is still in the open queue, marked as not moving. |
+| S-who | Set by the manager | The manager agent sets a ticket to `static` when it finds the ticket cannot be resumed (see section 11). A person can also set it. |
+| S-leave | Leaves `static` by a worker or a person | A worker who picks it up hands it to an agent (`in_progress`). Nothing else moves it. |
+
+Status list, now: `open`, `in_progress`, `static`, `closed`. `waiting` from the earlier draft is not used.
