@@ -1,0 +1,162 @@
+[
+  {
+    "model": "claude-opus-5.5",
+    "seconds": 0.0,
+    "error": null,
+    "tickets": 10,
+    "excluded": 0,
+    "failing_old_checks": 0,
+    "failing_pairing": 0,
+    "high": 5,
+    "failing_check": 0,
+    "found": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "found_and_checked": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "level3_found": 3,
+    "file": "claude-opus-1.json",
+    "bar_met": true
+  },
+  {
+    "model": "claude-opus-5.5",
+    "seconds": 0.0,
+    "error": null,
+    "tickets": 10,
+    "excluded": 0,
+    "failing_old_checks": 0,
+    "failing_pairing": 0,
+    "high": 3,
+    "failing_check": 0,
+    "found": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "found_and_checked": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "level3_found": 3,
+    "file": "claude-opus-2.json",
+    "bar_met": true
+  },
+  {
+    "model": "claude-opus-5.5",
+    "seconds": 0.0,
+    "error": null,
+    "tickets": 10,
+    "excluded": 0,
+    "failing_old_checks": 0,
+    "failing_pairing": 0,
+    "high": 5,
+    "failing_check": 0,
+    "found": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "found_and_checked": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "level3_found": 3,
+    "file": "claude-opus-3.json",
+    "bar_met": true
+  },
+  {
+    "model": "claude-opus-5.5",
+    "seconds": 0.0,
+    "error": null,
+    "tickets": 10,
+    "excluded": 0,
+    "failing_old_checks": 0,
+    "failing_pairing": 0,
+    "high": 3,
+    "failing_check": 0,
+    "found": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "found_and_checked": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "level3_found": 3,
+    "file": "claude-opus-4.json",
+    "bar_met": true
+  },
+  {
+    "model": "claude-opus-5.5",
+    "seconds": 0.0,
+    "error": null,
+    "tickets": 10,
+    "excluded": 0,
+    "failing_old_checks": 0,
+    "failing_pairing": 0,
+    "high": 3,
+    "failing_check": 0,
+    "found": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "found_and_checked": {
+      "E1": true,
+      "E2": true,
+      "E3": true,
+      "E4": true,
+      "E5": true,
+      "E6": true,
+      "E7": true
+    },
+    "level3_found": 3,
+    "file": "claude-opus-5.json",
+    "bar_met": true
+  }
+]
