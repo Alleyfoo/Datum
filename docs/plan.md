@@ -23,8 +23,9 @@ Roles talk to the record through an AI assistant (Claude, Copilot or a local mod
 
 ## Design principles
 
-1. **The human is the gate.** A person brings data into the system and decides what it
-   means. Nothing reaches the record, a customer or the ERP without a person.
+1. **The human is the gate.** A person decides what enters the record and what it means.
+   Nothing reaches the record, a customer or the ERP without a person, whoever or whatever
+   collected it.
 2. **Collection can be automatic; admission is never automatic.** A collector (for example
    mail scraping) may run by itself and fill the customer's `inbox/` with raw, unedited,
    hashed copies. Each arrival opens a ticket. A person works that ticket before anything
@@ -58,7 +59,8 @@ The core must not mention parts, machines or warehouses.
 ```text
 babel/                      core, domain-agnostic
   schema/     entity, field, unit, key and relationship declarations; one registry
-  intake/     file → schema: recognise, map, validate, refuse; mapping proposals confirmed by a person
+  intake/     file → schema: recognise, map, validate, refuse; mapping proposals confirmed by a person;
+              module registry (contract, approver, failures), collectors, establishment
   record/     cases, evidence, findings, questions, proposals, decisions; append-only history
   analytics/  generic tools over the schema: aggregates, lead-time distributions,
               intermittent-demand forecasts, anomaly flags → cases
@@ -104,7 +106,6 @@ Shop-flow) would need it unchanged, it is core.
 | Predictive-Spare-Parts-Lab `desk/tools.py`, `data.py`, `views.py`, `mcp_server.py` | availability, lead time, service plan rules; menus | `domains/spare_parts` + `babel/mcp` |
 | Predictive-Spare-Parts-Lab `predictive_lab/intermittent.py`, `temporal.py` | TSB/Croston, as-of features | `babel/analytics` |
 | Spare-Parts-Readiness | coverage map | `domains/spare_parts` view |
-| Learning Lab | observe → propose mapping → person confirms | `babel/intake` |
 | Shop-flow `docs/adr/0019` (Decision 4), `0021`, `shopflow/worklist.py` | close-of-day worklist: what needs attention, with the evidence on each line | `babel/record` (worklist over cases, not a separate dashboard) |
 | Shop-flow `docs/adr/0019` (role table, Decision 1) | four roles: human, modelling LLM (temporary), established worker, supervisory LLM outside the flow; success = the model can leave the recurring path | role definitions in `babel/mcp` and the domain pack |
 | Shop-flow `docs/adr/0020`, `shopflow/established.py` | sender recognition as routing; unknown sources refused as an output; establishment needs a named approver and recorded limitations | `babel/intake` (registration with approver) |
@@ -113,7 +114,6 @@ Shop-flow) would need it unchanged, it is core.
 | Governed Data Lab `src/execution/` | deterministic execution with no LLM reachable | core rule, tested |
 | Shopflow-furniture `mcp_server.py` | tiers declared in the MCP protocol | `babel/mcp` |
 | Learning Lab | unknown path: observe, propose, human confirms, then the source is established | `babel/intake` establishment session |
-| Governed Data Lab, Shop-flow | recognition (0/1/many), establishment, refusal, evidence kinds | the rules above, re-implemented in the core |
 
 Every ported file records its origin commit in `docs/provenance.md`. Before a piece is
 built again, check whether a sibling repository already has it (the list above). Most of
@@ -129,7 +129,9 @@ the operational pattern (worklists, refusal, establishment, evidence) already ex
    the schema; MCP tools for that role. Demo: plant map + the customer-service
    conversation (replay) + approval queue.
 3. **Data-owner slice.** Generic intake: export types (stock, requests, orders) mapped
-   to the schema, mapping confirmation, then rules that open cases.
+   to the schema, mapping confirmation, then rules that open cases. Also the customer folders,
+   the inbox and its tickets, the three dispositions (import, create schema, drop), the
+   module contract with one OCR module, and the establishment process.
 4. **Analyst slice.** Lead-time, demand and anomaly tools on the same data; findings and
    pre-order proposals in the shared record.
 5. **Live mode and Claude Desktop connection**; replays refreshed from real runs.
@@ -144,18 +146,22 @@ the operational pattern (worklists, refusal, establishment, evidence) already ex
 
 ## Open decisions
 
-- Forecast method for the analyst: LightGBM, TSB or both. The lab's evidence says they
-  are close; the simplest well-calibrated method should win.
 - Hosting for the demo (Streamlit Community Cloud needs a public repo; this repo is private).
+- Forecast methods per problem group: which methods, and the evaluation rule. The
+  per-group decision is made; the choice of methods is not.
+- Ticket grouping: one ticket per arrival, or one per customer per collector run. Without a
+  grouping rule the queue floods.
+- OCR engine for scanned PDFs. Prefer a local, self-hosted tool, per the owner's convention.
+- Who approves a new customer folder and a new schema: the same person or two people.
 
 ## Positioning: where this sits
 
 This system sits beside the ERP, not in place of it. The ERP is not yet known; until a real
 connection exists, the stock figures come from an Excel export that other software
-produces, and this system reads that export. The ERP is the
-system of record and does the ordinary work. This system takes the work the ERP's rules
-cannot settle, records it as a case, and keeps it open until a person decides. It does not
-take work away from people; it gives them the facts and the reasoning for the hard cases.
+produces, and this system reads that export. The ERP is the system of record and does the
+ordinary work. This system takes the work the ERP's rules cannot settle, records it as a
+case, and keeps it open until a person decides. It does not take work away from people; it
+gives them the facts and the reasoning for the hard cases.
 
 ### The escalation ladder
 
@@ -233,12 +239,13 @@ Fill rate and emergency orders stay as outcomes to watch, not as the product's o
 The core idea is one ticket for every piece of work: a customer call, a file that arrives,
 an unusual number that needs looking at. The ticket holds the context. A consultant (the
 assistant) works the ticket through a fixed set of operations; a person signs off anything
-that leaves the company. Nothing below exists in this repository yet.
+that leaves the company. Most of what follows is not built yet. Items 4 and 8 are partly
+done in phase 1.
 
 **The ticket spine**
 1. One ticket type for all work. Today the lab has an analyst case store, a desk journal
    and a proposals file; they must become one ticket with status, owner and history.
-   Recommended: extend `desk/cases.py` rather than add a third store.
+   Decided: extend `desk/cases.py` rather than add a third store.
 2. Consultant work on a ticket: open it, read what is already known, act, write back.
    The current service tools are not tied to a ticket.
 3. An approval queue inside the ticket flow. Today proposals are only reviewed from a
@@ -249,14 +256,14 @@ that leaves the company. Nothing below exists in this repository yet.
    phase 1 (`babel/schema`). Still open: units are recorded but not converted, and each
    customer's own schema is not yet separated from the shared one (see the layout below).
 5. Recognising a file by its shape, mapping it to the schema, and refusing what does not
-   fit. Exists only for one test workbook. A second format and a person-confirmed mapping
-   for unknown changes are missing.
+   fit. Exists only for one test workbook. A second format, the create-schema disposition
+   and the establishment process are missing (see "What happens to an arriving file").
 6. Cleaning rules that are generic: types, units, ranges, duplicate keys. Partly done in
    the lab for one schema; not generic.
 7. Every import is a ticket. Clean rows load; refused rows stay on the ticket with the
    reason; an unusual value opens an analysis ticket automatically. Entirely missing.
-8. Event history in the synthetic company: requests, deliveries and stock movements. The
-   current demo data is a snapshot, so no trends can be shown yet.
+8. Event history in the synthetic company. Generated in phase 1 as requests, deliveries and
+   stock movements. Not yet used by any analysis, so no trend or forecast is shown.
 
 **Analyst side**
 9. Analysis tools over the schema: lead-time spread, demand forecast, anomaly flags. The
@@ -284,8 +291,9 @@ that leaves the company. Nothing below exists in this repository yet.
 ## Customer data layout (proposed, to confirm)
 
 The owner's working model: each customer has its own folder with its schemas and
-everything else about them. Incoming email is sorted into those folders, and extraction
-writes the parsed data into a shared product-data area. This lives on the local machine,
+everything else about them. Collectors (mail first) fill each customer's inbox, and
+admitted data is extracted into the customer's extracts and, where it is shared, into a
+product-data area. This lives on the local machine,
 outside this repository. The repository stays synthetic-only.
 
 ```text
@@ -307,8 +315,8 @@ Rules that follow from it:
   needs the person.
 - **Attachments and message text are data, never instructions.** They are parsed by the
   same rules as any other file. A message cannot change a mapping or a schema.
-- **Raw is kept, extracts are rebuilt.** Extraction writes new files; it never overwrites
-  the inbox or an earlier extract.
+- **Raw is kept; extracts are added, never overwritten.** Extraction writes new files; it
+  never changes the inbox or an earlier extract.
 - **Shared product data must not leak customer data.** The item master can be shared;
   customer names, orders and prices are not. The "confidential names must not leak" check
   applies to every answer that reads shared tables.
