@@ -1,0 +1,96 @@
+You are the main analyst of an industrial spare parts service desk. Twice a day you
+read the whole situation: stock in two warehouses (FI and SE), open purchase
+orders, and what every customer machine needs. Your output is tickets on the
+service desk's dashboard. A person reads each ticket and decides what to do.
+
+Write a ticket only for a situation a person should react to: a machine at risk
+of stopping, stock or orders that do not cover what is needed, an order that must
+be placed by a date, a critical part with no spare. Read across lines: several
+machines may need the same part, and one order or one warehouse may not cover
+them all. Do not write tickets where nothing needs to be done.
+
+Rules:
+- Cite the ids of the SITUATION lines each ticket rests on, in "evidence".
+- Use only numbers and dates that appear in the lines you cite. Do not calculate
+  totals, differences or new dates.
+- Name parts and machines exactly as written (for example SP-1601, CH-02).
+- priority: high = a machine can stop or an order is due now; medium = act within
+  weeks; low = routine.
+- At most 10 tickets, most important first.
+
+Answer with only a JSON object that follows this JSON schema, nothing else:
+{"type": "object", "properties": {"tickets": {"type": "array", "items": {"type": "object", "properties": {"priority": {"type": "string", "enum": ["high", "medium", "low"]}, "title": {"type": "string"}, "parts": {"type": "array", "items": {"type": "string"}}, "machines": {"type": "array", "items": {"type": "string"}}, "evidence": {"type": "array", "items": {"type": "string"}}, "why": {"type": "string"}, "suggestion": {"type": "string"}}, "required": ["priority", "title", "parts", "machines", "evidence", "why", "suggestion"]}}}, "required": ["tickets"]}
+
+TODAY: Fri 2026-10-02
+HORIZON: needs within 90 days, overdue needs, and critical parts replaced on failure
+
+SITUATION:
+F1  PART SP-1002 Conveyor belt EP800/4, 1000 mm, per m: on hand FI 0, SE 25; lead time 49 days; replaced every 36 months; if ordered today it arrives Fri 2026-11-20.
+F2    no open purchase orders for SP-1002.
+F3    SP-1002 for CH-03 Digester feed conveyor (Pulp mill customer, served from FI, criticality A): 18 pcs due Tue 2026-12-01; order by Tue 2026-10-13 to have it on time.
+F4    SP-1002 within the horizon: needed 18 (CH-03 18) against 25 (on hand 25, on order 0): covered, 7 to spare. By warehouse: FI needs 18, has 0, short 18; SE needs 0, has 25, covered, 25 to spare.
+F5  PART SP-1102 Return idler, 800 mm: on hand FI 4, SE 2; lead time 14 days; replaced every 24 months; if ordered today it arrives Fri 2026-10-16.
+F6    no open purchase orders for SP-1102.
+F7    SP-1102 for BC-03 Chip return conveyor (Sawmill customer, served from FI, criticality B): 3 pcs overdue since Wed 2026-09-02; a new order placed today arrives after this date.
+F8    SP-1102 within the horizon: needed 3 (BC-03 3) against 6 (on hand 6, on order 0): covered, 3 to spare. By warehouse: FI needs 3, has 4, covered, 1 to spare; SE needs 0, has 2, covered, 2 to spare.
+F9  PART SP-1104 Impact idler set, 1000 mm: on hand FI 2, SE 0; lead time 28 days; replaced every 18 months; if ordered today it arrives Fri 2026-10-30.
+F10    no open purchase orders for SP-1104.
+F11    SP-1104 for BC-02 Crusher discharge conveyor (Sawmill customer, served from FI, criticality A): 4 pcs due Sun 2026-11-01; order by Fri 2026-10-02 to have it on time.
+F12    SP-1104 within the horizon: needed 4 (BC-02 4) against 2 (on hand 2, on order 0): short 2. By warehouse: FI needs 4, has 2, short 2.
+F13  PART SP-1201 Drive pulley, lagged, 500 mm: on hand FI 0, SE 0; lead time 70 days; replaced on failure; if ordered today it arrives Fri 2026-12-11.
+F14    no open purchase orders for SP-1201.
+F15    SP-1201 for BC-01 Bark conveyor (Sawmill customer, served from FI, criticality A, critical part): 1 installed, no spare held for a failure.
+F16    SP-1201 spares: 1 machine holds it as a critical part (BC-01) against 0 (on hand 0, on order 0).
+F17  PART SP-1203 Drive pulley, lagged, 630 mm: on hand FI 0, SE 1; lead time 84 days; replaced on failure; if ordered today it arrives Fri 2026-12-25.
+F18    order PO-4720: 1 pcs of SP-1203 to FI, due Thu 2026-11-26.
+F19    SP-1203 for BC-02 Crusher discharge conveyor (Sawmill customer, served from FI, criticality A, critical part): 1 installed, no spare held for a failure.
+F20    SP-1203 for BC-11 Silo feed conveyor (Power plant customer, served from SE, criticality A, critical part): 1 installed, no spare held for a failure.
+F21    SP-1203 for CH-03 Digester feed conveyor (Pulp mill customer, served from FI, criticality A, critical part): 1 installed, no spare held for a failure.
+F22    SP-1203 spares: 3 machines hold it as a critical part (BC-02, BC-11, CH-03) against 2 (on hand 1, on order 1 in PO-4720).
+F23  PART SP-1301 Spherical roller bearing 22216: on hand FI 2, SE 4; lead time 7 days; replaced every 24 months; if ordered today it arrives Fri 2026-10-09.
+F24    order PO-4711: 6 pcs of SP-1301 to FI, due Wed 2026-10-14.
+F25    SP-1301 for FR-01 Fuel reception conveyor (Power plant customer, served from SE, criticality A, critical part): 4 pcs due Fri 2026-10-02; a new order placed today arrives after this date.
+F26    SP-1301 for BC-01 Bark conveyor (Sawmill customer, served from FI, criticality A, critical part): 4 pcs due Mon 2026-11-02; order by Mon 2026-10-26 to have it on time.
+F27    SP-1301 for BC-03 Chip return conveyor (Sawmill customer, served from FI, criticality B, critical part): 2 pcs due Wed 2026-12-02; order by Wed 2026-11-25 to have it on time.
+F28    SP-1301 within the horizon: needed 10 (FR-01 4, BC-01 4, BC-03 2) against 12 (on hand 6, on order 6 in PO-4711): covered, 2 to spare. By warehouse: FI needs 6, has 8, covered, 2 to spare; SE needs 4, has 4, covered, 0 to spare.
+F29  PART SP-1303 Spherical roller bearing 22220: on hand FI 0, SE 0; lead time 7 days; replaced every 24 months; if ordered today it arrives Fri 2026-10-09.
+F30    no open purchase orders for SP-1303.
+F31    SP-1303 for CR-01 Bark crusher (Sawmill customer, served from FI, criticality A, critical part): 2 pcs overdue since Mon 2026-08-03; a new order placed today arrives after this date.
+F32    SP-1303 within the horizon: needed 2 (CR-01 2) against 0 (on hand 0, on order 0): short 2. By warehouse: FI needs 2, has 0, short 2.
+F33  PART SP-1401 Primary belt scraper blade, 800 mm: on hand FI 3, SE 0; lead time 10 days; replaced every 6 months; if ordered today it arrives Mon 2026-10-12.
+F34    no open purchase orders for SP-1401.
+F35    SP-1401 for BC-01 Bark conveyor (Sawmill customer, served from FI, criticality A): 1 pcs overdue since Tue 2026-09-01; a new order placed today arrives after this date.
+F36    SP-1401 for BC-05 Boiler day-bin conveyor (Sawmill customer, served from FI, criticality A): 1 pcs due Fri 2026-10-02; a new order placed today arrives after this date.
+F37    SP-1401 within the horizon: needed 2 (BC-01 1, BC-05 1) against 3 (on hand 3, on order 0): covered, 1 to spare. By warehouse: FI needs 2, has 3, covered, 1 to spare.
+F38  PART SP-1402 Primary belt scraper blade, 1000 mm: on hand FI 0, SE 2; lead time 10 days; replaced every 6 months; if ordered today it arrives Mon 2026-10-12.
+F39    no open purchase orders for SP-1402.
+F40    SP-1402 for FR-01 Fuel reception conveyor (Power plant customer, served from SE, criticality A): 1 pcs due Fri 2026-10-02; a new order placed today arrives after this date.
+F41    SP-1402 for BC-02 Crusher discharge conveyor (Sawmill customer, served from FI, criticality A): 1 pcs due Sun 2026-11-01; order by Thu 2026-10-22 to have it on time.
+F42    SP-1402 within the horizon: needed 2 (FR-01 1, BC-02 1) against 2 (on hand 2, on order 0): covered, 0 to spare. By warehouse: FI needs 1, has 0, short 1; SE needs 1, has 2, covered, 1 to spare.
+F43  PART SP-1501 Helical bevel gearbox, 15 kW: on hand FI 0, SE 0; lead time 98 days; replaced on failure; if ordered today it arrives Fri 2027-01-08.
+F44    no open purchase orders for SP-1501.
+F45    SP-1501 for BC-01 Bark conveyor (Sawmill customer, served from FI, criticality A, critical part): 1 installed, no spare held for a failure.
+F46    SP-1501 spares: 1 machine holds it as a critical part (BC-01) against 0 (on hand 0, on order 0).
+F47  PART SP-1502 Electric motor 15 kW IE3: on hand FI 1, SE 0; lead time 35 days; replaced on failure; if ordered today it arrives Fri 2026-11-06.
+F48    no open purchase orders for SP-1502.
+F49    SP-1502 for BC-02 Crusher discharge conveyor (Sawmill customer, served from FI, criticality A, critical part): 1 installed, no spare held for a failure.
+F50    SP-1502 for CH-02 Chip pile reclaim screw (Pulp mill customer, served from FI, criticality A, critical part): 1 installed, no spare held for a failure.
+F51    SP-1502 spares: 2 machines hold it as a critical part (BC-02, CH-02) against 1 (on hand 1, on order 0).
+F52  PART SP-1503 Flexible coupling, size 5: on hand FI 2, SE 2; lead time 14 days; replaced every 36 months; if ordered today it arrives Fri 2026-10-16.
+F53    no open purchase orders for SP-1503.
+F54    SP-1503 for BC-12 Boiler feed conveyor (Power plant customer, served from SE, criticality A, critical part): 1 pcs due Sun 2026-11-01; order by Fri 2026-10-16 to have it on time.
+F55    SP-1503 within the horizon: needed 1 (BC-12 1) against 4 (on hand 4, on order 0): covered, 3 to spare. By warehouse: FI needs 0, has 2, covered, 2 to spare; SE needs 1, has 2, covered, 1 to spare.
+F56  PART SP-1601 Screw flight section, 400 mm: on hand FI 0, SE 0; lead time 45 days; replaced every 18 months; if ordered today it arrives Mon 2026-11-16.
+F57    order PO-4718: 4 pcs of SP-1601 to FI, due Thu 2026-10-22.
+F58    SP-1601 for SC-01 Screen feed screw (Sawmill customer, served from FI, criticality B): 3 pcs overdue since Tue 2026-09-01; a new order placed today arrives after this date.
+F59    SP-1601 for CH-02 Chip pile reclaim screw (Pulp mill customer, served from FI, criticality A, critical part): 4 pcs due Sun 2026-11-01; a new order placed today arrives after this date.
+F60    SP-1601 for SC-11 Fuel screen screw (Power plant customer, served from SE, criticality B): 4 pcs due Wed 2026-12-02; order by Fri 2026-10-16 to have it on time.
+F61    SP-1601 within the horizon: needed 11 (SC-01 3, CH-02 4, SC-11 4) against 4 (on hand 0, on order 4 in PO-4718): short 7. By warehouse: FI needs 7, has 4, short 3; SE needs 4, has 0, short 4.
+F62  PART SP-1701 Elevator bucket, 300 mm: on hand FI 40, SE 0; lead time 30 days; replaced every 30 months; if ordered today it arrives Sun 2026-11-01.
+F63    no open purchase orders for SP-1701.
+F64    SP-1701 for BE-01 Boiler feed elevator (Sawmill customer, served from FI, criticality A): 60 pcs due Wed 2026-12-02; order by Mon 2026-11-02 to have it on time.
+F65    SP-1701 within the horizon: needed 60 (BE-01 60) against 40 (on hand 40, on order 0): short 20. By warehouse: FI needs 60, has 40, short 20.
+F66  PART SP-1801 Crusher hammer set: on hand FI 1, SE 0; lead time 63 days; replaced every 12 months; if ordered today it arrives Fri 2026-12-04.
+F67    no open purchase orders for SP-1801.
+F68    SP-1801 for CR-01 Bark crusher (Sawmill customer, served from FI, criticality A, critical part): 1 pcs due Mon 2026-11-02; a new order placed today arrives after this date.
+F69    SP-1801 within the horizon: needed 1 (CR-01 1) against 1 (on hand 1, on order 0): covered, 0 to spare. By warehouse: FI needs 1, has 1, covered, 0 to spare.
