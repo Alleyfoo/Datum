@@ -137,7 +137,7 @@ MENU_QUESTIONS = {
 
 Choices = Dict[str, Tuple[str, Optional[str]]]
 
-# (letter, part_no, description, critical, status)
+# (letters, part_no, description, critical, status)
 MenuPart = Tuple[str, str, str, bool, str]
 # (number, machine_id, name, status, parts)
 MenuMachine = Tuple[int, str, str, str, List[MenuPart]]
@@ -145,10 +145,22 @@ MenuMachine = Tuple[int, str, str, str, List[MenuPart]]
 MenuTree = List[Tuple[str, List[Tuple[str, str, List[MenuMachine]]]]]
 
 
+def part_letters(index: int) -> str:
+    """The letters of a machine's part at this index, counted from 0: a to z, then aa, ab, ...,
+    az, ba, ..., zz, aaa, ..., as spreadsheet columns are lettered. Every part gets letters of
+    its own, and the first 26 parts keep the lab's single letters."""
+    letters = ""
+    index += 1
+    while index:
+        index, rest = divmod(index - 1, 26)
+        letters = string.ascii_lowercase[rest] + letters
+    return letters
+
+
 def menu_tree(data: ServiceData) -> MenuTree:
     """The desk as data: machines numbered across the desk, parts lettered within
-    a machine. The text menu and the widget are both drawn from this, so their
-    codes always agree."""
+    a machine (part_letters: after z come aa, ab, ..., so no part is left out). The
+    text menu and the widget are both drawn from this, so their codes always agree."""
     tree: MenuTree = []
     n = 0
     for country in countries(data):
@@ -157,9 +169,9 @@ def menu_tree(data: ServiceData) -> MenuTree:
             machines: List[MenuMachine] = []
             for m in data.machines_of(cid):
                 n += 1
-                parts = [(letter, b.part_no, data.parts[b.part_no].description, b.critical,
+                parts = [(part_letters(i), b.part_no, data.parts[b.part_no].description, b.critical,
                           line_status(data, b.part_no, b.qty_installed, b.critical))
-                         for letter, b in zip(string.ascii_lowercase, data.bom_of(m.machine_id))]
+                         for i, b in enumerate(data.bom_of(m.machine_id))]
                 machines.append((n, m.machine_id, m.name, machine_status(data, m.machine_id), parts))
             firms.append((cid, name, machines))
         tree.append((country, firms))
@@ -182,10 +194,11 @@ def desk_menu(data: ServiceData) -> Tuple[str, Choices]:
             for n, machine_id, mname, st, parts in machines:
                 codes[str(n)] = (machine_id, None)
                 lines.append(f"  {n:>4}   {machine_id:<7}{_cut(mname, 30):<32}{MARK[st]}")
-                for letter, part_no, description, critical, pst in parts:
-                    codes[f"{n}{letter}"] = (machine_id, part_no)
+                for letters, part_no, description, critical, pst in parts:
+                    codes[f"{n}{letters}"] = (machine_id, part_no)
                     desc = _cut(description, 28) + (" ★" if critical else "")
-                    lines.append(f"          {letter}  {part_no:<9}{desc:<31}{MARK[pst]}")
+                    # padded to two, so "aa" keeps the column; a single letter prints as the lab's
+                    lines.append(f"          {letters:<2} {part_no:<9}{desc:<31}{MARK[pst]}")
     lines += ["", "Reply with one code:  machine number + part letter + question",
               "  B  " + MENU_QUESTIONS["B"] + "      e.g. 1a B",
               "  P  " + MENU_QUESTIONS["P"] + "      e.g. 1a P",

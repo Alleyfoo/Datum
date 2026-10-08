@@ -12,15 +12,17 @@ import difflib
 import json
 import os
 import re
+import string
 import subprocess
 import sys
+from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
 
 from domains.spare_parts import build, tools, views
-from domains.spare_parts.data import demo, from_tables
+from domains.spare_parts.data import BomLine, Machine, Part, demo, from_tables
 from view_screens import EMOJI_CUSTOMER, screens, service_data_text
 
 TESTS = Path(__file__).parent
@@ -85,6 +87,46 @@ def test_the_widget_gives_every_card_the_code_of_the_text_menu():
                 codes.update({f"{n}{p[0]}": (machine_id, p[1]) for p in parts})
     assert codes == views.desk_menu(data)[1]
     assert "__DESK__" not in html and "sendPrompt(c)" in html
+
+
+def test_part_letters_go_on_after_z_as_spreadsheet_columns_do():
+    assert [views.part_letters(i) for i in (0, 1, 25, 26, 27, 51, 52, 701, 702)] == [
+        "a", "b", "z", "aa", "ab", "az", "ba", "zz", "aaa"]
+    first = [views.part_letters(i) for i in range(1000)]
+    assert len(set(first)) == 1000 and all(code.isalpha() and code.islower() for code in first)
+
+
+def test_a_machine_with_27_parts_keeps_every_part_in_the_menu_its_codes_and_the_widget():
+    # B6: parts were lettered with zip(ascii_lowercase, ...), so the 27th dropped out without a word
+    data = demo()
+    extra = [Part(f"SP-9{n:03d}", f"Test part {n}", "Test", False, 7) for n in range(1, 28)]
+    long_line = Machine("XX-27", "C-100", "Long test line", "Belt conveyor", "Test", "B", 0, 0, 1, 1)
+    data = replace(data, machines={**data.machines, long_line.machine_id: long_line},
+                   parts={**data.parts, **{p.part_no: p for p in extra}},
+                   bom=data.bom + [BomLine(long_line.machine_id, p.part_no, 1, False) for p in extra])
+
+    [(number, parts)] = [(n, parts) for _, firms in views.menu_tree(data) for _, _, machines in firms
+                         for n, machine_id, _, _, parts in machines if machine_id == "XX-27"]
+    assert [p[0] for p in parts] == list(string.ascii_lowercase) + ["aa"]
+    assert [p[1] for p in parts] == [p.part_no for p in extra]
+
+    text, codes = views.desk_menu(data)
+    assert {code: part for code, (machine_id, part) in codes.items() if machine_id == "XX-27"} == {
+        str(number): None, **{f"{number}{p[0]}": p[1] for p in parts}}
+    assert (codes[f"{number}z"], codes[f"{number}aa"]) == (("XX-27", "SP-9026"), ("XX-27", "SP-9027"))
+    lines = text.splitlines()
+    z, aa = (next(line for line in lines if part_no in line) for part_no in ("SP-9026", "SP-9027"))
+    assert (z.index("SP-9026"), z.split()[0], aa.split()[0]) == (aa.index("SP-9027"), "z", "aa")
+
+    html = views.desk_widget(data)
+    tree = json.loads(re.search(r"const D=(.*);\n", html).group(1))
+    clicked = {}
+    for _, firms in tree:
+        for _, _, machines in firms:
+            for n, machine_id, _, _, parts in machines:
+                clicked[str(n)] = (machine_id, None)
+                clicked.update({f"{n}{p[0]}": (machine_id, p[1]) for p in parts})
+    assert clicked == codes and clicked[f"{number}aa"] == ("XX-27", "SP-9027")
 
 
 def test_the_goldens_are_exactly_the_screens(port):
