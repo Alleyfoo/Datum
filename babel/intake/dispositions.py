@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import Optional
 
 from babel.record import queue
-from babel.record.store import Store, require, text
+from babel.record.store import CLOSED, Store, require, text
 
 from . import accepted, schemas
 
@@ -65,7 +65,7 @@ def drop(store: Store, ticket: int, actor: str, reason: str, *, role: Optional[s
         data = {k: v for k, v in item["data"].items() if k != "proposal"}
         data.update(resolution="dropped", decisions=data.get("decisions", []) + [decision])
         return store.update(db, ticket, actor, role=acting, action="dropped",
-                            note={"reason": reason, "decision": decision}, data=data, status="done")
+                            note={"reason": reason, "decision": decision}, data=data, status=CLOSED)
 
 
 def propose(store: Store, ticket: int, actor: str, disposition: str, reason: str, *, payload: dict,

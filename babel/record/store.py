@@ -35,7 +35,9 @@ from typing import Callable, Iterable, List, Optional
 
 ROLES = ("approver", "worker")
 USER_KINDS = ("person", "agent", "service")
-TASK_STATUSES = ("open", "in_progress", "needs_input", "done")
+#: a task's last status: its work has stopped and its claim is handed back. Named once, here
+CLOSED = "done"
+TASK_STATUSES = ("open", "in_progress", "needs_input", CLOSED)
 DOCUMENT_TYPES = ("decision", "finding")
 LINK_TYPES = ("blocks", "about")
 LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to P22 (build-plan section 20)
@@ -331,7 +333,7 @@ class Store:
         if "data" in changes:
             details["data"] = sorted(k for k in set(item["data"]) | set(changes["data"])
                                      if item["data"].get(k) != changes["data"].get(k))
-        finished = changes.get("status") == "done"
+        finished = changes.get("status") == CLOSED
         if finished and item["claimed_by"]:
             details["released"] = item["claimed_by"]  # finishing hands the claim back
         self.write_journal(db, number, actor, self.acting_role(db, actor, role), action, details)
@@ -355,7 +357,7 @@ class Store:
         """Require the actor's live claim on a task before a state change, and renew it."""
         item = self._item(db, number)
         require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
-        require(item["status"] != "done", "item_done", f"#{number} is done")
+        require(item["status"] != CLOSED, f"item_{CLOSED}", f"#{number} is {CLOSED}")
         if item["claimed_by"] == actor and not item["lease_active"]:
             raise RecordError("claim_expired", f"your lease on #{number} ran out at {item['lease_until']}; claim it again")
         require(item["claimed_by"] == actor, "claim_required", f"claim #{number} before changing it")
@@ -366,7 +368,7 @@ class Store:
         """Claim inside an open transaction: free, expired, or already the actor's."""
         item = self._item(db, number)
         require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
-        require(item["status"] != "done", "item_done", f"#{number} is done")
+        require(item["status"] != CLOSED, f"item_{CLOSED}", f"#{number} is {CLOSED}")
         if item["lease_active"] and item["claimed_by"] != actor:
             raise RecordError("claim_conflict",
                               f"#{number} is held by {item['claimed_by']} until {item['lease_until']}")
@@ -471,8 +473,8 @@ class Store:
             rows = db.execute(
                 "SELECT number FROM items i WHERE kind='task' AND status IN ('open','in_progress')"
                 " AND NOT EXISTS (SELECT 1 FROM links l JOIN items b ON b.number=l.source"
-                "                 WHERE l.target=i.number AND l.type='blocks' AND b.status!='done')"
-                " ORDER BY number").fetchall()
+                "                 WHERE l.target=i.number AND l.type='blocks' AND b.status!=?)"
+                " ORDER BY number", (CLOSED,)).fetchall()
             items = [self._item(db, r[0]) for r in rows]
         return [i for i in items if not i["lease_active"] or i["claimed_by"] == actor]
 

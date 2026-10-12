@@ -24,15 +24,15 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 from babel.checks import Check, describe
 
 from . import queue
-from .store import Store, require
+from .store import CLOSED, Store, require
 
 TYPE = "consultation"
 #: questions shown per page; the open questions are always counted over all of them
 PAGE = 20
 #: the ticket statuses a person searches by (build-plan section 12), as the store keeps them
-STATUSES = {"open": ("open",), "in_progress": ("in_progress",), "closed": ("done",)}
+STATUSES = {"open": ("open",), "in_progress": ("in_progress",), "closed": (CLOSED,)}
 #: the store's statuses in the words a person reads
-SHOWN = {"open": "open", "in_progress": "in_progress", "needs_input": "waiting for an approver", "done": "closed"}
+SHOWN = {"open": "open", "in_progress": "in_progress", "needs_input": "waiting for an approver", CLOSED: "closed"}
 REPLY = "reply"
 
 
