@@ -274,7 +274,8 @@ def build(store: Store, data: Optional[ServiceData] = None, *, actor: str) -> Re
         """Find a customer, machine or part by id, name or description. One match opens its card,
         several are listed for the person to choose (never choose for them), none is reported. With
         status (open, in_progress or closed), list tickets of that status instead, narrowed by text
-        if given: "what is waiting" is search(status="open"). Writes nothing."""
+        if given: "what is waiting" is search(status="open"); in_progress also lists the tickets
+        whose reply waits for an approver, marked so. Writes nothing."""
         if status is not None:
             return search_tickets(store, text, status)
         if not text.strip():

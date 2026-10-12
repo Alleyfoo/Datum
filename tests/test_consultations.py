@@ -213,6 +213,23 @@ def test_the_receipt_says_what_was_asked_run_applied_checked_not_known_and_who_a
     assert lines["needs approval"].startswith(f"the reply waits in the approval queue on #{number}")
 
 
+def test_a_ticket_waiting_for_an_approver_is_listed_under_in_progress(store):
+    # P25-b (build-plan section 25), implemented as recommended and not yet confirmed by the owner:
+    # needs_input stays a status of its own, in the approval queue, and the filter lists it under
+    # in_progress. To list it elsewhere, change cons.STATUSES and this test.
+    assert cons.STATUSES == {"open": ("open",), "in_progress": ("in_progress", "needs_input"),
+                             "closed": ("closed",)}
+    working, waiting = _start(store), _start(store)
+    _answer(store, waiting)
+    cons.propose_reply(store, waiting, "ville", answer_text="7 days.", customer_answer="7 days.", against=1,
+                       check=PASS, reason="Reply")
+    assert store.get(waiting)["status"] == "needs_input"
+    assert [t["number"] for t in cons.tickets(store, "in_progress")] == [working, waiting]
+    assert (cons.tickets(store, "open"), cons.tickets(store, "closed")) == ([], [])
+    assert [q["number"] for q in queue.pending(store)] == [waiting]  # and it waits in the approval queue
+    assert cons.ticket_line(store.get(waiting)).endswith("·  waiting for an approver")
+
+
 def test_the_status_filter_uses_the_owners_three_statuses(store):
     open_one, working, closed = _start(store), _start(store), _start(store)
     cons.release(store, open_one, "ville", "The customer will call back")

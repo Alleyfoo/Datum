@@ -98,6 +98,18 @@ def test_the_status_filter_lists_tickets_of_that_status_only(store, search):
     assert all(f"#{numbers['waiting']} " not in text for text in (out, closed))
 
 
+def test_a_ticket_waiting_for_an_approver_is_listed_under_in_progress_and_marked_so(store, search):
+    # P25-b (build-plan section 25), to confirm: its own status in the approval queue, listed under in_progress
+    numbers = _tickets(store)
+    assert search(status="in_progress") == "\n".join([
+        "search status in_progress: 2 tickets. Which one?",
+        "",
+        f" 1  #{numbers['in_progress']:<4} consultation  Consultation: in_progress line  ·  in_progress, with ville",
+        f" 2  #{numbers['waiting']:<4} consultation  Consultation: waiting line  ·  waiting for an approver",
+    ])
+    assert [q["number"] for q in queue.pending(store)] == [numbers["waiting"]]
+
+
 def test_several_tickets_are_listed_and_text_narrows_them(store, search):
     first = cons.start(store, "ville", "Consultation: Pulp mill customer · CH-02", subject={})["number"]
     second = cons.start(store, "pia", "Consultation: Sawmill customer · BC-01", subject={})["number"]
