@@ -388,3 +388,13 @@ reason changed in `1f2eba1` and `7798ef8`. P25-b as recommended (`36665be`; the 
 changed in `2549309`). The P25 answer lets a closed ticket end in "a release-without-decision", while T-release
 (section 10) sends a released ticket back to `open`. `release` follows T-release; closing a ticket without a decision
 stays possible only through the store's `set_status`, and no tool does it. Confirm that reading.
+
+## 28. Owner answers, eighth round: closed tickets are deleted; only finished keeps history
+
+| ID | Answer | What it means |
+|---|---|---|
+| S-del | Closed tickets are deleted in time | A closed ticket is deleted after a set time if nobody reacts to it. The time is a named setting, not yet chosen. |
+| S-keep | Only finished tickets keep history | Finished tickets keep their full history. Closed tickets do not: this is a deliberate exception to the logging rule (section 11). |
+| S-merge | Round five merged first | Done: `build/round-five` is merged into `main` (commit `b72177e`). 351 tests pass. |
+
+Recorded as a conflict with the logging rule, made on purpose by the owner. The deletion time is still open.
