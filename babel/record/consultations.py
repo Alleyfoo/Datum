@@ -158,10 +158,11 @@ def propose_reply(store: Store, number: int, actor: str, *, answer_text: str, cu
         "check": kept["data"]["checks"][-1]["n"]})
 
 
-def release(store: Store, number: int, actor: str) -> dict:
-    """Hand the consultation back unconcluded: it returns to ``open`` (T-release), its record kept."""
+def release(store: Store, number: int, actor: str, reason: Optional[str] = None) -> dict:
+    """Hand the consultation back unconcluded: it returns to ``open`` (T-release), its record kept.
+    The reason, when given, is kept in the journal entry with who released it and when."""
     _consultation(store.get(number))
-    return store.release(number, actor)
+    return store.release(number, actor, reason=reason)
 
 
 def tickets(store: Store, status: str) -> List[dict]:

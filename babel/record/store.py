@@ -416,21 +416,22 @@ class Store:
         with self.transaction() as db:
             return self.take(db, number, actor, role)
 
-    def release(self, number: int, actor: str) -> dict:
+    def release(self, number: int, actor: str, *, reason: Optional[str] = None) -> dict:
         with self.transaction() as db:
-            return self.let_go(db, number, actor)
+            return self.let_go(db, number, actor, reason=reason)
 
-    def let_go(self, db, number: int, actor: str) -> dict:
+    def let_go(self, db, number: int, actor: str, *, reason: Optional[str] = None) -> dict:
         """Hand the claim back. A ticket released while `in_progress` has no decision yet, so it
         returns to `open` for the next handler (owner answer T-release, build-plan section 10); the
-        journal entry records the change and the history stays. A parked ticket stays parked."""
+        journal entry records the change, and why when a reason is given, and the history stays.
+        A parked ticket stays parked."""
         item = self._item(db, number)
         require(item["claimed_by"] == actor, "release_forbidden", f"only the holder can release #{number}")
-        details = {}
+        details = {} if reason is None else {"reason": text(reason, "reason")}
         if item["status"] == "in_progress":
             db.execute("UPDATE items SET status='open', claimed_by=NULL, lease_until=NULL, updated_at=?,"
                        " version=version+1 WHERE number=?", (self.now(), number))
-            details = {"status": {"before": "in_progress", "after": "open"}}
+            details["status"] = {"before": "in_progress", "after": "open"}
         else:
             db.execute("UPDATE items SET claimed_by=NULL, lease_until=NULL WHERE number=?", (number,))
         self.write_journal(db, number, actor, self.acting_role(db, actor), "released", details)

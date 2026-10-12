@@ -238,6 +238,21 @@ def test_released_without_a_decision_a_ticket_goes_back_to_open(store):
         "created", "claimed", "opened", "released", "claimed", "opened"]
 
 
+def test_a_release_keeps_why_in_its_journal_entry(store):
+    # P26 (build-plan section 25): the journal records who released a ticket, when, and why
+    task = store.add_task("hook", "A customer called")
+    store.open_ticket(task, "ville")
+    released = store.release(task, "ville", reason="The customer will call back")
+    entry = store.journal(task)[-1]
+    assert (entry["actor"], entry["role"], entry["action"], entry["at"]) == ("ville", "worker", "released", store.now())
+    assert entry["details"] == {"status": {"before": "in_progress", "after": "open"},
+                                "reason": "The customer will call back"}
+    assert (released["status"], released["claimed_by"]) == ("open", None)
+    store.open_ticket(task, "pia")
+    assert _code(store.release, task, "pia", reason="  ") == "invalid_argument"
+    assert (store.get(task)["claimed_by"], store.journal(task)[-1]["action"]) == ("pia", "opened")
+
+
 def test_a_lease_that_runs_out_leaves_the_ticket_in_progress(store, clock):
     # Q-stale (build-plan section 20): only a release returns it to open
     task = store.add_task("hook", "A customer called")
