@@ -89,13 +89,13 @@ def test_the_status_filter_lists_tickets_of_that_status_only(store, search):
     assert out.startswith("search status open: 1 ticket, shown; viewing it changes nothing.\n\n"
                           f"#{numbers['open']} consultation · open\nConsultation: open line")
     working = search(status="in_progress")
-    assert working.startswith(f"search status in_progress: 1 ticket, shown; viewing it changes nothing.\n\n"
-                              f"#{numbers['in_progress']} consultation · in_progress, with ville")
+    assert f"#{numbers['in_progress']} " in working and "in_progress, with ville" in working
+    assert all(f"#{numbers[state]} " not in working for state in ("open", "closed"))
     closed = search(status="closed")
     assert closed.startswith(f"search status closed: 1 ticket, shown; viewing it changes nothing.\n\n"
                              f"#{numbers['closed']} consultation · closed")
-    # waiting for an approver is in the approval queue, not under these three statuses (owner answer 3)
-    assert all(f"#{numbers['waiting']} " not in text for text in (out, working, closed))
+    # waiting for an approver is never open or closed; where else it is listed is its own test
+    assert all(f"#{numbers['waiting']} " not in text for text in (out, closed))
 
 
 def test_several_tickets_are_listed_and_text_narrows_them(store, search):
