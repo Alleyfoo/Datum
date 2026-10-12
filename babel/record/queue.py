@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional
 
-from .store import CLOSED, RecordError, Store, require, text
+from .store import CLOSED, ENDS, RecordError, Store, require, text
 
 #: effect(db, ticket, proposal) -> None or a dict with any of: "status", "title", "data",
 #: "proposal" (the next step, which parks the ticket again), "record" (kept on the decision),
@@ -110,7 +110,7 @@ def approve(store: Store, number: int, approver: str, reason: str, *, effect: Op
             updated = store.update(db, number, approver, role=role, action="approved",
                                    note={"proposal": proposal["action"], "reason": reason, "decision": decision},
                                    **fields)
-            if updated["status"] != CLOSED:
+            if updated["status"] not in ENDS:
                 store.let_go(db, number, approver)
             return store._item(db, number)
     except RecordError as error:

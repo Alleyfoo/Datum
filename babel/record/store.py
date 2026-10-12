@@ -44,6 +44,8 @@ USER_KINDS = ("person", "agent", "service")
 #: a task's last status: its work has stopped and its claim is handed back. Named once, here
 CLOSED = "closed"  # the owner's name for it (P25, build-plan section 25); the store said "done" before
 TASK_STATUSES = ("open", "in_progress", "needs_input", CLOSED)
+#: the statuses a task's work ends in: its claim is handed back, and it is not claimed, opened or resumed again
+ENDS = (CLOSED,)
 #: the store's version, kept in SQLite's user_version; an older store is brought up to it once, when opened
 VERSION = 1
 DOCUMENT_TYPES = ("decision", "finding")
@@ -125,6 +127,11 @@ def agent_like(name: str) -> bool:
 
 def _encode(value) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def _marks(values) -> str:
+    """``?,?,?``: one SQL parameter per value, for ``IN (...)``."""
+    return ",".join("?" * len(values))
 
 
 class Store:
@@ -365,11 +372,11 @@ class Store:
         if "data" in changes:
             details["data"] = sorted(k for k in set(item["data"]) | set(changes["data"])
                                      if item["data"].get(k) != changes["data"].get(k))
-        finished = changes.get("status") == CLOSED
-        if finished and item["claimed_by"]:
-            details["released"] = item["claimed_by"]  # finishing hands the claim back
+        ended = changes.get("status") in ENDS
+        if ended and item["claimed_by"]:
+            details["released"] = item["claimed_by"]  # a task whose work ends hands the claim back
         self.write_journal(db, number, actor, self.acting_role(db, actor, role), action, details)
-        if finished:
+        if ended:
             db.execute("UPDATE items SET claimed_by=NULL, lease_until=NULL WHERE number=?", (number,))
         elif self._holds(db, number, actor):
             self._renew(db, number)
@@ -389,7 +396,7 @@ class Store:
         """Require the actor's live claim on a task before a state change, and renew it."""
         item = self._item(db, number)
         require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
-        require(item["status"] != CLOSED, f"item_{CLOSED}", f"#{number} is {CLOSED}")
+        require(item["status"] not in ENDS, f"item_{item['status']}", f"#{number} is {item['status']}")
         if item["claimed_by"] == actor and not item["lease_active"]:
             raise RecordError("claim_expired", f"your lease on #{number} ran out at {item['lease_until']}; claim it again")
         require(item["claimed_by"] == actor, "claim_required", f"claim #{number} before changing it")
@@ -400,7 +407,7 @@ class Store:
         """Claim inside an open transaction: free, expired, or already the actor's."""
         item = self._item(db, number)
         require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
-        require(item["status"] != CLOSED, f"item_{CLOSED}", f"#{number} is {CLOSED}")
+        require(item["status"] not in ENDS, f"item_{item['status']}", f"#{number} is {item['status']}")
         if item["lease_active"] and item["claimed_by"] != actor:
             raise RecordError("claim_conflict",
                               f"#{number} is held by {item['claimed_by']} until {item['lease_until']}")
@@ -476,8 +483,8 @@ class Store:
         """`resume` inside an open transaction."""
         item = self._item(db, number)
         require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
-        require(item["status"] != CLOSED, f"item_{CLOSED}",
-                f"#{number} is {CLOSED}: its work has stopped, so it is not resumed")
+        require(item["status"] not in ENDS, f"item_{item['status']}",
+                f"#{number} is {item['status']}: its work has stopped, so it is not resumed")
         require(item["status"] in ("open", "in_progress"), "not_open",
                 f"#{number} is {item['status']}: it waits on a decision and is resumed only once that is made")
         if item["status"] == "in_progress" and item["claimed_by"] == actor and item["lease_active"]:
@@ -533,8 +540,8 @@ class Store:
             rows = db.execute(
                 "SELECT number FROM items i WHERE kind='task' AND status IN ('open','in_progress')"
                 " AND NOT EXISTS (SELECT 1 FROM links l JOIN items b ON b.number=l.source"
-                "                 WHERE l.target=i.number AND l.type='blocks' AND b.status!=?)"
-                " ORDER BY number", (CLOSED,)).fetchall()
+                f"                 WHERE l.target=i.number AND l.type='blocks' AND b.status NOT IN ({_marks(ENDS)}))"
+                " ORDER BY number", ENDS).fetchall()
             items = [self._item(db, r[0]) for r in rows]
         return [i for i in items if not i["lease_active"] or i["claimed_by"] == actor]
 
