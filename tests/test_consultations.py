@@ -51,6 +51,42 @@ def test_released_unconcluded_a_consultation_goes_back_to_open(store):
     assert store.open_ticket(number, "pia")["status"] == "in_progress"  # the next agent takes it up
 
 
+def test_released_then_resumed_it_is_the_same_consultation_with_its_questions_and_answers(store):
+    # P26 (build-plan section 25): released work is kept; the next agent takes it up as it was left
+    number = _start(store)
+    cons.person_fact(store, number, "ville", "stopped", "stopped", "machine stopped: yes (breakdown)")
+    _answer(store, number)
+    cons.ask_person(store, number, "ville", "Service demand", "Service demand for M-1",
+                    waiting_for="machine", ask="Which machine?")
+    cons.record_check(store, number, "ville", 1, "draft", PASS)
+    left = cons.get(store, number)
+    released = cons.release(store, number, "ville", "The customer will call back")
+    assert (released["status"], released["claimed_by"], released["data"]) == ("open", None, left["data"])
+    resumed = cons.resume(store, number, "pia")
+    assert (resumed["number"], resumed["status"], resumed["claimed_by"]) == (number, "in_progress", "pia")
+    assert resumed["data"] == left["data"]  # the person's answers, the questions and answers, the checks
+    page = cons.view(store, number)
+    assert ([q["status"] for q in page["questions"]], len(page["item"]["data"]["checks"])) == (["answered", "open"], 1)
+    assert [(m["action"], m["by"], m["reason"]) for m in page["handovers"]] == [
+        ("opened", "ville", None), ("released", "ville", "The customer will call back"), ("resumed", "pia", None)]
+    _answer(store, number, actor="pia")  # the next agent carries on
+    assert _code(_answer, store, number) == "claim_required"  # ville no longer has it
+
+
+def test_a_consultation_is_released_by_its_holder_with_a_reason(store):
+    number = _start(store)
+    for reason in ("", "   "):
+        assert _code(cons.release, store, number, "ville", reason) == "invalid_argument"
+    assert _code(cons.release, store, number, "pia", "Not mine to keep") == "release_forbidden"
+    item = cons.get(store, number)
+    assert (item["status"], item["claimed_by"]) == ("in_progress", "ville")
+    assert [e["action"] for e in store.journal(number)] == ["created", "claimed", "opened"]
+    other = store.add_task("hook", "A file arrived")
+    store.claim(other, "ville")
+    assert _code(cons.release, store, other, "ville", "Not a call") == "not_a_consultation"
+    assert _code(cons.resume, store, other, "ville") == "not_a_consultation"
+
+
 def test_every_write_needs_the_holders_claim_and_is_attributed(store):
     number = _start(store)
     assert _code(cons.person_fact, store, number, "pia", "stopped", "stopped", "machine stopped: yes") == \

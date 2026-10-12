@@ -253,6 +253,53 @@ def test_a_release_keeps_why_in_its_journal_entry(store):
     assert (store.get(task)["claimed_by"], store.journal(task)[-1]["action"]) == ("pia", "opened")
 
 
+def test_resuming_an_open_ticket_hands_it_to_whoever_resumes_it(store):
+    # P26 (build-plan section 25): resume takes up a ticket released without a decision
+    task = store.add_task("hook", "A customer called")
+    store.open_ticket(task, "ville")
+    store.release(task, "ville", reason="The customer will call back")
+    resumed = store.resume(task, "pia")
+    assert (resumed["status"], resumed["claimed_by"], resumed["lease_active"]) == ("in_progress", "pia", True)
+    assert [(e["actor"], e["role"], e["action"], e["details"]) for e in store.journal(task)[-2:]] == [
+        ("pia", "worker", "claimed", {}),
+        ("pia", "worker", "resumed", {"status": {"before": "open", "after": "in_progress"}})]
+    assert store.journal(task)[-1]["at"] == store.now()
+
+
+def test_a_ticket_whose_holders_lease_ran_out_is_resumed_by_the_next_agent(store, clock):
+    # Q-stale leaves it in_progress when the lease runs out; resume is how another agent takes it up
+    task = store.add_task("hook", "A customer called")
+    store.open_ticket(task, "ville")
+    assert _code(store.resume, task, "pia") == "claim_conflict"  # ville's lease is live
+    ran_out = store.get(task)["lease_until"]
+    clock.advance(seconds=store.lease.total_seconds() + 60)
+    resumed = store.resume(task, "pia")
+    assert (resumed["status"], resumed["claimed_by"], resumed["lease_active"]) == ("in_progress", "pia", True)
+    claimed, entry = store.journal(task)[-2:]
+    assert claimed["details"] == {"previous": "ville", "expired_at": ran_out}
+    assert (entry["actor"], entry["action"], entry["details"]) == (
+        "pia", "resumed", {"previous": "ville", "lease_ran_out": ran_out})
+
+
+def test_resuming_a_held_ticket_changes_nothing_and_a_waiting_or_closed_one_is_not_resumed(store):
+    task = store.add_task("hook", "A customer called")
+    store.open_ticket(task, "ville")
+    before = (store.get(task), len(store.journal(task)))
+    assert store.resume(task, "ville") == before[0]
+    assert len(store.journal(task)) == before[1]
+    parked = store.add_task("hook", "Waits on an approver")
+    store.claim(parked, "ville")
+    store.set_status(parked, "ville", "needs_input")
+    store.release(parked, "ville")
+    assert _code(store.resume, parked, "pia") == "not_open"
+    store.set_status(task, "ville", CLOSED)
+    with pytest.raises(RecordError, match=f"#{task} is closed: its work has stopped, so it is not resumed") as refused:
+        store.resume(task, "pia")
+    assert refused.value.code == "item_closed"
+    assert _code(store.resume, store.add_document("hook", "finding", "A finding", "text"), "pia") == "not_a_task"
+    assert [store.get(n)["status"] for n in (task, parked)] == ["closed", "needs_input"]
+
+
 def test_a_lease_that_runs_out_leaves_the_ticket_in_progress(store, clock):
     # Q-stale (build-plan section 20): only a release returns it to open
     task = store.add_task("hook", "A customer called")

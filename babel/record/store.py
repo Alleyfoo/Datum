@@ -11,8 +11,10 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   P22, build-plan section 20), every write by its holder renews it, closing releases it, and a
   holder whose lease ran out must claim again;
 - opening an open ticket hands it to an agent: claimed, and `in_progress`; released without a
-  decision, it goes back to `open` (owner answers T-open and T-release, build-plan section 10). A
-  lease that runs out leaves the status as it is (owner answer Q-stale, section 20);
+  decision, it goes back to `open` (owner answers T-open and T-release, build-plan section 10),
+  and the release may say why. A lease that runs out leaves the status as it is (owner answer
+  Q-stale, section 20). Resuming takes up an open ticket, or one whose holder's lease ran out,
+  and the journal records who resumed it (owner answer P26, section 25);
 - a task's statuses are `open`, `in_progress`, `needs_input` (it waits on an approver's decision)
   and `closed`: its work has stopped, which says nothing of success; it may end in a decision, a
   drop, or neither (owner answer P25, build-plan section 25). The store kept `done` for `closed`
@@ -457,6 +459,33 @@ class Store:
                 f"#{number} is {item['status']}: only an open ticket is opened")
         self.take(db, number, actor, role)
         return self.update(db, number, actor, role=role, action="opened", status="in_progress")
+
+    def resume(self, number: int, actor: str, *, role: Optional[str] = None) -> dict:
+        """Take a ticket up again (owner answer P26, build-plan section 25).
+
+        An open ticket (released without a decision, or sent back by an approver) and one still
+        `in_progress` whose holder's lease ran out (Q-stale leaves its status) are handed to the
+        actor: claimed, `in_progress`, and the journal records who resumed it. A ticket the actor
+        already holds changes nothing, and one another holds on a live lease is refused. A ticket
+        waiting on a decision is resumed once it is decided; a closed ticket never is.
+        """
+        with self.transaction() as db:
+            return self.resuming(db, number, actor, role)
+
+    def resuming(self, db, number: int, actor: str, role: Optional[str] = None) -> dict:
+        """`resume` inside an open transaction."""
+        item = self._item(db, number)
+        require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
+        require(item["status"] != CLOSED, f"item_{CLOSED}",
+                f"#{number} is {CLOSED}: its work has stopped, so it is not resumed")
+        require(item["status"] in ("open", "in_progress"), "not_open",
+                f"#{number} is {item['status']}: it waits on a decision and is resumed only once that is made")
+        if item["status"] == "in_progress" and item["claimed_by"] == actor and item["lease_active"]:
+            return item
+        self.take(db, number, actor, role)  # refuses another's live lease
+        note = ({"previous": item["claimed_by"], "lease_ran_out": item["lease_until"]}
+                if item["status"] == "in_progress" else {})
+        return self.update(db, number, actor, role=role, action="resumed", note=note, status="in_progress")
 
     # -- what people do on a ticket -----------------------------------------------------------
 

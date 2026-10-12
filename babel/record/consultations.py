@@ -3,7 +3,9 @@
 A consultation is a task of type ``consultation`` in the ticket store, in its one number space.
 Starting one opens it at once, which hands it to the agent working the call: claimed and
 ``in_progress`` (owner answer T-open). Released without a conclusion, it goes back to ``open``
-(T-release). Every write needs the holder's claim and is an attributed journal entry:
+(T-release), with the reason why; resumed, it is handed to the agent who takes it up, as it was
+left (P26). Its card lists these handovers once it has changed hands. Every write needs the
+holder's claim and is an attributed journal entry:
 
 - a fact only the person knows, recorded as the person's answer, never guessed;
 - each question asked: answered with its facts and receipt, or open while it waits for a fact only
@@ -24,7 +26,7 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 from babel.checks import Check, describe
 
 from . import queue
-from .store import CLOSED, Store, require
+from .store import CLOSED, Store, require, text
 
 TYPE = "consultation"
 #: questions shown per page; the open questions are always counted over all of them
@@ -158,22 +160,43 @@ def propose_reply(store: Store, number: int, actor: str, *, answer_text: str, cu
         "check": kept["data"]["checks"][-1]["n"]})
 
 
-def release(store: Store, number: int, actor: str, reason: Optional[str] = None) -> dict:
-    """Hand the consultation back unconcluded: it returns to ``open`` (T-release), its record kept.
-    The reason, when given, is kept in the journal entry with who released it and when."""
-    _consultation(store.get(number))
-    return store.release(number, actor, reason=reason)
+def release(store: Store, number: int, actor: str, reason: str) -> dict:
+    """Hand the consultation back without a decision (owner answers T-release and P26): it returns
+    to ``open`` for whoever takes the call up again, with everything on it kept: the person's
+    answers, the questions and their answers, the checks. Nothing is deleted. Only its holder
+    releases it, and the reason is required: the journal entry keeps who, when and why."""
+    reason = text(reason, "reason")
+    with store.transaction() as db:
+        _consultation(store._item(db, number))
+        return store.let_go(db, number, actor, reason=reason)
+
+
+def resume(store: Store, number: int, actor: str) -> dict:
+    """Take a consultation up again (owner answer P26): an open one, released or sent back by the
+    approver, or one whose consultant's lease ran out. It is handed to the actor, ``in_progress``,
+    as it was left, and the journal records who resumed it. One waiting for an approver is not
+    resumed, and a closed one never is: its work has stopped."""
+    with store.transaction() as db:
+        _consultation(store._item(db, number))
+        return store.resuming(db, number, actor)
+
+
+#: the journal's actions that hand a consultation to someone, or back
+HANDOVERS = ("opened", "released", "resumed")
 
 
 def handovers(store: Store, number: int) -> List[dict]:
-    """Who has had the consultation, from its journal, oldest first: each opening, and each release
-    without a decision (back to ``open``) with its reason. A claim handed back with a proposal is
-    not a handover: the proposal waits in the approval queue and the card shows it as the reply."""
+    """Who has had the consultation, from its journal, oldest first: each opening, each release
+    without a decision (back to ``open``) with its reason, and each resumption. A claim handed back
+    with a proposal is not a handover: the proposal waits in the approval queue and the card shows
+    it as the reply."""
     out = []
     for entry in store.journal(number):
-        released = entry["action"] == "released" and entry["details"].get("status", {}).get("after") == "open"
-        if entry["action"] == "opened" or released:
-            out.append({"action": entry["action"], "by": entry["actor"], "reason": entry["details"].get("reason")})
+        if entry["action"] not in HANDOVERS:
+            continue
+        if entry["action"] == "released" and entry["details"].get("status", {}).get("after") != "open":
+            continue
+        out.append({"action": entry["action"], "by": entry["actor"], "reason": entry["details"].get("reason")})
     return out
 
 

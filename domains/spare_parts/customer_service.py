@@ -11,13 +11,18 @@
     check(consultation, answer)    the answer checks on a draft, kept on the ticket
     propose_reply(consultation, answer)
                                    the reply queued for an approver; nothing is sent
+    release(consultation, reason)  hand the call back without a decision: open again, everything
+                                   on it kept, and the reason required
+    resume(consultation)           take up an open call (or one whose lease ran out) as it was
+                                   left; a closed one is not resumed
 
 Ported from Parts-Service-Desk desk/mcp_server.py at 46c859a (origin in docs/provenance.md) and
 rewritten on this repository's company data, ticket store and approval queue. The lab's menu tools
 (list_countries, list_companies, show_plant, show_machine) become one search with the 0/1/many rule
 of docs/interaction.md: the plant view and the machine card are what a match opens. ask_question
 becomes ask and stopped, check_answer becomes check, and propose_customer_reply becomes
-propose_reply, which uses the approval queue instead of the lab's proposals file.
+propose_reply, which uses the approval queue instead of the lab's proposals file. release and
+resume are new: the owner's answer to P26 (build-plan section 25).
 
 Every tool is a plain function with a typed signature that returns text, and acts as the one named
 user the role is built for (there is no authentication, build-plan G4). No tool calls a model, reads
@@ -53,6 +58,10 @@ Explain the FACTS in three parts: CUSTOMER ANSWER (2-3 sentences for the custome
 RECOMMENDATION. Use only the FACTS, copy dates and quantities exactly as written, follow the
 RECOMMENDED PLAN, and never name other customers or internal stock problems in the CUSTOMER ANSWER.
 Run check on your draft and fix what it flags, then propose_reply.
+
+If the call cannot be finished now, release it with the reason (for example, the customer will call
+back); nothing on it is lost. When the call is taken up again, resume it by its number: it comes
+back as it was left, with who released it and why. A closed consultation is not resumed.
 
 You cannot send anything to a customer and cannot approve anything: a named approver decides on the
 reply outside this chat.
@@ -388,5 +397,40 @@ def build(store: Store, data: Optional[ServiceData] = None, *, actor: str) -> Re
             "CUSTOMER ANSWER, as it would go to the customer once approved:", said, "",
             consultations.receipt_text(item, entry),
         ])
+
+    @role.register(writes=True)
+    def release(consultation: int, reason: str) -> str:
+        """Hand the consultation back without a decision, when the call cannot be finished now (for
+        example, the customer will call back). It goes back to open for whoever takes the call up
+        again with resume, and everything on it is kept: the person's answers, the questions and
+        their answers, the checks. Nothing is deleted. The reason is required: it stays with the
+        release, and whoever resumes the call sees it. Only the consultant who has the call can
+        release it."""
+        consultations.release(store, consultation, actor, reason)
+        return "\n".join([
+            f"Consultation #{consultation} released: open, with no one. Nothing was decided, and nothing is deleted.",
+            "", consultations.view_text(consultations.view(store, consultation)), "",
+            f"Whoever takes the call up again resumes it: resume({consultation}).",
+        ])
+
+    @role.register(writes=True)
+    def resume(consultation: int) -> str:
+        """Take up a consultation again: one that is open (released, or a reply the approver sent
+        back) or whose consultant's lease ran out. It becomes in_progress, with you, as it was left:
+        the person's answers, the questions and their answers and the checks are all on it, and its
+        handovers say who released it and why. A consultation waiting for an approver is not
+        resumed, and a closed one never is: its work has stopped, and a new call is a new
+        consultation."""
+        before = consultations.get(store, consultation)
+        held = before["status"] == "in_progress" and before["claimed_by"] == actor and before["lease_active"]
+        item = consultations.resume(store, consultation, actor)
+        head = (f"Consultation #{consultation} is in progress with you already: nothing changed." if held
+                else f"Consultation #{consultation} resumed: in_progress, with {actor}, as it was left.")
+        advice = "Go on with ask, check and propose_reply."
+        if item["data"]["person"]:
+            advice = ("The person's answers are as recorded above, with who recorded them: if the situation may "
+                      "have changed since, ask the person again before relying on them. Then go on with ask, check "
+                      "and propose_reply.")
+        return "\n".join([head, "", consultations.view_text(consultations.view(store, consultation)), "", advice])
 
     return role
