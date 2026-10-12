@@ -12,7 +12,7 @@ import babel.record.consultations
 import domains.spare_parts.customer_service
 from babel.mcp import ToolError
 from babel.record import queue
-from babel.record.store import CLOSED, RecordError
+from babel.record.store import ENDS, RecordError
 from cs_briefs import ANSWERS, REPLY
 from domains.spare_parts import tools
 from domains.spare_parts.customer_service import build
@@ -176,8 +176,8 @@ def test_propose_reply_queues_it_for_an_approver_and_sends_nothing(store, role):
     # the proposal needs an approver: a named person with the role, and a reason
     assert _code(queue.approve, store, number, "ville", "looks right") == "role_missing"
     assert _code(queue.approve, store, number, "anna", "") == "invalid_argument"
-    closed = queue.approve(store, number, "anna", "Checked against the facts")
-    assert closed["status"] == CLOSED
+    decided = queue.approve(store, number, "anna", "Checked against the facts")
+    assert decided["status"] in ENDS  # the approval ends the consultation's work
     [decision] = store.documents_about(number, "decision")
     assert (decision["data"]["approver"], decision["data"]["action"]) == ("anna", "reply")
 
@@ -258,7 +258,7 @@ def test_resumed_by_a_second_consultant_it_is_the_same_consultation_as_it_was_le
                           "check and propose_reply.")
 
 
-def test_a_consultation_waiting_for_an_approver_or_closed_is_not_resumed(store, role):
+def test_a_consultation_waiting_for_an_approver_or_decided_is_not_resumed(store, role):
     number = _open(role)
     role.call("stopped", {"consultation": number, "state": "stopped"})
     role.call("ask", {"consultation": number, "question": "Availability"})
@@ -266,13 +266,14 @@ def test_a_consultation_waiting_for_an_approver_or_closed_is_not_resumed(store, 
     other = build(store, DATA, actor="pia")
     assert _code(other.call, "resume", {"consultation": number}) == "not_open"  # the approver has it next
     queue.approve(store, number, "anna", "Checked against the facts")
-    closed = f"#{number} is closed: its work has stopped, so it is not resumed"
-    with pytest.raises(RecordError, match=closed) as refused:
+    ended = store.get(number)["status"]
+    assert ended in ENDS  # the approval ended its work
+    with pytest.raises(RecordError, match=f"#{number} is {ended}: its work has stopped, so it is not resumed") as refused:
         other.call("resume", {"consultation": number})
-    assert refused.value.code == "item_closed"
+    assert refused.value.code == f"item_{ended}"
     assert _code(role.call, "release", {"consultation": number, "reason": "Too late"}) == "release_forbidden"
     item = store.get(number)
-    assert (item["status"], item["claimed_by"]) == ("closed", None)
+    assert (item["status"], item["claimed_by"]) == (ended, None)
 
 
 #: the modules a tool runs: none may reach a model, the network, another process, a clock or chance

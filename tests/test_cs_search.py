@@ -68,18 +68,19 @@ def test_a_search_needs_words_or_a_status(search):
 
 
 def _tickets(store):
-    """One consultation in each state: open (released), in progress, waiting for an approver, closed."""
+    """One consultation in each state: open (released), in progress, waiting for an approver, and decided
+    (its reply approved)."""
     numbers = {}
-    for state in ("open", "in_progress", "waiting", "closed"):
+    for state in ("open", "in_progress", "waiting", "decided"):
         numbers[state] = cons.start(store, "ville", f"Consultation: {state} line", subject={})["number"]
     cons.release(store, numbers["open"], "ville", "The customer will call back")
-    for state in ("waiting", "closed"):
+    for state in ("waiting", "decided"):
         cons.answer(store, numbers[state], "ville", "Lead time", "Lead time", facts="FACTS:", tools_run=["lead_time"],
                     rule="a rule")
         cons.propose_reply(store, numbers[state], "ville", answer_text="7 days.", customer_answer="7 days.",
                            against=1, check=Check(unsupported=()),
                            reason="Reply")
-    queue.approve(store, numbers["closed"], "anna", "Checked against the facts")
+    queue.approve(store, numbers["decided"], "anna", "Checked against the facts")
     return numbers
 
 
@@ -90,12 +91,16 @@ def test_the_status_filter_lists_tickets_of_that_status_only(store, search):
                           f"#{numbers['open']} consultation · open\nConsultation: open line")
     working = search(status="in_progress")
     assert f"#{numbers['in_progress']} " in working and "in_progress, with ville" in working
-    assert all(f"#{numbers[state]} " not in working for state in ("open", "closed"))
-    closed = search(status="closed")
-    assert closed.startswith(f"search status closed: 1 ticket, shown; viewing it changes nothing.\n\n"
-                             f"#{numbers['closed']} consultation · closed")
-    # waiting for an approver is never open or closed; where else it is listed is its own test
-    assert all(f"#{numbers['waiting']} " not in text for text in (out, closed))
+    assert all(f"#{numbers[state]} " not in working for state in ("open", "decided"))
+    # the decided one is listed under the status its approval ended it in, and nowhere else
+    ended = store.get(numbers["decided"])["status"]
+    where = next(name for name, statuses in cons.STATUSES.items() if ended in statuses)
+    decided = search(status=where)
+    assert decided.startswith(f"search status {where}: 1 ticket, shown; viewing it changes nothing.\n\n"
+                              f"#{numbers['decided']} consultation · {cons.SHOWN[ended]}")
+    assert all(f"#{numbers['decided']} " not in search(status=other) for other in cons.STATUSES if other != where)
+    # waiting for an approver is never open, nor where a decided one goes; where else it is listed is its own test
+    assert all(f"#{numbers['waiting']} " not in text for text in (out, decided))
 
 
 def test_a_ticket_waiting_for_an_approver_is_listed_under_in_progress_and_marked_so(store, search):

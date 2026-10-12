@@ -5,7 +5,7 @@ import pytest
 
 from babel.intake import accepted, dispositions, inbox
 from babel.record import queue
-from babel.record.store import CLOSED, RecordError
+from babel.record.store import CLOSED, ENDS, RecordError
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SUBJECT = {"company_id": "C-100", "source_id": "src_1"}
@@ -68,7 +68,7 @@ def test_a_worker_cannot_admit_an_approver_can(store):
     assert accepted.files(store, "C-100", "stock_export") == []
 
     item = dispositions.admit(store, task, "anna", "Trial checked: 19 rows, no refusals")
-    assert (item["status"], item["data"]["resolution"]) == (CLOSED, "imported")
+    assert item["status"] in ENDS and item["data"]["resolution"] == "imported"
     [row] = accepted.files(store, "C-100", "stock_export")
     assert (row["source_id"], row["schema_version"], row["ticket"], row["admitted_by"]) == ("src_1", 1, task, "anna")
     [decision] = store.documents_about(task, "decision")

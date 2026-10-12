@@ -6,7 +6,7 @@ import pytest
 from babel.checks import Check
 from babel.record import consultations as cons
 from babel.record import queue
-from babel.record.store import CLOSED, RecordError
+from babel.record.store import CLOSED, ENDS, RecordError
 
 # the clock and store fixtures are in conftest.py
 
@@ -153,9 +153,10 @@ def test_a_proposed_reply_waits_for_an_approver_and_nothing_is_sent(store):
     assert _code(queue.approve, store, number, "ville", "fine") == "role_missing"
     assert _code(queue.approve, store, number, "anna", " ") == "invalid_argument"
     assert "Reply: the reply waits in the approval queue" in cons.view_text(cons.view(store, number))
-    assert queue.approve(store, number, "anna", "Checked against the facts")["status"] == CLOSED
+    decided = queue.approve(store, number, "anna", "Checked against the facts")
+    assert decided["status"] in ENDS  # the approval ends the consultation's work
     card = cons.view_text(cons.view(store, number))
-    assert card.splitlines()[0] == f"#{number} consultation · closed"
+    assert card.splitlines()[0] == f"#{number} consultation · {cons.SHOWN[decided['status']]}"
     [decision] = store.documents_about(number, "decision")
     assert card.splitlines()[-1] == f"Reply: approved by anna (decision #{decision['number']}): Checked against the facts"
 

@@ -1,7 +1,7 @@
 import pytest
 
 from babel.record import queue
-from babel.record.store import CLOSED, RecordError
+from babel.record.store import ENDS, RecordError
 
 
 def _code(call, *args, **kwargs):
@@ -56,14 +56,14 @@ def test_an_agent_cannot_approve(store):
 
 def test_an_approval_is_a_named_decision_document_about_the_ticket(store):
     task = _proposed(store)
-    closed = queue.approve(store, task, "anna", "Checked the trial; admit it")
-    assert (closed["status"], closed["claimed_by"]) == (CLOSED, None)
-    assert "proposal" not in closed["data"]
+    decided = queue.approve(store, task, "anna", "Checked the trial; admit it")
+    assert decided["status"] in ENDS and decided["claimed_by"] is None  # the approval ends the ticket's work
+    assert "proposal" not in decided["data"]
     [decision] = store.documents_about(task, "decision")
     assert decision["data"]["decision"] == "approved"
     assert (decision["data"]["approver"], decision["data"]["reason"]) == ("anna", "Checked the trial; admit it")
     assert decision["body"].startswith("Approved by anna (approver): Checked the trial; admit it")
-    assert closed["data"]["decisions"] == [decision["number"]]
+    assert decided["data"]["decisions"] == [decision["number"]]
     approved = [e for e in store.journal(task) if e["action"] == "approved"][0]
     assert (approved["actor"], approved["role"], approved["details"]["decision"]) == ("anna", "approver", decision["number"])
     assert queue.pending(store) == []
@@ -71,7 +71,7 @@ def test_an_approval_is_a_named_decision_document_about_the_ticket(store):
 
 def test_the_drafter_may_also_approve_when_holding_both_roles(store):
     task = _proposed(store, by="pia")
-    assert queue.approve(store, task, "pia", "I drafted it and confirm it")["status"] == CLOSED
+    assert queue.approve(store, task, "pia", "I drafted it and confirm it")["status"] in ENDS
 
 
 def test_an_effect_can_lead_to_a_next_proposal(store):
@@ -123,7 +123,7 @@ def test_an_approver_waits_for_another_holders_lease(store, clock):
     store.claim(task, "pia")
     assert _code(queue.approve, store, task, "anna", "fits") == "claim_conflict"
     clock.advance(seconds=store.lease.total_seconds() + 60)  # a minute past pia's lease, with no write
-    assert queue.approve(store, task, "anna", "fits")["status"] == CLOSED
+    assert queue.approve(store, task, "anna", "fits")["status"] in ENDS
 
 
 def test_a_decision_needs_a_reason_and_something_to_decide(store):

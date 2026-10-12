@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 from babel.record import queue
-from babel.record.consultations import release
+from babel.record.consultations import STATUSES, release
 from babel.record.store import Store
 from cs_briefs import REPLY
 from domains.spare_parts.customer_service import build
@@ -79,7 +79,7 @@ def scenario(root: Path) -> Dict[str, str]:
     release(store, 3, WORKER, "the customer will call back")
     steps.append(f"--- {WORKER} releases #3 unconcluded: the customer will call back")
     steps.append(run("open_consultation", {"customer": "C-200", "machine": "SC-11"}))
-    for status in ("open", "in_progress", "closed"):
+    for status in STATUSES:  # every status of the filter, in its order
         steps.append(run("search", {"status": status}))
     steps.append(run("search", {"text": "zzz", "status": "open"}))
     out["tickets_by_status"] = "\n\n".join(steps)

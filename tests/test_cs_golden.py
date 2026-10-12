@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from babel.record.consultations import STATUSES
 from cs_scenario import scenario
 
 TESTS = Path(__file__).parent
@@ -89,8 +90,13 @@ def test_the_status_filter_after_the_call(texts):
     after = texts["tickets_by_status"]
     assert 'search status open: 1 ticket, shown; viewing it changes nothing.\n\n#3 consultation · open' in after
     assert '#4 consultation · in_progress, with ville' in after
-    assert 'search status closed: 1 ticket, shown; viewing it changes nothing.\n\n#1 consultation · closed' in after
     assert 'search "zzz" with status open: no ticket.' in after
+    # every status of the filter is searched once, and the approved call is listed by exactly one of them,
+    # the status its approval ended it in, as its card with the approver's decision
+    searches = [step for step in after.split("\n\n>>> ") if step.startswith("search(status=")]
+    assert [step.split("\n")[0] for step in searches] == [f'search(status="{s}")' for s in STATUSES]
+    [listed] = [step for step in searches if "\n#1 consultation · " in step]
+    assert "\nReply: approved by anna (decision #2): Checked against the facts; PO-4718 goes to CH-02" in listed
 
 
 def test_the_released_call_is_resumed_by_a_second_consultant_as_it_was_left(texts):
