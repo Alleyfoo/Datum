@@ -349,3 +349,12 @@ approval belongs among the three statuses) and P26 (tools to release and resume 
 ## 24. Work order
 
 The remaining work, in order, with the decisions still needed, is in [work-order.md](work-order.md).
+
+## 25. Owner answers, fifth round
+
+| ID | Answer | What it means |
+|---|---|---|
+| P25 | Rename `done` to `closed` | The ticket status `done` becomes `closed`. A closed ticket may end in a decision, a drop or a release-without-decision: closed means the work has stopped, not that it succeeded. The status filter lists `open`, `in_progress` and `closed`. |
+| P25-b | Open | Where a ticket waiting for an approver (`needs_input`) appears in the filter is not answered. Recommendation until answered: it stays a separate status in the approval queue, and the filter lists it under `in_progress`. |
+| P26 | Yes, add them | The consultant gets `release` and `resume` as MCP tools, with journal entries and tests. |
+| P11 | A website, not the code | The process is published as a website that displays it (the flow, the tickets, the receipts), not the repository. The repository stays private. Who builds and hosts the site is open. |
