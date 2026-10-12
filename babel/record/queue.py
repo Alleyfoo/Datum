@@ -79,7 +79,7 @@ def _refused(store: Store, number: int, actor: str, verb: str, error: RecordErro
 
 def approve(store: Store, number: int, approver: str, reason: str, *, effect: Optional[Effect] = None,
             expect: Optional[str] = None) -> dict:
-    """Approve what a ticket waits on. Without an effect saying otherwise, the ticket is done."""
+    """Approve what a ticket waits on. Without an effect saying otherwise, the ticket is closed."""
     reason = text(reason, "reason")
     try:
         with store.transaction() as db:

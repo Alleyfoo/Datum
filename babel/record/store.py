@@ -6,13 +6,17 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
 - a decision or a finding is a document, which records what was concluded;
 - a comment records what happened; comments and every state change are journal entries, and
   the journal is append-only (enforced by the database, not only by this code);
-- a `blocks` link keeps a task out of the ready list until its blocker is done;
+- a `blocks` link keeps a task out of the ready list until its blocker is closed;
 - a claim is a lease: it runs out by itself, one day after its holder's last write (owner answer
-  P22, build-plan section 20), every write by its holder renews it, finishing releases it, and a
+  P22, build-plan section 20), every write by its holder renews it, closing releases it, and a
   holder whose lease ran out must claim again;
 - opening an open ticket hands it to an agent: claimed, and `in_progress`; released without a
   decision, it goes back to `open` (owner answers T-open and T-release, build-plan section 10). A
-  lease that runs out leaves the status as it is (owner answer Q-stale, section 20).
+  lease that runs out leaves the status as it is (owner answer Q-stale, section 20);
+- a task's statuses are `open`, `in_progress`, `needs_input` (it waits on an approver's decision)
+  and `closed`: its work has stopped, which says nothing of success; it may end in a decision, a
+  drop, or neither (owner answer P25, build-plan section 25). The store kept `done` for `closed`
+  before; one migration step, run once when an older store opens, renames it.
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -36,8 +40,10 @@ from typing import Callable, Iterable, List, Optional
 ROLES = ("approver", "worker")
 USER_KINDS = ("person", "agent", "service")
 #: a task's last status: its work has stopped and its claim is handed back. Named once, here
-CLOSED = "done"
+CLOSED = "closed"  # the owner's name for it (P25, build-plan section 25); the store said "done" before
 TASK_STATUSES = ("open", "in_progress", "needs_input", CLOSED)
+#: the store's version, kept in SQLite's user_version; an older store is brought up to it once, when opened
+VERSION = 1
 DOCUMENT_TYPES = ("decision", "finding")
 LINK_TYPES = ("blocks", "about")
 LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to P22 (build-plan section 20)
@@ -131,8 +137,32 @@ class Store:
             db.executescript(SCHEMA)
             if db.execute("SELECT 1 FROM users WHERE name=?", (SYSTEM,)).fetchone() is None:
                 db.execute("INSERT INTO users VALUES (?,?,?,?)", (SYSTEM, "service", "", self.now()))
+            behind = db.execute("PRAGMA user_version").fetchone()[0] < VERSION
         finally:
             db.close()
+        if behind:
+            self._migrate()
+
+    def _migrate(self) -> None:
+        """Bring a store written by older code up to VERSION, in one transaction. Each item a step
+        changes gets a journal entry by `system`, with the value before and after. The journal
+        itself is never rewritten: it keeps what was written at the time.
+
+        1. The status `done` is called `closed` (owner answer P25, build-plan section 25).
+        """
+        with self.transaction() as db:
+            version = db.execute("PRAGMA user_version").fetchone()[0]
+            if version >= VERSION:
+                return  # another connection brought it up while this one waited for the lock
+            if version < 1:
+                for (number,) in db.execute("SELECT number FROM items WHERE kind='task' AND status='done'"
+                                            " ORDER BY number").fetchall():
+                    db.execute("UPDATE items SET status=?, updated_at=?, version=version+1 WHERE number=?",
+                               (CLOSED, self.now(), number))
+                    self.write_journal(db, number, SYSTEM, SYSTEM, "migrated", {
+                        "status": {"before": "done", "after": CLOSED},
+                        "reason": "the status done is called closed (owner answer P25, build-plan section 25)"})
+            db.execute(f"PRAGMA user_version={VERSION}")
 
     def ensure(self, script: str) -> None:
         """Create a module's own tables (CREATE ... IF NOT EXISTS statements) once per store."""
@@ -411,7 +441,7 @@ class Store:
 
         An open ticket is claimed by the actor and becomes `in_progress`, and the journal records
         who opened it and when. Opening a ticket that is already `in_progress` changes nothing. A
-        ticket that waits on a decision, or is done, is not opened.
+        ticket that waits on a decision, or is closed, is not opened.
         """
         with self.transaction() as db:
             return self.opening(db, number, actor, role)

@@ -50,7 +50,7 @@ def fitting_finding(store: Store, db, ticket: int, payload: dict) -> dict:
 
 
 def drop(store: Store, ticket: int, actor: str, reason: str, *, role: Optional[str] = None) -> dict:
-    """A worker or an approver drops the file. The ticket is done; the file stays where it is."""
+    """A worker or an approver drops the file. The ticket is closed; the file stays where it is."""
     reason = text(reason, "reason")
     with store.transaction() as db:
         item = store.hold(db, ticket, actor)

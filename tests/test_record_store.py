@@ -1,8 +1,9 @@
+import json
 import sqlite3
 
 import pytest
 
-from babel.record.store import CLOSED, RecordError, agent_like
+from babel.record.store import CLOSED, TASK_STATUSES, RecordError, Store, agent_like
 
 # the clock and store fixtures are in conftest.py
 
@@ -244,6 +245,55 @@ def test_a_lease_that_runs_out_leaves_the_ticket_in_progress(store, clock):
     clock.advance(seconds=store.lease.total_seconds() + 60)
     item = store.get(task)
     assert (item["status"], item["claimed_by"], item["lease_active"]) == ("in_progress", "ville", False)
+
+
+def test_a_tasks_statuses_are_open_in_progress_needs_input_and_closed(store):
+    # P25 (build-plan section 25): done is called closed; closed means the work has stopped
+    assert (TASK_STATUSES, CLOSED) == (("open", "in_progress", "needs_input", "closed"), "closed")
+    task = store.add_task("hook", "A file arrived")
+    store.claim(task, "ville")
+    assert _code(store.set_status, task, "ville", "done") == "invalid_status"
+    closed = store.set_status(task, "ville", "closed")
+    assert store.journal(task)[-1]["details"]["status"] == {"before": "open", "after": "closed"}
+    with pytest.raises(RecordError, match=f"#{task} is closed") as refused:
+        store.claim(task, "pia")
+    assert (closed["status"], refused.value.code) == ("closed", "item_closed")
+
+
+def _written_before_the_rename(store, number):
+    """Leave #number as the code before P25 did on closing it: status done, its journal entry
+    saying so, and the store without a version."""
+    db = sqlite3.connect(store.path)
+    try:
+        db.execute("UPDATE items SET status='done', claimed_by=NULL, lease_until=NULL WHERE number=?", (number,))
+        db.execute("INSERT INTO journal (item, actor, role, action, details, at) VALUES (?,?,?,?,?,?)",
+                   (number, "ville", "worker", "status_changed",
+                    json.dumps({"status": {"before": "open", "after": "done"}, "released": "ville"}), store.now()))
+        db.execute("PRAGMA user_version=0")
+        db.commit()
+    finally:
+        db.close()
+
+
+def test_a_store_written_with_done_opens_with_closed(store, clock):
+    # P25: one migration step, run once when an older store opens; the journal keeps its history
+    finished, waiting = store.add_task("hook", "Finished"), store.add_task("hook", "Still open")
+    _written_before_the_rename(store, finished)
+    before = store.get(finished)
+    clock.advance(hours=1)
+    reopened = Store(store.path, clock=clock)
+    item = reopened.get(finished)
+    assert (item["status"], item["version"], item["updated_at"]) == ("closed", before["version"] + 1, reopened.now())
+    *history, migrated = reopened.journal(finished)
+    assert history[-1]["details"]["status"]["after"] == "done"  # what was written then stays written
+    assert (migrated["actor"], migrated["role"], migrated["action"], migrated["at"]) == (
+        "system", "system", "migrated", reopened.now())
+    assert migrated["details"]["status"] == {"before": "done", "after": "closed"}
+    assert reopened.get(waiting)["status"] == "open"
+    assert _code(reopened.claim, finished, "pia") == "item_closed"
+    entries = len(reopened.journal())
+    Store(store.path, clock=clock)  # opened again: the step has run, nothing more changes
+    assert (len(reopened.journal()), reopened.get(finished)["version"]) == (entries, item["version"])
 
 
 def test_anyone_may_comment_even_on_a_finished_task(store):
