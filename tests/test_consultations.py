@@ -45,7 +45,7 @@ def test_each_consultation_is_its_own_ticket_opened_to_the_agent(store):
 
 def test_released_unconcluded_a_consultation_goes_back_to_open(store):
     number = _start(store)
-    released = cons.release(store, number, "ville")
+    released = cons.release(store, number, "ville", "The customer will call back")
     assert (released["status"], released["claimed_by"]) == ("open", None)
     assert store.journal(number)[-1]["action"] == "released"
     assert store.open_ticket(number, "pia")["status"] == "in_progress"  # the next agent takes it up
@@ -157,7 +157,7 @@ def test_the_receipt_says_what_was_asked_run_applied_checked_not_known_and_who_a
 
 def test_the_status_filter_uses_the_owners_three_statuses(store):
     open_one, working, closed = _start(store), _start(store), _start(store)
-    cons.release(store, open_one, "ville")
+    cons.release(store, open_one, "ville", "The customer will call back")
     store.set_status(closed, "ville", CLOSED)
     assert [t["number"] for t in cons.tickets(store, "open")] == [open_one]
     assert [t["number"] for t in cons.tickets(store, "in_progress")] == [working]

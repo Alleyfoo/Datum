@@ -72,7 +72,7 @@ def scenario(root: Path) -> Dict[str, str]:
     queue.approve(store, 1, APPROVER, reason)
     steps = [f"--- in the approval queue, {APPROVER} (approver) approves the reply on #1: \"{reason}\""]
     steps.append(run("open_consultation", {"customer": "C-100", "machine": "SC-01", "part": "SP-1601"}))
-    release(store, 3, WORKER)
+    release(store, 3, WORKER, "the customer will call back")
     steps.append(f"--- {WORKER} releases #3 unconcluded: the customer will call back")
     steps.append(run("open_consultation", {"customer": "C-200", "machine": "SC-11"}))
     for status in ("open", "in_progress", "closed"):

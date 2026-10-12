@@ -72,7 +72,7 @@ def _tickets(store):
     numbers = {}
     for state in ("open", "in_progress", "waiting", "closed"):
         numbers[state] = cons.start(store, "ville", f"Consultation: {state} line", subject={})["number"]
-    cons.release(store, numbers["open"], "ville")
+    cons.release(store, numbers["open"], "ville", "The customer will call back")
     for state in ("waiting", "closed"):
         cons.answer(store, numbers[state], "ville", "Lead time", "Lead time", facts="FACTS:", tools_run=["lead_time"],
                     rule="a rule")

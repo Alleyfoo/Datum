@@ -184,7 +184,7 @@ def test_propose_reply_queues_it_for_an_approver_and_sends_nothing(store, role):
 
 def test_a_released_consultation_goes_back_to_open(store, role):
     number = _open(role)
-    babel.record.consultations.release(store, number, "ville")
+    babel.record.consultations.release(store, number, "ville", "The customer will call back")
     assert store.get(number)["status"] == "open"
     assert role.call("search", {"status": "open"}).startswith("search status open: 1 ticket, shown")
     assert _code(role.call, "ask", {"consultation": number, "question": "Lead time"}) == "claim_required"
