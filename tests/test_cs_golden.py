@@ -1,9 +1,10 @@
 """The customer-service scenario, checked against saved text and run again for determinism.
 
 golden/cs/*.txt holds the scenario's text (tests/cs_scenario.py: the call "CH-02 has stopped. The
-customer needs SP-1601", tool by tool, and the tickets after it), written by
-scripts/regen_golden_cs.py. These tests only read it: a missing or stale golden fails, it is never
-written here. golden/cs/lab_reference/ holds the lab's own briefs, compared in test_cs_rules.py.
+customer needs SP-1601", tool by tool, the tickets after it, and a call released and resumed by a
+second consultant), written by scripts/regen_golden_cs.py. These tests only read it: a missing or
+stale golden fails, it is never written here. golden/cs/lab_reference/ holds the lab's own briefs,
+compared in test_cs_rules.py.
 """
 
 import difflib
@@ -23,6 +24,7 @@ GOLDEN = TESTS / "golden" / "cs"
 NAMES = sorted(path.stem for path in GOLDEN.glob("*.txt"))
 LAB = GOLDEN / "lab_reference"
 CALL = "consultation_CH-02_SP-1601"
+HANDOVER = "consultation_released_and_resumed"
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +46,8 @@ def _same(expected: str, actual: str, label: str) -> None:
 
 
 def test_the_goldens_are_exactly_the_scenarios_texts(texts):
-    assert sorted(texts) == NAMES == [CALL, "tickets_by_status"], "run scripts/regen_golden_cs.py and review the diff"
+    assert sorted(texts) == NAMES == [CALL, HANDOVER, "tickets_by_status"], \
+        "run scripts/regen_golden_cs.py and review the diff"
 
 
 @pytest.mark.parametrize("name", NAMES)
@@ -88,6 +91,25 @@ def test_the_status_filter_after_the_call(texts):
     assert '#4 consultation · in_progress, with ville' in after
     assert 'search status closed: 1 ticket, shown; viewing it changes nothing.\n\n#1 consultation · closed' in after
     assert 'search "zzz" with status open: no ticket.' in after
+
+
+def test_the_released_call_is_resumed_by_a_second_consultant_as_it_was_left(texts):
+    # P26 (build-plan section 25): released with its reason, listed under open, resumed with nothing lost
+    steps = {step.split("\n")[0]: step for step in texts[HANDOVER].split("\n\n>>> ")}
+    released = steps['release(5, "the customer is checking whether SC-11 has stopped and will call back")']
+    resumed = steps["resume(5)"]
+    reason = "  released   by ville: the customer is checking whether SC-11 has stopped and will call back"
+    assert released.split("\n")[1] == ("Consultation #5 released: open, with no one. Nothing was decided, "
+                                       "and nothing is deleted.")
+    assert resumed.split("\n")[1] == "Consultation #5 resumed: in_progress, with pia, as it was left."
+    for step in (released, resumed):  # the same questions and answers, before and after
+        assert reason in step
+        assert "   1  Lead time of SP-1601 for SC-11  ·  answered: " in step
+        assert "Open questions, of all 2: 2 (Has SC-11 stopped?)" in step
+    assert "  resumed    by pia" in resumed and "  resumed" not in released
+    assert " 2  #5    consultation  Consultation: Power plant customer · SC-11 Fuel screen screw · SP-1601 Screw " \
+           "flight section, 400 mm  ·  open" in steps['search(status="open")']
+    assert steps['search(status="in_progress")'].endswith("·  in_progress, with pia")
 
 
 def test_two_runs_in_one_process_give_identical_text(texts, tmp_path):
