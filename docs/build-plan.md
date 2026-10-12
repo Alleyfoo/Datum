@@ -358,3 +358,10 @@ The remaining work, in order, with the decisions still needed, is in [work-order
 | P25-b | Open | Where a ticket waiting for an approver (`needs_input`) appears in the filter is not answered. Recommendation until answered: it stays a separate status in the approval queue, and the filter lists it under `in_progress`. |
 | P26 | Yes, add them | The consultant gets `release` and `resume` as MCP tools, with journal entries and tests. |
 | P11 | A website, not the code | The process is published as a website that displays it (the flow, the tickets, the receipts), not the repository. The repository stays private. Who builds and hosts the site is open. |
+
+## 26. Owner answers, sixth round
+
+| ID | Answer | What it means |
+|---|---|---|
+| P25-b | A: under `in_progress` | A ticket waiting for an approver (`needs_input`) is listed under `in_progress` in the status filter. The approval queue shows it separately. Confirmed; the fifth-round build implements this. |
+| P11-site | A: a static page from the records | The website is a static page generated from the repository's records: the flow, the ticket states and receipts, with synthetic examples only. No live server. The recorded-walkthrough option is not chosen. |
