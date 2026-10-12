@@ -345,3 +345,7 @@ questions counted over all questions, not the page (`ceff80f`); the tool registr
 criteria are met; 333 tests pass. Building it raised two questions for the owner, P25 (where a ticket waiting for
 approval belongs among the three statuses) and P26 (tools to release and resume a consultation), in
 [backlog.md](backlog.md).
+
+## 24. Work order
+
+The remaining work, in order, with the decisions still needed, is in [work-order.md](work-order.md).
