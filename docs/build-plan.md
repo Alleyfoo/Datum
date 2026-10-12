@@ -398,3 +398,11 @@ stays possible only through the store's `set_status`, and no tool does it. Confi
 | S-merge | Round five merged first | Done: `build/round-five` is merged into `main` (commit `b72177e`). 351 tests pass. |
 
 Recorded as a conflict with the logging rule, made on purpose by the owner. The deletion time is still open.
+
+## 29. Owner answers, ninth round: the end states
+
+| ID | Answer | What it means |
+|---|---|---|
+| S-period | Yes, 30 days | A closed ticket is deleted after 30 days without a reaction. The period is a named setting. |
+| S-close | Workers can close | A worker may close a ticket with a reason when it cannot be finished. The creator is notified and told to amend and repost, or to delete. |
+| S-finish | Finishing needs a decision | A ticket becomes `finished` only with a decision recorded by an approver. Finished tickets go to the finished list, with their full history. |
