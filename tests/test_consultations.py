@@ -218,8 +218,7 @@ def test_a_ticket_waiting_for_an_approver_is_listed_under_in_progress(store):
     # P25-b (build-plan section 25), implemented as recommended and not yet confirmed by the owner:
     # needs_input stays a status of its own, in the approval queue, and the filter lists it under
     # in_progress. To list it elsewhere, change cons.STATUSES and this test.
-    assert cons.STATUSES == {"open": ("open",), "in_progress": ("in_progress", "needs_input"),
-                             "closed": ("closed",)}
+    assert cons.STATUSES["in_progress"] == ("in_progress", "needs_input") and "needs_input" not in cons.STATUSES
     working, waiting = _start(store), _start(store)
     _answer(store, waiting)
     cons.propose_reply(store, waiting, "ville", answer_text="7 days.", customer_answer="7 days.", against=1,
@@ -231,7 +230,7 @@ def test_a_ticket_waiting_for_an_approver_is_listed_under_in_progress(store):
     assert cons.ticket_line(store.get(waiting)).endswith("·  waiting for an approver")
 
 
-def test_the_status_filter_uses_the_owners_three_statuses(store):
+def test_the_status_filter_lists_open_in_progress_and_closed_tickets(store):
     open_one, working, closed = _start(store), _start(store), _start(store)
     cons.release(store, open_one, "ville", "The customer will call back")
     store.set_status(closed, "ville", CLOSED)

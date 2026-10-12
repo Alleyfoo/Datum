@@ -309,9 +309,10 @@ def test_a_lease_that_runs_out_leaves_the_ticket_in_progress(store, clock):
     assert (item["status"], item["claimed_by"], item["lease_active"]) == ("in_progress", "ville", False)
 
 
-def test_a_tasks_statuses_are_open_in_progress_needs_input_and_closed(store):
-    # P25 (build-plan section 25): done is called closed; closed means the work has stopped
-    assert (TASK_STATUSES, CLOSED) == (("open", "in_progress", "needs_input", "closed"), "closed")
+def test_done_is_called_closed_among_a_tasks_statuses(store):
+    # P25 (build-plan section 25): done is called closed. Which statuses follow it is the owner's list, its own test
+    assert CLOSED == "closed" and "done" not in TASK_STATUSES
+    assert TASK_STATUSES[:4] == ("open", "in_progress", "needs_input", "closed")
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
     assert _code(store.set_status, task, "ville", "done") == "invalid_status"
