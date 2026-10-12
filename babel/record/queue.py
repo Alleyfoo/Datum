@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional
 
-from .store import RecordError, Store, require, text
+from .store import CLOSED, RecordError, Store, require, text
 
 #: effect(db, ticket, proposal) -> None or a dict with any of: "status", "title", "data",
 #: "proposal" (the next step, which parks the ticket again), "record" (kept on the decision),
@@ -79,7 +79,7 @@ def _refused(store: Store, number: int, actor: str, verb: str, error: RecordErro
 
 def approve(store: Store, number: int, approver: str, reason: str, *, effect: Optional[Effect] = None,
             expect: Optional[str] = None) -> dict:
-    """Approve what a ticket waits on. Without an effect saying otherwise, the ticket is done."""
+    """Approve what a ticket waits on. Without an effect saying otherwise, the ticket is closed."""
     reason = text(reason, "reason")
     try:
         with store.transaction() as db:
@@ -104,13 +104,13 @@ def approve(store: Store, number: int, approver: str, reason: str, *, effect: Op
             follow = outcome.get("proposal")
             if follow:
                 data["proposal"] = {"payload": {}, **follow, "by": approver, "role": role, "at": store.now()}
-            fields = {"data": data, "status": outcome.get("status", "needs_input" if follow else "done")}
+            fields = {"data": data, "status": outcome.get("status", "needs_input" if follow else CLOSED)}
             if outcome.get("title"):
                 fields["title"] = outcome["title"]
             updated = store.update(db, number, approver, role=role, action="approved",
                                    note={"proposal": proposal["action"], "reason": reason, "decision": decision},
                                    **fields)
-            if updated["status"] != "done":
+            if updated["status"] != CLOSED:
                 store.let_go(db, number, approver)
             return store._item(db, number)
     except RecordError as error:

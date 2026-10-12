@@ -34,6 +34,10 @@ search status open: 1 ticket, shown; viewing it changes nothing.
 #3 consultation · open
 Consultation: Sawmill customer · SC-01 Screen feed screw · SP-1601 Screw flight section, 400 mm
 
+Handovers
+  opened     by ville
+  released   by ville: the customer will call back
+
 From the person: nothing yet
 
 Questions: none asked yet

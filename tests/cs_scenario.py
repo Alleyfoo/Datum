@@ -1,4 +1,5 @@
-"""The customer-service scenario kept as saved text: one call, tool by tool, and the tickets after it.
+"""The customer-service scenario kept as saved text: one call, tool by tool, the tickets after it, and
+a call released before it is finished and resumed by a second consultant.
 
     "CH-02 has stopped. The customer needs SP-1601."
 
@@ -25,6 +26,8 @@ from domains.spare_parts.data import demo
 #: the record's clock: fixed, so the journal is the same on every run (no tool's text shows it)
 AT = datetime(2026, 10, 8, 9, 0, tzinfo=timezone.utc)
 WORKER, APPROVER = "ville", "anna"
+#: the consultant who takes a released call up again
+SECOND = "pia"
 
 #: the call, in order: (tool, arguments)
 CALL: List[Tuple[str, dict]] = [
@@ -54,10 +57,11 @@ def scenario(root: Path) -> Dict[str, str]:
     store = Store(Path(root) / "babel.sqlite", clock=lambda: AT)
     store.add_user(WORKER, ["worker"])
     store.add_user(APPROVER, ["approver"])
+    store.add_user(SECOND, ["worker"])
     role = build(store, demo(), actor=WORKER)
 
-    def run(tool: str, arguments: dict) -> str:
-        return call_text(tool, arguments) + "\n" + role.call(tool, arguments)
+    def run(tool: str, arguments: dict, by=role) -> str:
+        return call_text(tool, arguments) + "\n" + by.call(tool, arguments)
 
     steps = []
     for tool, arguments in CALL:
@@ -72,11 +76,24 @@ def scenario(root: Path) -> Dict[str, str]:
     queue.approve(store, 1, APPROVER, reason)
     steps = [f"--- in the approval queue, {APPROVER} (approver) approves the reply on #1: \"{reason}\""]
     steps.append(run("open_consultation", {"customer": "C-100", "machine": "SC-01", "part": "SP-1601"}))
-    release(store, 3, WORKER)
+    release(store, 3, WORKER, "the customer will call back")
     steps.append(f"--- {WORKER} releases #3 unconcluded: the customer will call back")
     steps.append(run("open_consultation", {"customer": "C-200", "machine": "SC-11"}))
     for status in ("open", "in_progress", "closed"):
         steps.append(run("search", {"status": status}))
     steps.append(run("search", {"text": "zzz", "status": "open"}))
     out["tickets_by_status"] = "\n\n".join(steps)
+
+    # a call released before it is finished, and taken up again by a second consultant: nothing is lost
+    second = build(store, demo(), actor=SECOND)
+    reason = "the customer is checking whether SC-11 has stopped and will call back"
+    steps = [run("open_consultation", {"customer": "C-200", "machine": "SC-11", "part": "SP-1601"}),
+             run("ask", {"consultation": 5, "question": "Lead time"}),
+             run("ask", {"consultation": 5, "question": "Availability"}),
+             run("release", {"consultation": 5, "reason": reason}),
+             run("search", {"status": "open"}),
+             f"--- the customer calls back, and {SECOND} takes the call",
+             run("resume", {"consultation": 5}, by=second),
+             run("search", {"status": "in_progress"}, by=second)]
+    out["consultation_released_and_resumed"] = "\n\n".join(steps)
     return out

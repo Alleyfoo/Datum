@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import Optional
 
 from babel.record import queue
-from babel.record.store import Store, require, text
+from babel.record.store import CLOSED, Store, require, text
 
 from . import accepted, schemas
 
@@ -50,7 +50,7 @@ def fitting_finding(store: Store, db, ticket: int, payload: dict) -> dict:
 
 
 def drop(store: Store, ticket: int, actor: str, reason: str, *, role: Optional[str] = None) -> dict:
-    """A worker or an approver drops the file. The ticket is done; the file stays where it is."""
+    """A worker or an approver drops the file. The ticket is closed; the file stays where it is."""
     reason = text(reason, "reason")
     with store.transaction() as db:
         item = store.hold(db, ticket, actor)
@@ -65,7 +65,7 @@ def drop(store: Store, ticket: int, actor: str, reason: str, *, role: Optional[s
         data = {k: v for k, v in item["data"].items() if k != "proposal"}
         data.update(resolution="dropped", decisions=data.get("decisions", []) + [decision])
         return store.update(db, ticket, actor, role=acting, action="dropped",
-                            note={"reason": reason, "decision": decision}, data=data, status="done")
+                            note={"reason": reason, "decision": decision}, data=data, status=CLOSED)
 
 
 def propose(store: Store, ticket: int, actor: str, disposition: str, reason: str, *, payload: dict,

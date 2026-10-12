@@ -6,7 +6,7 @@ import pytest
 from babel.checks import Check
 from babel.record import consultations as cons
 from babel.record import queue
-from babel.record.store import RecordError
+from babel.record.store import CLOSED, RecordError
 
 # the clock and store fixtures are in conftest.py
 
@@ -45,10 +45,46 @@ def test_each_consultation_is_its_own_ticket_opened_to_the_agent(store):
 
 def test_released_unconcluded_a_consultation_goes_back_to_open(store):
     number = _start(store)
-    released = cons.release(store, number, "ville")
+    released = cons.release(store, number, "ville", "The customer will call back")
     assert (released["status"], released["claimed_by"]) == ("open", None)
     assert store.journal(number)[-1]["action"] == "released"
     assert store.open_ticket(number, "pia")["status"] == "in_progress"  # the next agent takes it up
+
+
+def test_released_then_resumed_it_is_the_same_consultation_with_its_questions_and_answers(store):
+    # P26 (build-plan section 25): released work is kept; the next agent takes it up as it was left
+    number = _start(store)
+    cons.person_fact(store, number, "ville", "stopped", "stopped", "machine stopped: yes (breakdown)")
+    _answer(store, number)
+    cons.ask_person(store, number, "ville", "Service demand", "Service demand for M-1",
+                    waiting_for="machine", ask="Which machine?")
+    cons.record_check(store, number, "ville", 1, "draft", PASS)
+    left = cons.get(store, number)
+    released = cons.release(store, number, "ville", "The customer will call back")
+    assert (released["status"], released["claimed_by"], released["data"]) == ("open", None, left["data"])
+    resumed = cons.resume(store, number, "pia")
+    assert (resumed["number"], resumed["status"], resumed["claimed_by"]) == (number, "in_progress", "pia")
+    assert resumed["data"] == left["data"]  # the person's answers, the questions and answers, the checks
+    page = cons.view(store, number)
+    assert ([q["status"] for q in page["questions"]], len(page["item"]["data"]["checks"])) == (["answered", "open"], 1)
+    assert [(m["action"], m["by"], m["reason"]) for m in page["handovers"]] == [
+        ("opened", "ville", None), ("released", "ville", "The customer will call back"), ("resumed", "pia", None)]
+    _answer(store, number, actor="pia")  # the next agent carries on
+    assert _code(_answer, store, number) == "claim_required"  # ville no longer has it
+
+
+def test_a_consultation_is_released_by_its_holder_with_a_reason(store):
+    number = _start(store)
+    for reason in ("", "   "):
+        assert _code(cons.release, store, number, "ville", reason) == "invalid_argument"
+    assert _code(cons.release, store, number, "pia", "Not mine to keep") == "release_forbidden"
+    item = cons.get(store, number)
+    assert (item["status"], item["claimed_by"]) == ("in_progress", "ville")
+    assert [e["action"] for e in store.journal(number)] == ["created", "claimed", "opened"]
+    other = store.add_task("hook", "A file arrived")
+    store.claim(other, "ville")
+    assert _code(cons.release, store, other, "ville", "Not a call") == "not_a_consultation"
+    assert _code(cons.resume, store, other, "ville") == "not_a_consultation"
 
 
 def test_every_write_needs_the_holders_claim_and_is_attributed(store):
@@ -117,11 +153,33 @@ def test_a_proposed_reply_waits_for_an_approver_and_nothing_is_sent(store):
     assert _code(queue.approve, store, number, "ville", "fine") == "role_missing"
     assert _code(queue.approve, store, number, "anna", " ") == "invalid_argument"
     assert "Reply: the reply waits in the approval queue" in cons.view_text(cons.view(store, number))
-    assert queue.approve(store, number, "anna", "Checked against the facts")["status"] == "done"
+    assert queue.approve(store, number, "anna", "Checked against the facts")["status"] == CLOSED
     card = cons.view_text(cons.view(store, number))
     assert card.splitlines()[0] == f"#{number} consultation · closed"
     [decision] = store.documents_about(number, "decision")
     assert card.splitlines()[-1] == f"Reply: approved by anna (decision #{decision['number']}): Checked against the facts"
+
+
+def test_once_released_the_card_says_who_had_the_consultation_and_why(store):
+    # P26 (build-plan section 25): whoever has the call next sees who released it and why
+    number = _start(store)
+    assert "Handovers" not in cons.view_text(cons.view(store, number))  # opened, never handed over
+    cons.release(store, number, "ville", "The customer will call back")
+    store.open_ticket(number, "pia")
+    lines = cons.view_text(cons.view(store, number)).splitlines()
+    assert lines[:8] == [f"#{number} consultation · in_progress, with pia", "Consultation: Customer one · M-1 · P-1",
+                         "", "Handovers",
+                         "  opened     by ville",
+                         "  released   by ville: The customer will call back",
+                         "  opened     by pia",
+                         ""]
+    # a claim handed back with a proposed reply goes to the approval queue: it is not a handover
+    proposed = _start(store)
+    _answer(store, proposed)
+    cons.propose_reply(store, proposed, "ville", answer_text="7 days.", customer_answer="7 days.", against=1,
+                       check=PASS, reason="Reply")
+    assert [m["action"] for m in cons.handovers(store, proposed)] == ["opened"]
+    assert "Handovers" not in cons.view_text(cons.view(store, proposed))
 
 
 def test_a_consultation_with_no_questions_says_so(store):
@@ -155,10 +213,27 @@ def test_the_receipt_says_what_was_asked_run_applied_checked_not_known_and_who_a
     assert lines["needs approval"].startswith(f"the reply waits in the approval queue on #{number}")
 
 
+def test_a_ticket_waiting_for_an_approver_is_listed_under_in_progress(store):
+    # P25-b (build-plan section 25), implemented as recommended and not yet confirmed by the owner:
+    # needs_input stays a status of its own, in the approval queue, and the filter lists it under
+    # in_progress. To list it elsewhere, change cons.STATUSES and this test.
+    assert cons.STATUSES == {"open": ("open",), "in_progress": ("in_progress", "needs_input"),
+                             "closed": ("closed",)}
+    working, waiting = _start(store), _start(store)
+    _answer(store, waiting)
+    cons.propose_reply(store, waiting, "ville", answer_text="7 days.", customer_answer="7 days.", against=1,
+                       check=PASS, reason="Reply")
+    assert store.get(waiting)["status"] == "needs_input"
+    assert [t["number"] for t in cons.tickets(store, "in_progress")] == [working, waiting]
+    assert (cons.tickets(store, "open"), cons.tickets(store, "closed")) == ([], [])
+    assert [q["number"] for q in queue.pending(store)] == [waiting]  # and it waits in the approval queue
+    assert cons.ticket_line(store.get(waiting)).endswith("·  waiting for an approver")
+
+
 def test_the_status_filter_uses_the_owners_three_statuses(store):
     open_one, working, closed = _start(store), _start(store), _start(store)
-    cons.release(store, open_one, "ville")
-    store.set_status(closed, "ville", "done")
+    cons.release(store, open_one, "ville", "The customer will call back")
+    store.set_status(closed, "ville", CLOSED)
     assert [t["number"] for t in cons.tickets(store, "open")] == [open_one]
     assert [t["number"] for t in cons.tickets(store, "in_progress")] == [working]
     assert [t["number"] for t in cons.tickets(store, "closed")] == [closed]

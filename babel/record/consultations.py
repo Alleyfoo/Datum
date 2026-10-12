@@ -3,7 +3,9 @@
 A consultation is a task of type ``consultation`` in the ticket store, in its one number space.
 Starting one opens it at once, which hands it to the agent working the call: claimed and
 ``in_progress`` (owner answer T-open). Released without a conclusion, it goes back to ``open``
-(T-release). Every write needs the holder's claim and is an attributed journal entry:
+(T-release), with the reason why; resumed, it is handed to the agent who takes it up, as it was
+left (P26). Its card lists these handovers once it has changed hands. Every write needs the
+holder's claim and is an attributed journal entry:
 
 - a fact only the person knows, recorded as the person's answer, never guessed;
 - each question asked: answered with its facts and receipt, or open while it waits for a fact only
@@ -24,15 +26,18 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 from babel.checks import Check, describe
 
 from . import queue
-from .store import Store, require
+from .store import CLOSED, Store, require, text
 
 TYPE = "consultation"
 #: questions shown per page; the open questions are always counted over all of them
 PAGE = 20
-#: the ticket statuses a person searches by (build-plan section 12), as the store keeps them
-STATUSES = {"open": ("open",), "in_progress": ("in_progress",), "closed": ("done",)}
+#: the ticket statuses a person searches by (build-plan section 12), and the store's statuses each one
+#: lists. A ticket waiting for an approver keeps its own status, needs_input, in the approval queue, and
+#: is listed under in_progress: open point P25-b, implemented as recommended and not yet confirmed by
+#: the owner (build-plan section 25). To list it elsewhere, change this mapping and the test naming it.
+STATUSES = {"open": ("open",), "in_progress": ("in_progress", "needs_input"), "closed": (CLOSED,)}
 #: the store's statuses in the words a person reads
-SHOWN = {"open": "open", "in_progress": "in_progress", "needs_input": "waiting for an approver", "done": "closed"}
+SHOWN = {"open": "open", "in_progress": "in_progress", "needs_input": "waiting for an approver", CLOSED: "closed"}
 REPLY = "reply"
 
 
@@ -158,20 +163,55 @@ def propose_reply(store: Store, number: int, actor: str, *, answer_text: str, cu
         "check": kept["data"]["checks"][-1]["n"]})
 
 
-def release(store: Store, number: int, actor: str) -> dict:
-    """Hand the consultation back unconcluded: it returns to ``open`` (T-release), its record kept."""
-    _consultation(store.get(number))
-    return store.release(number, actor)
+def release(store: Store, number: int, actor: str, reason: str) -> dict:
+    """Hand the consultation back without a decision (owner answers T-release and P26): it returns
+    to ``open`` for whoever takes the call up again, with everything on it kept: the person's
+    answers, the questions and their answers, the checks. Nothing is deleted. Only its holder
+    releases it, and the reason is required: the journal entry keeps who, when and why."""
+    reason = text(reason, "reason")
+    with store.transaction() as db:
+        _consultation(store._item(db, number))
+        return store.let_go(db, number, actor, reason=reason)
+
+
+def resume(store: Store, number: int, actor: str) -> dict:
+    """Take a consultation up again (owner answer P26): an open one, released or sent back by the
+    approver, or one whose consultant's lease ran out. It is handed to the actor, ``in_progress``,
+    as it was left, and the journal records who resumed it. One waiting for an approver is not
+    resumed, and a closed one never is: its work has stopped."""
+    with store.transaction() as db:
+        _consultation(store._item(db, number))
+        return store.resuming(db, number, actor)
+
+
+#: the journal's actions that hand a consultation to someone, or back
+HANDOVERS = ("opened", "released", "resumed")
+
+
+def handovers(store: Store, number: int) -> List[dict]:
+    """Who has had the consultation, from its journal, oldest first: each opening, each release
+    without a decision (back to ``open``) with its reason, and each resumption. A claim handed back
+    with a proposal is not a handover: the proposal waits in the approval queue and the card shows
+    it as the reply."""
+    out = []
+    for entry in store.journal(number):
+        if entry["action"] not in HANDOVERS:
+            continue
+        if entry["action"] == "released" and entry["details"].get("status", {}).get("after") != "open":
+            continue
+        out.append({"action": entry["action"], "by": entry["actor"], "reason": entry["details"].get("reason")})
+    return out
 
 
 def tickets(store: Store, status: str) -> List[dict]:
-    """Every ticket with this status, as a person names it: open, in_progress or closed."""
+    """Every ticket with this status, as a person names it: open, in_progress or closed. in_progress
+    also lists the tickets waiting for an approver (STATUSES)."""
     require(status in STATUSES, "invalid_argument", f"status must be one of {', '.join(STATUSES)}")
     return [item for item in store.items("task") if item["status"] in STATUSES[status]]
 
 
 def view(store: Store, number: int, offset: int = 0, limit: int = PAGE) -> dict:
-    """One consultation with a page of its questions.
+    """One consultation with a page of its questions, and who has had it.
 
     The open and the answered questions are taken from all the questions, never from the page:
     the lab's get_case took them from the paged slice, so an open question on another page went
@@ -185,7 +225,8 @@ def view(store: Store, number: int, offset: int = 0, limit: int = PAGE) -> dict:
             "total": len(questions), "next_offset": offset + limit if offset + limit < len(questions) else None,
             "open_questions": [q for q in questions if q["status"] == "open"],
             "answered_questions": [q for q in questions if q["status"] == "answered"],
-            "decisions": [store.get(n) for n in item["data"].get("decisions", [])]}
+            "decisions": [store.get(n) for n in item["data"].get("decisions", [])],
+            "handovers": handovers(store, number)}
 
 
 # -- text --------------------------------------------------------------------------------
@@ -265,12 +306,21 @@ def _question_line(q: dict) -> str:
     return f"{q['n']:>4}  {q['title']}  ·  {state}"
 
 
+def handovers_text(moves: Sequence[dict]) -> List[Tuple[str, str]]:
+    """``opened   by ville``, ``released   by ville: <why>``: one line per handover."""
+    return [(m["action"], f"by {m['by']}" + (f": {m['reason']}" if m["reason"] else "")) for m in moves]
+
+
 def view_text(page: dict) -> str:
-    """A consultation as a card: who has it, the person's answers, a page of questions, the open
-    questions of all, the checks and the reply."""
+    """A consultation as a card: who has it (and, once it has changed hands, who had it before and
+    why it was released), the person's answers, a page of questions, the open questions of all,
+    the checks and the reply."""
     item = page["item"]
     data = item["data"]
     out = [f"#{item['number']} consultation · {SHOWN[item['status']]}{holder(item)}", item["title"]]
+    moves = page.get("handovers") or []
+    if any(m["action"] != "opened" for m in moves):
+        out += ["", lines_text(handovers_text(moves), "Handovers")]
     person = [(name, f"{fact['text']}, answered by {fact['by']}") for name, fact in data["person"].items()]
     out += ["", lines_text(person, "From the person") if person else "From the person: nothing yet"]
     shown = page["questions"]

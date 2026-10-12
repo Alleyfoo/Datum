@@ -35,6 +35,11 @@ derives open questions from all questions, not the page; substitute stock is che
 | `stopped(consultation, state)` | the person's answer: `stopped` or `planned`. Required before an availability answer; never guessed | a fact on the ticket, attributed |
 | `check(consultation, answer)` | runs the answer checks | the check result on the ticket |
 | `propose_reply(consultation, answer)` | queues the reply for an approver | a proposal (the approval queue, as built in C6) |
+| `release(consultation, reason)` | added in round five (P26, build-plan section 25): hands the call back without a decision; everything on it is kept, and the reason is required | the ticket back to `open`; a journal entry with who, when and why |
+| `resume(consultation)` | added in round five (P26): takes up an open consultation, or one whose lease ran out, as it was left; a closed one is refused with its reason | the ticket `in_progress` with the agent; a journal entry |
+
+Since round five the status `closed` is the store's own name (it said `done`), and `search(status="in_progress")` also
+lists a ticket waiting for an approver, marked so: P25 and P25-b in build-plan section 25, P25-b still to confirm.
 
 ## Acceptance criteria
 

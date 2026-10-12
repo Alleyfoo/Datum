@@ -12,7 +12,7 @@ import babel.record.consultations
 import domains.spare_parts.customer_service
 from babel.mcp import ToolError
 from babel.record import queue
-from babel.record.store import RecordError
+from babel.record.store import CLOSED, RecordError
 from cs_briefs import ANSWERS, REPLY
 from domains.spare_parts import tools
 from domains.spare_parts.customer_service import build
@@ -45,8 +45,12 @@ def _open(role):
     return 1
 
 
+#: the slice's tools, in the order the role lists them first
+SLICE_TOOLS = ["search", "open_consultation", "stopped", "ask", "check", "propose_reply"]
+
+
 def test_the_role_has_the_six_tools_and_cannot_send_or_approve(role):
-    assert role.names() == ["search", "open_consultation", "stopped", "ask", "check", "propose_reply"]
+    assert role.names()[:6] == SLICE_TOOLS
     assert [t.name for t in role.tools() if not t.writes] == ["search"]
     for word in ("approve", "verdict", "send", "reject", "decide"):  # the lab's test_mcp, on this role
         assert not any(word in name for name in role.names()), word
@@ -172,18 +176,103 @@ def test_propose_reply_queues_it_for_an_approver_and_sends_nothing(store, role):
     # the proposal needs an approver: a named person with the role, and a reason
     assert _code(queue.approve, store, number, "ville", "looks right") == "role_missing"
     assert _code(queue.approve, store, number, "anna", "") == "invalid_argument"
-    done = queue.approve(store, number, "anna", "Checked against the facts")
-    assert done["status"] == "done"
+    closed = queue.approve(store, number, "anna", "Checked against the facts")
+    assert closed["status"] == CLOSED
     [decision] = store.documents_about(number, "decision")
     assert (decision["data"]["approver"], decision["data"]["action"]) == ("anna", "reply")
 
 
 def test_a_released_consultation_goes_back_to_open(store, role):
     number = _open(role)
-    babel.record.consultations.release(store, number, "ville")
+    babel.record.consultations.release(store, number, "ville", "The customer will call back")
     assert store.get(number)["status"] == "open"
     assert role.call("search", {"status": "open"}).startswith("search status open: 1 ticket, shown")
     assert _code(role.call, "ask", {"consultation": number, "question": "Lead time"}) == "claim_required"
+
+
+def test_the_role_also_has_release_and_resume(role):
+    # P26 (build-plan section 25): the consultant can hand a call back and take one up again
+    assert role.names() == SLICE_TOOLS + ["release", "resume"]
+    assert role["release"].writes and role["resume"].writes
+    assert (role["release"].schema["required"], role["resume"].schema["required"]) == (
+        ["consultation", "reason"], ["consultation"])
+
+
+def test_release_hands_the_call_back_with_its_reason_and_the_filter_lists_it_under_open(store, role):
+    number = _open(role)
+    out = role.call("release", {"consultation": number, "reason": "The customer will call back"})
+    assert out.startswith(f"Consultation #{number} released: open, with no one. Nothing was decided, and nothing "
+                          f"is deleted.\n\n#{number} consultation · open\n")
+    assert out.endswith(f"Whoever takes the call up again resumes it: resume({number}).")
+    entry = store.journal(number)[-1]
+    assert (entry["actor"], entry["action"], entry["details"]["reason"]) == (
+        "ville", "released", "The customer will call back")
+    listed = role.call("search", {"status": "open"})
+    assert listed.startswith("search status open: 1 ticket, shown; viewing it changes nothing.\n\n"
+                             f"#{number} consultation · open\n")
+    assert "  released   by ville: The customer will call back" in listed
+    assert role.call("search", {"status": "in_progress"}) == "search status in_progress: no ticket."
+
+
+def test_a_release_without_a_reason_is_refused_and_changes_nothing(store, role):
+    number = _open(role)
+    with pytest.raises(ToolError, match="missing argument reason"):
+        role.call("release", {"consultation": number})
+    for reason in ("", "   "):
+        assert _code(role.call, "release", {"consultation": number, "reason": reason}) == "invalid_argument"
+    item = store.get(number)
+    assert (item["status"], item["claimed_by"]) == ("in_progress", "ville")
+    assert [e["action"] for e in store.journal(number)] == ["created", "claimed", "opened"]
+
+
+def test_resumed_by_a_second_consultant_it_is_the_same_consultation_as_it_was_left(store, role):
+    number = _open(role)
+    role.call("ask", {"consultation": number, "question": "Lead time"})  # answered
+    role.call("ask", {"consultation": number, "question": "Availability"})  # waits for the person
+    left = store.get(number)["data"]
+    role.call("release", {"consultation": number, "reason": "The customer is checking whether CH-02 has stopped"})
+    other = build(store, DATA, actor="pia")
+    out = other.call("resume", {"consultation": number})
+    assert out.startswith(f"Consultation #{number} resumed: in_progress, with pia, as it was left.\n\n"
+                          f"#{number} consultation · in_progress, with pia\n")
+    item = store.get(number)
+    assert (item["status"], item["claimed_by"], item["data"]) == ("in_progress", "pia", left)
+    for line in ("  released   by ville: The customer is checking whether CH-02 has stopped",
+                 "  resumed    by pia",
+                 "   1  Lead time of SP-1601 for CH-02  ·  answered: ",
+                 "Open questions, of all 2: 2 (Has CH-02 stopped?)"):
+        assert line in out, line
+    assert out.endswith("\n\nGo on with ask, check and propose_reply.")  # the person has answered nothing yet
+    resumed = store.journal(number)[-1]
+    assert (resumed["actor"], resumed["role"], resumed["action"]) == ("pia", "worker", "resumed")
+    # pia goes on where ville left off: the person's answer answers the question that waited
+    other.call("stopped", {"consultation": number, "state": "stopped"})
+    assert other.call("ask", {"consultation": number, "question": "Availability"}).startswith(
+        f"#{number} question 3: Availability of SP-1601 for CH-02\n")
+    assert [q["status"] for q in store.get(number)["data"]["questions"]] == ["answered", "answered", "answered"]
+    assert _code(role.call, "ask", {"consultation": number, "question": "Lead time"}) == "claim_required"
+    again = other.call("resume", {"consultation": number})
+    assert again.startswith(f"Consultation #{number} is in progress with you already: nothing changed.")
+    assert again.endswith("\n\nThe person's answers are as recorded above, with who recorded them: if the situation "
+                          "may have changed since, ask the person again before relying on them. Then go on with ask, "
+                          "check and propose_reply.")
+
+
+def test_a_consultation_waiting_for_an_approver_or_closed_is_not_resumed(store, role):
+    number = _open(role)
+    role.call("stopped", {"consultation": number, "state": "stopped"})
+    role.call("ask", {"consultation": number, "question": "Availability"})
+    role.call("propose_reply", {"consultation": number, "answer": REPLY})
+    other = build(store, DATA, actor="pia")
+    assert _code(other.call, "resume", {"consultation": number}) == "not_open"  # the approver has it next
+    queue.approve(store, number, "anna", "Checked against the facts")
+    closed = f"#{number} is closed: its work has stopped, so it is not resumed"
+    with pytest.raises(RecordError, match=closed) as refused:
+        other.call("resume", {"consultation": number})
+    assert refused.value.code == "item_closed"
+    assert _code(role.call, "release", {"consultation": number, "reason": "Too late"}) == "release_forbidden"
+    item = store.get(number)
+    assert (item["status"], item["claimed_by"]) == ("closed", None)
 
 
 #: the modules a tool runs: none may reach a model, the network, another process, a clock or chance

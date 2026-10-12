@@ -3,15 +3,16 @@
 **As of 2026-10-12.** Done so far: the schema registry, the synthetic company, the intake chain (preserve, staging,
 cleaning, trial, tickets, dispositions, schema versions and the create-schema gate), the desk's views with golden
 tests, the customer-service slice (rules, checks, six MCP tools, consultations as tickets), all bugs B1 to B6, and
-the formula rule. 333 tests pass. The authoritative lists are [backlog.md](backlog.md) and [build-plan.md](build-plan.md).
-This page is the order of work and the decisions still needed.
+the formula rule. Round five (branch `build/round-five`, not merged) adds the owner's status name `closed`, the
+`release` and `resume` tools and the P25-b status mapping (B2 and B3 below); 351 tests pass there. The authoritative
+lists are [backlog.md](backlog.md) and [build-plan.md](build-plan.md). This page is the order of work and the
+decisions still needed.
 
 ## A. Decisions needed from the owner (blocking, in order)
 
 | ID | Question | Blocks |
 |---|---|---|
-| P25 | Ticket statuses: keep the store's `open`, `in_progress`, `needs_input`, `done`, or map to your `open`, `in_progress`, `closed`? And where does a ticket waiting for an approver (`needs_input`) show in the search filter? | the status filter (criterion 9) and the queue view |
-| P26 | Should the consultant be able to release or resume a consultation through MCP? The code supports it; the six tools do not expose it. Recommendation: yes, add a `release` tool. | the handover story in the demo |
+| P25-b | Where does a ticket waiting for an approver (`needs_input`) show in the status filter? Built as recommended, to confirm: it keeps its own status in the approval queue and is listed under `in_progress` (`36665be`). The rest of P25 (`closed` replaces `done`) and P26 (`release` and `resume`) are answered in build-plan section 25 and built (B2, B3). | nothing now; a different answer changes one mapping and its test |
 | P24 | A placeholder 0 that a program saved for a formula passes the null check. Decided as a working assumption (A-1): clean first. Revisit when real data arrives. | nothing now; real data only |
 | P11 | Publish the repository, or post recordings only, for the job posts? | the public demo and the posts |
 | P2 | Ticket grouping. Owner: later, one ticket per file for now. Confirm. | nothing now |
@@ -21,10 +22,16 @@ This page is the order of work and the decisions still needed.
 
 1. **Small fixes in the slice (C13 follow-up).** The receipt wording that the build run did not finish (a critical part
    described twice in one sentence). One commit, with its golden file updated in the same commit.
-2. **Release and resume tool (P26, after the owner's yes).** Add `release` and `resume` to the consultant tools, with
-   the journal entries and tests for both. Golden test: a consultation released, then resumed by a second call.
-3. **Status mapping (P25, after the owner's answer).** Implement the owner's status names in the filter and in the
-   ticket view. Tests for each status.
+2. **Done: release and resume tool (P26).** `release(consultation, reason)` and `resume(consultation)` are consultant
+   tools: a release needs its reason and goes back to `open` with everything kept; resume takes up an open
+   consultation, or one whose lease ran out, and refuses a closed one with its reason; both are journal entries and
+   the card's handovers show them. Commits `8820bf5`, `9481c74`, `fd5138e`; golden `1b85414` (a consultation released,
+   then resumed by a second consultant); tests that pinned the six tools or released without a reason changed in
+   `1f2eba1` and `7798ef8`.
+3. **Done: status mapping (P25).** The store's status `done` is `closed`, in the filter, the ticket view and the
+   journal, and an older store is migrated once when it opens (`6323e83`, `c679ee0`; tests that pinned `done`
+   changed in `d15fe4e`). A ticket waiting for an approver is listed under `in_progress`, as recommended and still to
+   confirm (P25-b, `36665be`; the test that pinned the old placement changed in `2549309`). Tests for each status.
 4. **Worklist (C16, reads R6).** Port the close-of-day worklist from Shop-flow onto tickets: one action sheet per role,
    each line with its evidence. Golden test on the synthetic company.
 5. **Analysis tools (C14).** Lead-time spread and the pre-order proposal on the schema. Golden test. The pre-order is

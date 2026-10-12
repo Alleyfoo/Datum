@@ -6,13 +6,19 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
 - a decision or a finding is a document, which records what was concluded;
 - a comment records what happened; comments and every state change are journal entries, and
   the journal is append-only (enforced by the database, not only by this code);
-- a `blocks` link keeps a task out of the ready list until its blocker is done;
+- a `blocks` link keeps a task out of the ready list until its blocker is closed;
 - a claim is a lease: it runs out by itself, one day after its holder's last write (owner answer
-  P22, build-plan section 20), every write by its holder renews it, finishing releases it, and a
+  P22, build-plan section 20), every write by its holder renews it, closing releases it, and a
   holder whose lease ran out must claim again;
 - opening an open ticket hands it to an agent: claimed, and `in_progress`; released without a
-  decision, it goes back to `open` (owner answers T-open and T-release, build-plan section 10). A
-  lease that runs out leaves the status as it is (owner answer Q-stale, section 20).
+  decision, it goes back to `open` (owner answers T-open and T-release, build-plan section 10),
+  and the release may say why. A lease that runs out leaves the status as it is (owner answer
+  Q-stale, section 20). Resuming takes up an open ticket, or one whose holder's lease ran out,
+  and the journal records who resumed it (owner answer P26, section 25);
+- a task's statuses are `open`, `in_progress`, `needs_input` (it waits on an approver's decision)
+  and `closed`: its work has stopped, which says nothing of success; it may end in a decision, a
+  drop, or neither (owner answer P25, build-plan section 25). The store kept `done` for `closed`
+  before; one migration step, run once when an older store opens, renames it.
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -35,7 +41,11 @@ from typing import Callable, Iterable, List, Optional
 
 ROLES = ("approver", "worker")
 USER_KINDS = ("person", "agent", "service")
-TASK_STATUSES = ("open", "in_progress", "needs_input", "done")
+#: a task's last status: its work has stopped and its claim is handed back. Named once, here
+CLOSED = "closed"  # the owner's name for it (P25, build-plan section 25); the store said "done" before
+TASK_STATUSES = ("open", "in_progress", "needs_input", CLOSED)
+#: the store's version, kept in SQLite's user_version; an older store is brought up to it once, when opened
+VERSION = 1
 DOCUMENT_TYPES = ("decision", "finding")
 LINK_TYPES = ("blocks", "about")
 LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to P22 (build-plan section 20)
@@ -129,8 +139,32 @@ class Store:
             db.executescript(SCHEMA)
             if db.execute("SELECT 1 FROM users WHERE name=?", (SYSTEM,)).fetchone() is None:
                 db.execute("INSERT INTO users VALUES (?,?,?,?)", (SYSTEM, "service", "", self.now()))
+            behind = db.execute("PRAGMA user_version").fetchone()[0] < VERSION
         finally:
             db.close()
+        if behind:
+            self._migrate()
+
+    def _migrate(self) -> None:
+        """Bring a store written by older code up to VERSION, in one transaction. Each item a step
+        changes gets a journal entry by `system`, with the value before and after. The journal
+        itself is never rewritten: it keeps what was written at the time.
+
+        1. The status `done` is called `closed` (owner answer P25, build-plan section 25).
+        """
+        with self.transaction() as db:
+            version = db.execute("PRAGMA user_version").fetchone()[0]
+            if version >= VERSION:
+                return  # another connection brought it up while this one waited for the lock
+            if version < 1:
+                for (number,) in db.execute("SELECT number FROM items WHERE kind='task' AND status='done'"
+                                            " ORDER BY number").fetchall():
+                    db.execute("UPDATE items SET status=?, updated_at=?, version=version+1 WHERE number=?",
+                               (CLOSED, self.now(), number))
+                    self.write_journal(db, number, SYSTEM, SYSTEM, "migrated", {
+                        "status": {"before": "done", "after": CLOSED},
+                        "reason": "the status done is called closed (owner answer P25, build-plan section 25)"})
+            db.execute(f"PRAGMA user_version={VERSION}")
 
     def ensure(self, script: str) -> None:
         """Create a module's own tables (CREATE ... IF NOT EXISTS statements) once per store."""
@@ -331,7 +365,7 @@ class Store:
         if "data" in changes:
             details["data"] = sorted(k for k in set(item["data"]) | set(changes["data"])
                                      if item["data"].get(k) != changes["data"].get(k))
-        finished = changes.get("status") == "done"
+        finished = changes.get("status") == CLOSED
         if finished and item["claimed_by"]:
             details["released"] = item["claimed_by"]  # finishing hands the claim back
         self.write_journal(db, number, actor, self.acting_role(db, actor, role), action, details)
@@ -355,7 +389,7 @@ class Store:
         """Require the actor's live claim on a task before a state change, and renew it."""
         item = self._item(db, number)
         require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
-        require(item["status"] != "done", "item_done", f"#{number} is done")
+        require(item["status"] != CLOSED, f"item_{CLOSED}", f"#{number} is {CLOSED}")
         if item["claimed_by"] == actor and not item["lease_active"]:
             raise RecordError("claim_expired", f"your lease on #{number} ran out at {item['lease_until']}; claim it again")
         require(item["claimed_by"] == actor, "claim_required", f"claim #{number} before changing it")
@@ -366,7 +400,7 @@ class Store:
         """Claim inside an open transaction: free, expired, or already the actor's."""
         item = self._item(db, number)
         require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
-        require(item["status"] != "done", "item_done", f"#{number} is done")
+        require(item["status"] != CLOSED, f"item_{CLOSED}", f"#{number} is {CLOSED}")
         if item["lease_active"] and item["claimed_by"] != actor:
             raise RecordError("claim_conflict",
                               f"#{number} is held by {item['claimed_by']} until {item['lease_until']}")
@@ -384,21 +418,22 @@ class Store:
         with self.transaction() as db:
             return self.take(db, number, actor, role)
 
-    def release(self, number: int, actor: str) -> dict:
+    def release(self, number: int, actor: str, *, reason: Optional[str] = None) -> dict:
         with self.transaction() as db:
-            return self.let_go(db, number, actor)
+            return self.let_go(db, number, actor, reason=reason)
 
-    def let_go(self, db, number: int, actor: str) -> dict:
+    def let_go(self, db, number: int, actor: str, *, reason: Optional[str] = None) -> dict:
         """Hand the claim back. A ticket released while `in_progress` has no decision yet, so it
         returns to `open` for the next handler (owner answer T-release, build-plan section 10); the
-        journal entry records the change and the history stays. A parked ticket stays parked."""
+        journal entry records the change, and why when a reason is given, and the history stays.
+        A parked ticket stays parked."""
         item = self._item(db, number)
         require(item["claimed_by"] == actor, "release_forbidden", f"only the holder can release #{number}")
-        details = {}
+        details = {} if reason is None else {"reason": text(reason, "reason")}
         if item["status"] == "in_progress":
             db.execute("UPDATE items SET status='open', claimed_by=NULL, lease_until=NULL, updated_at=?,"
                        " version=version+1 WHERE number=?", (self.now(), number))
-            details = {"status": {"before": "in_progress", "after": "open"}}
+            details["status"] = {"before": "in_progress", "after": "open"}
         else:
             db.execute("UPDATE items SET claimed_by=NULL, lease_until=NULL WHERE number=?", (number,))
         self.write_journal(db, number, actor, self.acting_role(db, actor), "released", details)
@@ -409,7 +444,7 @@ class Store:
 
         An open ticket is claimed by the actor and becomes `in_progress`, and the journal records
         who opened it and when. Opening a ticket that is already `in_progress` changes nothing. A
-        ticket that waits on a decision, or is done, is not opened.
+        ticket that waits on a decision, or is closed, is not opened.
         """
         with self.transaction() as db:
             return self.opening(db, number, actor, role)
@@ -424,6 +459,33 @@ class Store:
                 f"#{number} is {item['status']}: only an open ticket is opened")
         self.take(db, number, actor, role)
         return self.update(db, number, actor, role=role, action="opened", status="in_progress")
+
+    def resume(self, number: int, actor: str, *, role: Optional[str] = None) -> dict:
+        """Take a ticket up again (owner answer P26, build-plan section 25).
+
+        An open ticket (released without a decision, or sent back by an approver) and one still
+        `in_progress` whose holder's lease ran out (Q-stale leaves its status) are handed to the
+        actor: claimed, `in_progress`, and the journal records who resumed it. A ticket the actor
+        already holds changes nothing, and one another holds on a live lease is refused. A ticket
+        waiting on a decision is resumed once it is decided; a closed ticket never is.
+        """
+        with self.transaction() as db:
+            return self.resuming(db, number, actor, role)
+
+    def resuming(self, db, number: int, actor: str, role: Optional[str] = None) -> dict:
+        """`resume` inside an open transaction."""
+        item = self._item(db, number)
+        require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
+        require(item["status"] != CLOSED, f"item_{CLOSED}",
+                f"#{number} is {CLOSED}: its work has stopped, so it is not resumed")
+        require(item["status"] in ("open", "in_progress"), "not_open",
+                f"#{number} is {item['status']}: it waits on a decision and is resumed only once that is made")
+        if item["status"] == "in_progress" and item["claimed_by"] == actor and item["lease_active"]:
+            return item
+        self.take(db, number, actor, role)  # refuses another's live lease
+        note = ({"previous": item["claimed_by"], "lease_ran_out": item["lease_until"]}
+                if item["status"] == "in_progress" else {})
+        return self.update(db, number, actor, role=role, action="resumed", note=note, status="in_progress")
 
     # -- what people do on a ticket -----------------------------------------------------------
 
@@ -471,8 +533,8 @@ class Store:
             rows = db.execute(
                 "SELECT number FROM items i WHERE kind='task' AND status IN ('open','in_progress')"
                 " AND NOT EXISTS (SELECT 1 FROM links l JOIN items b ON b.number=l.source"
-                "                 WHERE l.target=i.number AND l.type='blocks' AND b.status!='done')"
-                " ORDER BY number").fetchall()
+                "                 WHERE l.target=i.number AND l.type='blocks' AND b.status!=?)"
+                " ORDER BY number", (CLOSED,)).fetchall()
             items = [self._item(db, r[0]) for r in rows]
         return [i for i in items if not i["lease_active"] or i["claimed_by"] == actor]
 

@@ -1,0 +1,111 @@
+>>> open_consultation("C-200", "SC-11", "SP-1601")
+Consultation #5 opened: in_progress, with ville. It is this call's ticket.
+Consultation: Power plant customer · SC-11 Fuel screen screw · SP-1601 Screw flight section, 400 mm
+
+SC-11 Fuel screen screw · screw conveyor · criticality B
+
+ #  PART     DESCRIPTION                        INST   FI   SE  STATUS
+ 1  SP-1601  Screw flight section, 400 mm          4    0    0  ▲  due 2026-12-02
+
+★ critical spare   ● covered   ▲ low   ✖ none in stock   ? no parts list
+
+Ask: ask(5, "Availability"), ask(5, "Lead time") or ask(5, "Service demand"). Availability needs the person's answer first: ask them whether SC-11 has stopped and record it with stopped(5, "stopped") or stopped(5, "planned"). Never guess it.
+
+>>> ask(5, "Lead time")
+#5 question 1: Lead time of SP-1601 for SC-11
+
+QUESTION: Lead time of SP-1601 for SC-11: how long does it take to get, and when must we order it?
+CUSTOMER: Power plant customer (CHP plant, Western Sweden)
+MACHINE: SC-11 Fuel screen screw
+PART: SP-1601 Screw flight section, 400 mm
+TODAY: Fri 2026-10-02
+
+FACTS:
+- [machine_context] SC-11 Fuel screen screw is criticality B (degrades production if it stops).
+- [machine_context] It uses 4 x SP-1601.
+- [machine_context] Last replaced on Tue 2025-06-03.
+- [stock_by_warehouse] SP-1601 Screw flight section, 400 mm: on hand FI 0, SE 0.
+- [lead_time] Supplier lead time for SP-1601 is 45 days; ordered today it would arrive on Mon 2026-11-16.
+- [incoming_orders] Purchase order PO-4718: 4 x SP-1601 due in FI on Thu 2026-10-22.
+- [transfer] Moving stock between the FI and SE warehouses takes 3 days.
+- [next_need] The next planned replacement on SC-11 is due Wed 2026-12-02.
+- [lead_time_plan] RECOMMENDED PLAN: order 4 pcs by Fri 2026-10-16 for the replacement due Wed 2026-12-02.
+
+RECEIPT  #5 question 1: Lead time of SP-1601 for SC-11
+  asked of the person   nothing: this question needs no fact only the person knows
+  tools run             machine_context · stock_by_warehouse · lead_time · incoming_orders ·
+                        transfer · next_need · lead_time_plan
+  rule applied          scheduled part → order by the last working day before the due date less the
+                        lead time
+  checks                not run yet: check(consultation, answer) runs them on a draft
+  not known             nothing flagged by the rules
+  needs approval        nothing queued yet: propose_reply queues the reply for an approver, a named
+                        person with the approver role. Nothing is sent
+
+Explain these FACTS as CUSTOMER ANSWER / SITUATION / RECOMMENDATION. Run check(5, answer) on your draft, then propose_reply(5, answer).
+
+>>> ask(5, "Availability")
+#5 question 2: Availability of SP-1601 for SC-11 waits for the person. No answer is given without it.
+
+Has SC-11 stopped? Ask the person; do not guess it, even if the call already said so.
+  stopped   yes: it has stopped and waits for this part (a breakdown)
+  planned   no: the part is for planned service, and the machine runs
+
+Record the answer with stopped(5, "stopped") or stopped(5, "planned"), then ask(5, "Availability") again.
+
+>>> release(5, "the customer is checking whether SC-11 has stopped and will call back")
+Consultation #5 released: open, with no one. Nothing was decided, and nothing is deleted.
+
+#5 consultation · open
+Consultation: Power plant customer · SC-11 Fuel screen screw · SP-1601 Screw flight section, 400 mm
+
+Handovers
+  opened     by ville
+  released   by ville: the customer is checking whether SC-11 has stopped and will call back
+
+From the person: nothing yet
+
+Questions 1-2 of 2
+   1  Lead time of SP-1601 for SC-11  ·  answered: scheduled part → order by the last working day before the due date less the lead time
+   2  Availability of SP-1601 for SC-11  ·  open: waits for the person: Has SC-11 stopped?
+Open questions, of all 2: 2 (Has SC-11 stopped?)
+Checks: none run
+Reply: nothing queued yet: propose_reply queues the reply for an approver, a named person with the approver role. Nothing is sent
+
+Whoever takes the call up again resumes it: resume(5).
+
+>>> search(status="open")
+search status open: 2 tickets. Which one?
+
+ 1  #3    consultation  Consultation: Sawmill customer · SC-01 Screen feed screw · SP-1601 Screw flight section, 400 mm  ·  open
+ 2  #5    consultation  Consultation: Power plant customer · SC-11 Fuel screen screw · SP-1601 Screw flight section, 400 mm  ·  open
+
+--- the customer calls back, and pia takes the call
+
+>>> resume(5)
+Consultation #5 resumed: in_progress, with pia, as it was left.
+
+#5 consultation · in_progress, with pia
+Consultation: Power plant customer · SC-11 Fuel screen screw · SP-1601 Screw flight section, 400 mm
+
+Handovers
+  opened     by ville
+  released   by ville: the customer is checking whether SC-11 has stopped and will call back
+  resumed    by pia
+
+From the person: nothing yet
+
+Questions 1-2 of 2
+   1  Lead time of SP-1601 for SC-11  ·  answered: scheduled part → order by the last working day before the due date less the lead time
+   2  Availability of SP-1601 for SC-11  ·  open: waits for the person: Has SC-11 stopped?
+Open questions, of all 2: 2 (Has SC-11 stopped?)
+Checks: none run
+Reply: nothing queued yet: propose_reply queues the reply for an approver, a named person with the approver role. Nothing is sent
+
+Go on with ask, check and propose_reply.
+
+>>> search(status="in_progress")
+search status in_progress: 2 tickets. Which one?
+
+ 1  #4    consultation  Consultation: Power plant customer · SC-11 Fuel screen screw  ·  in_progress, with ville
+ 2  #5    consultation  Consultation: Power plant customer · SC-11 Fuel screen screw · SP-1601 Screw flight section, 400 mm  ·  in_progress, with pia
