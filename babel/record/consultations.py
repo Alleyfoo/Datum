@@ -165,6 +165,18 @@ def release(store: Store, number: int, actor: str, reason: Optional[str] = None)
     return store.release(number, actor, reason=reason)
 
 
+def handovers(store: Store, number: int) -> List[dict]:
+    """Who has had the consultation, from its journal, oldest first: each opening, and each release
+    without a decision (back to ``open``) with its reason. A claim handed back with a proposal is
+    not a handover: the proposal waits in the approval queue and the card shows it as the reply."""
+    out = []
+    for entry in store.journal(number):
+        released = entry["action"] == "released" and entry["details"].get("status", {}).get("after") == "open"
+        if entry["action"] == "opened" or released:
+            out.append({"action": entry["action"], "by": entry["actor"], "reason": entry["details"].get("reason")})
+    return out
+
+
 def tickets(store: Store, status: str) -> List[dict]:
     """Every ticket with this status, as a person names it: open, in_progress or closed."""
     require(status in STATUSES, "invalid_argument", f"status must be one of {', '.join(STATUSES)}")
@@ -172,7 +184,7 @@ def tickets(store: Store, status: str) -> List[dict]:
 
 
 def view(store: Store, number: int, offset: int = 0, limit: int = PAGE) -> dict:
-    """One consultation with a page of its questions.
+    """One consultation with a page of its questions, and who has had it.
 
     The open and the answered questions are taken from all the questions, never from the page:
     the lab's get_case took them from the paged slice, so an open question on another page went
@@ -186,7 +198,8 @@ def view(store: Store, number: int, offset: int = 0, limit: int = PAGE) -> dict:
             "total": len(questions), "next_offset": offset + limit if offset + limit < len(questions) else None,
             "open_questions": [q for q in questions if q["status"] == "open"],
             "answered_questions": [q for q in questions if q["status"] == "answered"],
-            "decisions": [store.get(n) for n in item["data"].get("decisions", [])]}
+            "decisions": [store.get(n) for n in item["data"].get("decisions", [])],
+            "handovers": handovers(store, number)}
 
 
 # -- text --------------------------------------------------------------------------------
@@ -266,12 +279,21 @@ def _question_line(q: dict) -> str:
     return f"{q['n']:>4}  {q['title']}  ·  {state}"
 
 
+def handovers_text(moves: Sequence[dict]) -> List[Tuple[str, str]]:
+    """``opened   by ville``, ``released   by ville: <why>``: one line per handover."""
+    return [(m["action"], f"by {m['by']}" + (f": {m['reason']}" if m["reason"] else "")) for m in moves]
+
+
 def view_text(page: dict) -> str:
-    """A consultation as a card: who has it, the person's answers, a page of questions, the open
-    questions of all, the checks and the reply."""
+    """A consultation as a card: who has it (and, once it has changed hands, who had it before and
+    why it was released), the person's answers, a page of questions, the open questions of all,
+    the checks and the reply."""
     item = page["item"]
     data = item["data"]
     out = [f"#{item['number']} consultation · {SHOWN[item['status']]}{holder(item)}", item["title"]]
+    moves = page.get("handovers") or []
+    if any(m["action"] != "opened" for m in moves):
+        out += ["", lines_text(handovers_text(moves), "Handovers")]
     person = [(name, f"{fact['text']}, answered by {fact['by']}") for name, fact in data["person"].items()]
     out += ["", lines_text(person, "From the person") if person else "From the person: nothing yet"]
     shown = page["questions"]

@@ -124,6 +124,28 @@ def test_a_proposed_reply_waits_for_an_approver_and_nothing_is_sent(store):
     assert card.splitlines()[-1] == f"Reply: approved by anna (decision #{decision['number']}): Checked against the facts"
 
 
+def test_once_released_the_card_says_who_had_the_consultation_and_why(store):
+    # P26 (build-plan section 25): whoever has the call next sees who released it and why
+    number = _start(store)
+    assert "Handovers" not in cons.view_text(cons.view(store, number))  # opened, never handed over
+    cons.release(store, number, "ville", "The customer will call back")
+    store.open_ticket(number, "pia")
+    lines = cons.view_text(cons.view(store, number)).splitlines()
+    assert lines[:8] == [f"#{number} consultation · in_progress, with pia", "Consultation: Customer one · M-1 · P-1",
+                         "", "Handovers",
+                         "  opened     by ville",
+                         "  released   by ville: The customer will call back",
+                         "  opened     by pia",
+                         ""]
+    # a claim handed back with a proposed reply goes to the approval queue: it is not a handover
+    proposed = _start(store)
+    _answer(store, proposed)
+    cons.propose_reply(store, proposed, "ville", answer_text="7 days.", customer_answer="7 days.", against=1,
+                       check=PASS, reason="Reply")
+    assert [m["action"] for m in cons.handovers(store, proposed)] == ["opened"]
+    assert "Handovers" not in cons.view_text(cons.view(store, proposed))
+
+
 def test_a_consultation_with_no_questions_says_so(store):
     card = cons.view_text(cons.view(store, _start(store)))
     assert card.splitlines()[2:] == ["", "From the person: nothing yet", "", "Questions: none asked yet",
