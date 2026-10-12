@@ -355,6 +355,18 @@ The remaining work, in order, with the decisions still needed, is in [work-order
 | ID | Answer | What it means |
 |---|---|---|
 | P25 | Rename `done` to `closed` | The ticket status `done` becomes `closed`. A closed ticket may end in a decision, a drop or a release-without-decision: closed means the work has stopped, not that it succeeded. The status filter lists `open`, `in_progress` and `closed`. |
-| P25-b | Open | Where a ticket waiting for an approver (`needs_input`) appears in the filter is not answered. Recommendation until answered: it stays a separate status in the approval queue, and the filter lists it under `in_progress`. |
+| P25-b | Open; implemented as recommended, to confirm | Where a ticket waiting for an approver (`needs_input`) appears in the filter is not answered. Recommendation until answered: it stays a separate status in the approval queue, and the filter lists it under `in_progress`. Implemented as recommended, to confirm (`36665be`): the mapping is `consultations.STATUSES`, and `test_a_ticket_waiting_for_an_approver_is_listed_under_in_progress` names it, so a different answer changes those two. |
 | P26 | Yes, add them | The consultant gets `release` and `resume` as MCP tools, with journal entries and tests. |
 | P11 | A website, not the code | The process is published as a website that displays it (the flow, the tickets, the receipts), not the repository. The repository stays private. Who builds and hosts the site is open. |
+
+**Status:** built on branch `build/round-five`, not merged; 351 tests pass. P25: the store names the status once
+(`6323e83`), the tests follow that name instead of `done` (`d15fe4e`), and `done` becomes `closed` with one migration
+step that renames it in an older store when it opens (`c679ee0`). The store had no SQLite constraint or trigger on a
+ticket's status (the set is checked in `Store.update`), so none was renamed and none was added. P26: a release keeps
+its reason in the journal (`8820bf5`), the card lists who had a consultation once it changed hands (`9481c74`), and
+`release` and `resume` are the consultant's tools, a consultation's release needing its reason (`fd5138e`), with a
+golden file of one release-and-resume sequence (`1b85414`); tests that pinned the six tools or released without a
+reason changed in `1f2eba1` and `7798ef8`. P25-b as recommended (`36665be`; the test that pinned the old placement
+changed in `2549309`). The P25 answer lets a closed ticket end in "a release-without-decision", while T-release
+(section 10) sends a released ticket back to `open`. `release` follows T-release; closing a ticket without a decision
+stays possible only through the store's `set_status`, and no tool does it. Confirm that reading.
