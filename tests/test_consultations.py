@@ -6,7 +6,7 @@ import pytest
 from babel.checks import Check
 from babel.record import consultations as cons
 from babel.record import queue
-from babel.record.store import RecordError
+from babel.record.store import CLOSED, RecordError
 
 # the clock and store fixtures are in conftest.py
 
@@ -117,7 +117,7 @@ def test_a_proposed_reply_waits_for_an_approver_and_nothing_is_sent(store):
     assert _code(queue.approve, store, number, "ville", "fine") == "role_missing"
     assert _code(queue.approve, store, number, "anna", " ") == "invalid_argument"
     assert "Reply: the reply waits in the approval queue" in cons.view_text(cons.view(store, number))
-    assert queue.approve(store, number, "anna", "Checked against the facts")["status"] == "done"
+    assert queue.approve(store, number, "anna", "Checked against the facts")["status"] == CLOSED
     card = cons.view_text(cons.view(store, number))
     assert card.splitlines()[0] == f"#{number} consultation · closed"
     [decision] = store.documents_about(number, "decision")
@@ -158,7 +158,7 @@ def test_the_receipt_says_what_was_asked_run_applied_checked_not_known_and_who_a
 def test_the_status_filter_uses_the_owners_three_statuses(store):
     open_one, working, closed = _start(store), _start(store), _start(store)
     cons.release(store, open_one, "ville")
-    store.set_status(closed, "ville", "done")
+    store.set_status(closed, "ville", CLOSED)
     assert [t["number"] for t in cons.tickets(store, "open")] == [open_one]
     assert [t["number"] for t in cons.tickets(store, "in_progress")] == [working]
     assert [t["number"] for t in cons.tickets(store, "closed")] == [closed]

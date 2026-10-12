@@ -2,7 +2,7 @@ import sqlite3
 
 import pytest
 
-from babel.record.store import RecordError, agent_like
+from babel.record.store import CLOSED, RecordError, agent_like
 
 # the clock and store fixtures are in conftest.py
 
@@ -117,26 +117,26 @@ def test_a_change_needs_the_claim(store):
     task = store.add_task("hook", "A file arrived")
     assert _code(store.set_status, task, "ville", "in_progress") == "claim_required"
     store.claim(task, "ville")
-    assert _code(store.set_status, task, "pia", "done") == "claim_required"
+    assert _code(store.set_status, task, "pia", CLOSED) == "claim_required"
     assert _code(store.release, task, "pia") == "release_forbidden"
 
 
 def test_finishing_hands_the_claim_back(store):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
-    done = store.set_status(task, "ville", "done")
-    assert (done["status"], done["claimed_by"], done["lease_until"]) == ("done", None, None)
+    closed = store.set_status(task, "ville", CLOSED)
+    assert (closed["status"], closed["claimed_by"], closed["lease_until"]) == (CLOSED, None, None)
     assert store.journal(task)[-1]["details"]["released"] == "ville"
-    assert _code(store.claim, task, "pia") == "item_done"
+    assert _code(store.claim, task, "pia") == f"item_{CLOSED}"
 
 
-def test_blocked_tasks_are_not_ready_until_the_blocker_is_done(store):
+def test_blocked_tasks_are_not_ready_until_the_blocker_is_closed(store):
     first = store.add_task("hook", "Create the schema")
     second = store.add_task("hook", "Import the file")
     store.link("ville", first, "blocks", second)
     assert [t["number"] for t in store.ready()] == [first]
     store.claim(first, "ville")
-    store.set_status(first, "ville", "done")
+    store.set_status(first, "ville", CLOSED)
     assert [t["number"] for t in store.ready()] == [second]
 
 
@@ -211,16 +211,16 @@ def test_opening_a_ticket_already_in_progress_changes_nothing(store):
     assert (store.get(task), len(store.journal(task))) == before
 
 
-def test_a_ticket_waiting_on_a_decision_or_done_is_not_opened(store):
+def test_a_ticket_waiting_on_a_decision_or_closed_is_not_opened(store):
     parked = store.add_task("hook", "Waits on an approver")
     store.claim(parked, "ville")
     store.set_status(parked, "ville", "needs_input")
     store.release(parked, "ville")
-    done = store.add_task("hook", "Finished")
-    store.claim(done, "ville")
-    store.set_status(done, "ville", "done")
+    closed = store.add_task("hook", "Finished")
+    store.claim(closed, "ville")
+    store.set_status(closed, "ville", CLOSED)
     assert _code(store.open_ticket, parked, "pia") == "not_open"
-    assert _code(store.open_ticket, done, "pia") == "not_open"
+    assert _code(store.open_ticket, closed, "pia") == "not_open"
     assert store.get(parked)["status"] == "needs_input"
 
 
@@ -249,7 +249,7 @@ def test_a_lease_that_runs_out_leaves_the_ticket_in_progress(store, clock):
 def test_anyone_may_comment_even_on_a_finished_task(store):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
-    store.set_status(task, "ville", "done")
+    store.set_status(task, "ville", CLOSED)
     store.comment(task, "anna", "Checked after the fact.")
     assert store.journal(task)[-1]["details"] == {"body": "Checked after the fact."}
     assert store.journal(task)[-1]["role"] == "approver"

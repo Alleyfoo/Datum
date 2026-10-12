@@ -5,7 +5,7 @@ import pytest
 
 from babel.intake import accepted, dispositions, inbox
 from babel.record import queue
-from babel.record.store import RecordError
+from babel.record.store import CLOSED, RecordError
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SUBJECT = {"company_id": "C-100", "source_id": "src_1"}
@@ -36,7 +36,7 @@ def test_a_worker_drops_a_file_with_a_reason_and_nothing_is_deleted(store, data_
     kept = inbox.preserve(data_root, "C-100", FIXTURES / "stock_export_2026-08-21.xlsx")
     task = _ticket(store)
     item = dispositions.drop(store, task, "ville", "Duplicate of last week's export")
-    assert (item["status"], item["data"]["resolution"], item["claimed_by"]) == ("done", "dropped", None)
+    assert (item["status"], item["data"]["resolution"], item["claimed_by"]) == (CLOSED, "dropped", None)
     [decision] = store.documents_about(task, "decision")
     assert decision["data"]["decision"] == "dropped"
     assert (decision["data"]["by"], decision["data"]["role"]) == ("ville", "worker")
@@ -68,7 +68,7 @@ def test_a_worker_cannot_admit_an_approver_can(store):
     assert accepted.files(store, "C-100", "stock_export") == []
 
     item = dispositions.admit(store, task, "anna", "Trial checked: 19 rows, no refusals")
-    assert (item["status"], item["data"]["resolution"]) == ("done", "imported")
+    assert (item["status"], item["data"]["resolution"]) == (CLOSED, "imported")
     [row] = accepted.files(store, "C-100", "stock_export")
     assert (row["source_id"], row["schema_version"], row["ticket"], row["admitted_by"]) == ("src_1", 1, task, "anna")
     [decision] = store.documents_about(task, "decision")

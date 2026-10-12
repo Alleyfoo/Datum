@@ -12,7 +12,7 @@ import babel.record.consultations
 import domains.spare_parts.customer_service
 from babel.mcp import ToolError
 from babel.record import queue
-from babel.record.store import RecordError
+from babel.record.store import CLOSED, RecordError
 from cs_briefs import ANSWERS, REPLY
 from domains.spare_parts import tools
 from domains.spare_parts.customer_service import build
@@ -172,8 +172,8 @@ def test_propose_reply_queues_it_for_an_approver_and_sends_nothing(store, role):
     # the proposal needs an approver: a named person with the role, and a reason
     assert _code(queue.approve, store, number, "ville", "looks right") == "role_missing"
     assert _code(queue.approve, store, number, "anna", "") == "invalid_argument"
-    done = queue.approve(store, number, "anna", "Checked against the facts")
-    assert done["status"] == "done"
+    closed = queue.approve(store, number, "anna", "Checked against the facts")
+    assert closed["status"] == CLOSED
     [decision] = store.documents_about(number, "decision")
     assert (decision["data"]["approver"], decision["data"]["action"]) == ("anna", "reply")
 
