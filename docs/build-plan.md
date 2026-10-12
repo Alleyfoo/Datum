@@ -365,3 +365,15 @@ The remaining work, in order, with the decisions still needed, is in [work-order
 |---|---|---|
 | P25-b | A: under `in_progress` | A ticket waiting for an approver (`needs_input`) is listed under `in_progress` in the status filter. The approval queue shows it separately. Confirmed; the fifth-round build implements this. |
 | P11-site | A: a static page from the records | The website is a static page generated from the repository's records: the flow, the ticket states and receipts, with synthetic examples only. No live server. The recorded-walkthrough option is not chosen. |
+
+## 27. Owner answers, seventh round: closed and finished
+
+| ID | Answer | What it means |
+|---|---|---|
+| S-two | Two end states | `closed` and `finished` are different. The release-without-decision reading is withdrawn. |
+| S-closed | Closed: it went wrong | A ticket that cannot be finished is `closed`. The ticket's creator is notified, and told how to amend the ticket and repost it, or delete it. |
+| S-finished | Finished: done and correct | A ticket that is done and correctly finished becomes `finished`. It goes to the finished list, and its whole history is saved. |
+| S-states | Status list | `open`, `in_progress`, `needs_input`, `closed`, `finished`. `needs_input` is listed under `in_progress` in the filter (section 26). |
+| S-delete | To confirm | The creator's option to delete a closed ticket conflicts with the rule that history is never deleted (section 12 and the logging rule). Recommendation: a deleted ticket is hidden from lists, and its history is kept and still searchable by an approver. |
+
+Round five (`build/round-five`) is built on the earlier reading of `closed` and must be changed for S-two. It is not merged yet.
