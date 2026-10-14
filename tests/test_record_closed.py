@@ -435,6 +435,28 @@ def test_a_closed_ticket_a_kept_record_refers_to_is_kept(store, clock):
     assert [line["details"]["ticket"] for line in _audit_lines(store)] == [gone]
 
 
+def test_a_closed_ticket_is_kept_while_a_kept_record_refers_to_a_document_only_about_it(store, clock):
+    task = _closed(store)
+    finding = store.add_document("ville", "finding", "Header differs", "Column c004 is renamed", about=task)
+    _referred_to(store, finding)
+    assert store.sweep(clock() + 31 * DAY) == []
+    assert _code(store.delete, task, "pia") == "still_referred_to"
+    assert (store.get(task)["status"], store.get(finding)["title"]) == (CLOSED, "Header differs")
+
+
+def test_the_sweep_raises_what_fails_instead_of_skipping_it(store, clock, monkeypatch):
+    # the owner's review of round six (build-plan section 30): the sweep never swallows an exception. It used to
+    # skip any deletion the database refused with a FOREIGN KEY error, whatever had caused it
+    first, second = _closed(store), _closed(store)
+
+    def refused(db, number, actor, role, at):
+        raise sqlite3.IntegrityError("FOREIGN KEY constraint failed")
+    monkeypatch.setattr(store, "_delete", refused)
+    with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY"):
+        store.sweep(clock() + 31 * DAY)
+    assert [store.get(n)["status"] for n in (first, second)] == [CLOSED, CLOSED]
+
+
 def test_the_database_refuses_every_other_delete(store, clock):
     closed, working = _closed(store), store.add_task("hook", "Another file arrived")
     store.sweep(clock() + 31 * DAY)

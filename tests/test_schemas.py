@@ -1,5 +1,6 @@
 import json
 import sqlite3
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -92,6 +93,20 @@ def test_a_version_is_never_rewritten_never_deleted_and_moves_only_forward(data_
     assert schemas.get(store, "C-100", "stock_export", 1)["schema"] == STOCK
     [active] = schemas.active(store, "C-100")
     assert (active.file_kind, active.version, active.schema) == ("stock_export", 1, STOCK)
+
+
+def test_a_closed_ticket_a_schema_version_was_drafted_on_is_never_deleted(data_root, store, clock):
+    # the owner's review of round six (build-plan section 30): a ticket a kept record refers to is kept
+    arrival = _claimed_ticket(data_root, store)
+    schemas.draft(store, arrival.ticket, "ville", "stock_export", STOCK, "Drafted from this export")
+    schemas.refuse(store, arrival.ticket, "anna", "The supplier is changing the export's columns")
+    store.claim(arrival.ticket, "ville")
+    store.close(arrival.ticket, "ville", "The supplier withdrew this export")
+    assert store.sweep(clock() + timedelta(days=3650)) == []
+    assert _code(store.delete, arrival.ticket, "anna") == "still_referred_to"  # anna answers for the queue's ticket
+    assert store.get(arrival.ticket)["status"] == "closed"
+    [version] = schemas.versions(store, "C-100", "stock_export")
+    assert (version["ticket"], version["status"], version["schema"]) == (arrival.ticket, "rejected", STOCK)
 
 
 def test_drafting_needs_the_claim_a_role_and_a_plain_file_kind(data_root, store):

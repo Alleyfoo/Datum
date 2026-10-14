@@ -921,30 +921,50 @@ class Store:
             "SELECT l.target FROM links l JOIN items t ON t.number = l.target"
             " WHERE l.source = ? AND l.type = 'blocks' AND t.status != ? ORDER BY l.target", (number, FINISHED))]
 
+    def _going(self, db, number: int) -> List[int]:
+        """What deleting a task deletes: the task, and the documents only about it."""
+        return [number, *(r[0] for r in db.execute(
+            "SELECT DISTINCT l.source FROM links l JOIN items d ON d.number = l.source"
+            " WHERE l.type = 'about' AND l.target = ? AND d.kind = 'document' AND NOT EXISTS"
+            " (SELECT 1 FROM links o WHERE o.source = l.source AND o.type = 'about' AND o.target != ?)"
+            " ORDER BY l.source", (number, number)))]
+
+    def _referrers(self, db, numbers: List[int]) -> List[str]:
+        """The kept records that refer to any of these items, as `table.column`: a row of a table outside
+        the store's own journal and links that refers to it through a foreign key the database declares
+        (a schema version drafted on a ticket, an accepted file). Such an item is kept, and so is what it
+        is about (the owner's review of round six, build-plan section 30)."""
+        found = []
+        for (table,) in db.execute("SELECT name FROM sqlite_master WHERE type = 'table'"
+                                   " AND name NOT IN ('items', 'journal', 'links') ORDER BY name").fetchall():
+            for key in db.execute(f'PRAGMA foreign_key_list("{table}")').fetchall():
+                if key["table"] == "items" and db.execute(
+                        f'SELECT 1 FROM "{table}" WHERE "{key["from"]}" IN ({_marks(numbers)}) LIMIT 1',
+                        numbers).fetchone():
+                    found.append(f"{table}.{key['from']}")
+        return found
+
     def _due(self, db, number: int, cutoff: datetime) -> bool:
-        """Whether the sweep deletes a task now: closed, nobody has reacted to it since `cutoff`, and no
-        task waits on it."""
-        return self._idle(db, number, cutoff) and not self._blocking(db, number)
+        """Whether the sweep deletes a task now: closed, nobody has reacted to it since `cutoff`, no task
+        waits on it, and no kept record refers to it or to a document only about it."""
+        return (self._idle(db, number, cutoff) and not self._blocking(db, number)
+                and not self._referrers(db, self._going(db, number)))
 
     def _delete(self, db, number: int, actor: str, role: str, at: str) -> None:
         """Delete a closed task inside an open transaction (owner answers S-del and S-keep, build-plan
         section 28). First one audit line: an entry on no item, with the task's number, when it was
         closed and when it is deleted, and no content. Then the task, its journal, its links, and the
-        documents only about it, with their journals and links. A task that another task still waits on
-        is refused, so no unresolved blocker goes silently with it (the owner's decision on R6-Q1). The
-        database refuses any row this does not mark in `deleting`, and any task that is not closed, and
-        a row another kept record refers to (a schema version drafted on the ticket): the transaction is
-        then rolled back whole."""
+        documents only about it, with their journals and links. Refused while another task waits on it,
+        so no unresolved blocker goes silently with it (the owner's decision on R6-Q1), and while a kept
+        record refers to it or to one of those documents (a schema version drafted on the ticket). The
+        database refuses any row this does not mark in `deleting`, and any task that is not closed."""
         waiting = self._blocking(db, number)
         require(not waiting, "still_blocking",
                 f"#{number} stays: {', '.join(f'#{n}' for n in waiting)} waits on it, until it is reposted and "
                 f"finished or an approver resolves the dependency")
-        documents = [r[0] for r in db.execute(
-            "SELECT DISTINCT l.source FROM links l JOIN items d ON d.number = l.source"
-            " WHERE l.type = 'about' AND l.target = ? AND d.kind = 'document' AND NOT EXISTS"
-            " (SELECT 1 FROM links o WHERE o.source = l.source AND o.type = 'about' AND o.target != ?)",
-            (number, number))]
-        gone = [number, *documents]
+        gone = self._going(db, number)
+        kept = self._referrers(db, gone)
+        require(not kept, "still_referred_to", f"#{number} stays: a kept record refers to it ({', '.join(kept)})")
         marks = _marks(gone)
         self.write_journal(db, None, actor, role, "deleted",
                            {"ticket": number, "closed_at": self._closed_at(db, number), "deleted_at": at}, at=at)
@@ -959,15 +979,11 @@ class Store:
         and reposting it (owner answer S-closed, build-plan section 27; who answers for it,
         `_responsible`): deleted as the sweep deletes one, with the same one audit line, attributed to
         that person and stamped now. Refused unless the ticket is closed and the actor answers for it,
-        while a task still waits on it (still_blocking), and while a kept record still refers to it."""
-        try:
-            with self.transaction() as db:
-                _, role = self._responsible(db, number, actor)
-                self._delete(db, number, actor, role, self.now())
-        except sqlite3.IntegrityError as error:
-            if "FOREIGN KEY" not in str(error):
-                raise
-            raise RecordError("still_referred_to", f"#{number} stays: a kept record refers to it") from None
+        while a task still waits on it (still_blocking), and while a kept record still refers to it
+        (still_referred_to)."""
+        with self.transaction() as db:
+            _, role = self._responsible(db, number, actor)
+            self._delete(db, number, actor, role, self.now())
 
     def sweep(self, today) -> List[int]:
         """Delete every closed ticket nobody has reacted to for more than CLOSED_RETENTION_DAYS, and
@@ -978,15 +994,16 @@ class Store:
         the person who answers for it is told it is closed, and again with each reaction by a person (a
         comment, an amendment, a repost; a decision or a finding about it, or a comment on one); an
         entry by a service, an agent or `system` is no reaction (`_last_reaction`). The ticket is deleted
-        once its days started more than CLOSED_RETENTION_DAYS before ``today``, and kept until then. Each
-        deletion is its own
-        transaction, by `system`: one audit line (the ticket's number, when it was closed and when it
-        was deleted, and no content), then the ticket, its journal and the documents only about it. A
-        finished ticket is never deleted, however old. A closed ticket that an unfinished task still
-        waits on (it blocks it) stays, closed and blocking, until it is reposted and finished or an
-        approver resolves the dependency (the owner's decision on R6-Q1); the sweep tries again on its
-        next run. A closed ticket that a kept record still refers to (a schema version drafted on it)
-        stays: the database refuses to delete it, and the sweep leaves it closed.
+        once its days started more than CLOSED_RETENTION_DAYS before ``today``, and kept until then.
+        Each deletion is its own transaction, by `system`: one audit line (the ticket's number, when it
+        was closed and when it was deleted, and no content), then the ticket, its journal and the
+        documents only about it. A finished ticket is never deleted, however old. A closed ticket that
+        an unfinished task still waits on (it blocks it) stays, closed and blocking, until it is
+        reposted and finished or an approver resolves the dependency (the owner's decision on R6-Q1); a
+        closed ticket that a kept record refers to (a schema version drafted on it), or a document only
+        about it, stays, closed. The sweep finds both by asking (`_blocking`, `_referrers`) and tries
+        them again on its next run. It never swallows an error: whatever fails is raised, after the
+        deletions already made, each committed with its audit line.
         """
         moment = _moment(today)
         stamp, cutoff = moment.isoformat(timespec="seconds"), moment - timedelta(days=CLOSED_RETENTION_DAYS)
@@ -996,15 +1013,10 @@ class Store:
             due = [number for number in closed if self._due(db, number, cutoff)]
         deleted = []
         for number in due:
-            try:
-                with self.transaction() as db:
-                    if not self._due(db, number, cutoff):
-                        continue  # someone wrote on it, reposted it or made it block a task since it was read
-                    self._delete(db, number, SYSTEM, SYSTEM, stamp)
-            except sqlite3.IntegrityError as error:
-                if "FOREIGN KEY" not in str(error):
-                    raise
-                continue  # a kept record still refers to it: the database keeps it, and so does the sweep
+            with self.transaction() as db:
+                if not self._due(db, number, cutoff):
+                    continue  # since it was read: someone reacted, reposted it, or it blocks or is referred to
+                self._delete(db, number, SYSTEM, SYSTEM, stamp)
             deleted.append(number)
         return deleted
 
