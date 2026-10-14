@@ -311,6 +311,42 @@ def _with_the_old_guards(store):
         db.close()
 
 
+def test_an_older_store_finishes_its_approved_closed_tickets_and_tells_the_creators_of_the_rest(store, clock):
+    # S-finish and S-closed: older code closed a ticket for every end, an approval's too
+    approved, stopped, working = (store.add_task("pia", f"Week {week} export") for week in (33, 34, 35))
+    store.claim(approved, "ville")
+    queue.propose(store, approved, "ville", "import", "Fits the schema")
+    queue.approve(store, approved, "anna", "Imported and checked")
+    [decision] = store.documents_about(approved, "decision")
+    _with_the_old_guards(store)
+    db = sqlite3.connect(store.path)
+    try:  # as round five's code left them: the approval's end and a close without a decision, both closed
+        db.execute("UPDATE items SET status='closed' WHERE number IN (?, ?)", (approved, stopped))
+        db.commit()
+    finally:
+        db.close()
+    before = {i["number"]: i for i in store.items()}
+    clock.advance(hours=1)
+    reopened = Store(store.path, clock=clock)
+    after = {i["number"]: i for i in reopened.items()}
+    assert sorted(after) == sorted(before)  # no ticket and no document is lost
+    assert [after[n]["status"] for n in (approved, stopped, working)] == [FINISHED, CLOSED, "open"]
+    assert after[approved]["version"] == before[approved]["version"] + 1
+    migrated = reopened.journal(approved)[-1]
+    assert (migrated["actor"], migrated["action"], migrated["at"]) == ("system", "migrated", reopened.now())
+    assert (migrated["details"]["status"], migrated["details"]["decision"]) == (
+        {"before": "closed", "after": "finished"}, decision["number"])
+    told = reopened.journal(stopped)[-1]
+    assert (told["actor"], told["action"], told["at"]) == ("system", "notice", reopened.now())
+    assert told["details"] == {"to": "pia", "text": NOTICE.format(n=stopped)}
+    assert [e["action"] for e in reopened.journal(working)] == ["created"]
+    assert reopened.sweep(clock() + 29 * DAY) == []  # its 30 days start when its creator is told
+    assert reopened.sweep(clock() + 3650 * DAY) == [stopped]  # and the finished one is never deleted
+    entries = len(reopened.journal())
+    Store(store.path, clock=clock)  # opened again: the steps have run, and nothing more changes
+    assert len(reopened.journal()) == entries
+
+
 def test_an_older_store_opens_with_every_ticket_and_lets_a_closed_one_go_in_time(store, clock):
     closed, working = _closed(store), store.add_task("hook", "Another file arrived")
     _with_the_old_guards(store)

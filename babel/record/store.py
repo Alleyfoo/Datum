@@ -22,8 +22,9 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   work ends in one of the last two. `closed`: it could not be finished (S-closed). `finished`: it
   is done and correct; only an approver finishes it, with a decision recorded about it, with a
   reason (S-finish), and it stays finished, with its whole history (S-finished). The store kept
-  `done` for `closed` before (P25, section 25); one migration step, run once when an older store
-  opens, renamed it;
+  `done` for `closed` before (P25, section 25), and closed a ticket for every end, an approval's
+  too; migration steps, run once when an older store opens, rename it, and finish the closed
+  tickets an approval ended;
 - a worker closes a task that cannot be finished, with the reason (S-close, section 29), and
   whatever path closes a task, a notice on it tells its creator (the item's `created_by`). The
   creator may amend its title or body, each amendment a journal entry with the text before and
@@ -63,7 +64,7 @@ ENDS = (CLOSED, FINISHED)
 #: what a decision document says when a task may be finished on it: an approval, or a finish itself
 FINISHING_DECISIONS = ("approved", "finished")
 #: the store's version, kept in SQLite's user_version; an older store is brought up to it once, when opened
-VERSION = 2
+VERSION = 3
 DOCUMENT_TYPES = ("decision", "finding")
 LINK_TYPES = ("blocks", "about")
 LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to P22 (build-plan section 20)
@@ -204,6 +205,11 @@ class Store:
         2. A closed ticket is deleted in time (owner answers S-del and S-period, build-plan sections 28
            and 29): the older delete guards, which refused every delete, give way to the ones in SCHEMA,
            which let the store delete a closed ticket and nothing else. No item changes.
+        3. The two end states (owner answers S-two, S-finish and S-closed, build-plan sections 27 and
+           29). Older code closed a ticket for every end, an approval's too. A closed ticket whose last
+           decision is an approver's approval, with a reason, is finished: it keeps its whole history
+           and is never deleted. Each other closed ticket stays closed and gets the notice to its
+           creator now, so its CLOSED_RETENTION_DAYS start when its creator is told. No ticket is lost.
         """
         with self.transaction() as db:
             version = db.execute("PRAGMA user_version").fetchone()[0]
@@ -220,6 +226,23 @@ class Store:
             if version < 2:
                 db.execute("DROP TRIGGER IF EXISTS items_no_delete")
                 db.execute("DROP TRIGGER IF EXISTS journal_no_delete")
+            if version < 3:
+                for row in db.execute("SELECT number, data, created_by FROM items WHERE kind='task' AND status=?"
+                                      " ORDER BY number", (CLOSED,)).fetchall():
+                    number, creator = row["number"], row["created_by"]
+                    last = (json.loads(row["data"]).get("decisions") or [None])[-1]
+                    found = self._decision(db, number, last)
+                    if (found.get("decision") in FINISHING_DECISIONS and found.get("approver")
+                            and str(found.get("reason") or "").strip()):
+                        db.execute("UPDATE items SET status=?, updated_at=?, version=version+1 WHERE number=?",
+                                   (FINISHED, self.now(), number))
+                        self.write_journal(db, number, SYSTEM, SYSTEM, "migrated", {
+                            "status": {"before": CLOSED, "after": FINISHED}, "decision": last,
+                            "reason": "an approver's approval finishes a ticket (owner answer S-finish, "
+                                      "build-plan section 29)"})
+                    else:
+                        self.write_journal(db, number, SYSTEM, SYSTEM, "notice",
+                                           {"to": creator, "text": notice(number, creator)})
             db.execute(f"PRAGMA user_version={VERSION}")
 
     def ensure(self, script: str) -> None:
@@ -447,15 +470,19 @@ class Store:
             self._renew(db, number)
         return self._item(db, number)
 
+    def _decision(self, db, number: int, document) -> dict:
+        """What a decision document about the task says (its data), or nothing if it is not one."""
+        row = None
+        if type(document) is int:
+            row = db.execute("SELECT d.data FROM items d JOIN links l ON l.source=d.number AND l.type='about'"
+                             " WHERE d.number=? AND d.kind='document' AND d.type='decision' AND l.target=?",
+                             (document, number)).fetchone()
+        return json.loads(row[0]) if row else {}
+
     def _decided(self, db, number: int, approver: str, decision) -> None:
         """Require the decision a task is finished on: a decision document about the task that this
         approver recorded, with a reason, approving it or finishing it (owner answer S-finish)."""
-        row = None
-        if type(decision) is int:
-            row = db.execute("SELECT d.data FROM items d JOIN links l ON l.source=d.number AND l.type='about'"
-                             " WHERE d.number=? AND d.kind='document' AND d.type='decision' AND l.target=?",
-                             (decision, number)).fetchone()
-        found = json.loads(row[0]) if row else {}
+        found = self._decision(db, number, decision)
         require(found.get("approver") == approver and found.get("decision") in FINISHING_DECISIONS
                 and str(found.get("reason") or "").strip() != "", "decision_required",
                 f"#{number} is {FINISHED} only with a decision an approver records about it, with a reason")
