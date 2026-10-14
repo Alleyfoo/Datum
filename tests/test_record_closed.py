@@ -8,11 +8,15 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
+from babel.record import queue
 from babel.record.store import CLOSED, CLOSED_RETENTION_DAYS, FINISHED, RecordError, Store
 
 # the clock and store fixtures are in conftest.py
 
 DAY = timedelta(days=1)
+NOTICE = ("#{n} is closed: it could not be finished. pia, as its creator you may amend it and repost it, which "
+          "opens it again with its history, or delete it. If nobody reacts to it for 30 days, it is deleted, "
+          "with its history.")
 
 
 def _code(call, *args, **kwargs):
@@ -27,6 +31,60 @@ def _closed(store, creator="pia", worker="ville"):
     store.claim(task, worker)
     store.set_status(task, worker, CLOSED)
     return task
+
+
+def test_a_worker_closes_a_ticket_that_cannot_be_finished_and_its_creator_is_notified(store):
+    # S-close and S-closed (build-plan sections 27 and 29): closed with a reason; the creator is told what to do
+    task = store.add_task("pia", "Stock export from C-100", body="Check the week 34 export.")
+    store.open_ticket(task, "ville")
+    closed = store.close(task, "ville", "The supplier no longer sends this export")
+    assert (closed["status"], closed["claimed_by"], closed["lease_until"]) == (CLOSED, None, None)
+    entry, told = store.journal(task)[-2:]
+    assert (entry["actor"], entry["role"], entry["action"], entry["at"]) == ("ville", "worker", "closed", store.now())
+    assert entry["details"] == {"reason": "The supplier no longer sends this export",
+                                "status": {"before": "in_progress", "after": "closed"}, "released": "ville"}
+    assert (told["actor"], told["role"], told["action"], told["at"]) == ("system", "system", "notice", store.now())
+    assert told["details"] == {"to": "pia", "text": NOTICE.format(n=task)}
+    assert _code(store.claim, task, "ville") == "item_closed"
+    assert _code(store.resume, task, "ville") == "item_closed"
+    assert _code(store.finish, task, "anna", "Done after all") == "item_closed"
+
+
+def test_closing_needs_the_claim_the_worker_role_and_a_reason(store):
+    task = store.add_task("pia", "Stock export from C-100")
+    assert _code(store.close, task, "ville", "Not ours") == "claim_required"
+    store.claim(task, "ville")
+    for reason in ("", "   "):
+        assert _code(store.close, task, "ville", reason) == "invalid_argument"
+    store.release(task, "ville")
+    store.claim(task, "anna")
+    assert _code(store.close, task, "anna", "Not ours") == "role_missing"  # workers close; anna only approves
+    store.release(task, "anna")
+    store.claim(task, "hook")
+    assert _code(store.close, task, "hook", "Not ours") == "role_missing"  # a service account holds no role
+    assert store.get(task)["status"] == "open"
+    assert "closed" not in [e["action"] for e in store.journal(task)]
+
+
+def test_a_ticket_waiting_on_a_proposal_or_already_ended_is_not_closed(store):
+    waiting = store.add_task("pia", "Stock export from C-100")
+    store.claim(waiting, "ville")
+    queue.propose(store, waiting, "ville", "import", "Fits the schema")
+    store.claim(waiting, "ville")
+    assert _code(store.close, waiting, "ville", "Not ours") == "proposal_pending"  # the approver decides first
+    closed = _closed(store)
+    assert _code(store.close, closed, "ville", "Again") == "item_closed"
+    finished = store.add_task("pia", "Week 33 export")
+    store.finish(finished, "anna", "Imported and checked")
+    assert _code(store.close, finished, "ville", "Not ours") == "item_finished"
+
+
+def test_whatever_closes_a_ticket_its_creator_is_notified(store):
+    # S-closed: the store's set_status closes with no reason, and the notice follows all the same
+    task = _closed(store)
+    closing, told = store.journal(task)[-2:]
+    assert (closing["action"], closing["details"]["status"]["after"]) == ("status_changed", CLOSED)
+    assert (told["action"], told["details"]) == ("notice", {"to": "pia", "text": NOTICE.format(n=task)})
 
 
 def test_the_creator_amends_a_closed_ticket_and_each_amendment_keeps_the_text_before_and_after(store):

@@ -24,11 +24,12 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   reason (S-finish), and it stays finished, with its whole history (S-finished). The store kept
   `done` for `closed` before (P25, section 25); one migration step, run once when an older store
   opens, renamed it;
-- the creator of a closed ticket (the item's `created_by`) may amend its title or body, each
-  amendment a journal entry with the text before and after, and repost it: open again, with its
-  history; or delete it (S-closed, section 27). A closed ticket nobody reacts to for
-  CLOSED_RETENTION_DAYS is deleted by the sweep, which runs only when called, on the date it is
-  given (S-period, section 29).
+- a worker closes a task that cannot be finished, with the reason (S-close, section 29), and
+  whatever path closes a task, a notice on it tells its creator (the item's `created_by`). The
+  creator may amend its title or body, each amendment a journal entry with the text before and
+  after, and repost it: open again, with its history; or delete it (S-closed, section 27). A
+  closed ticket nobody reacts to for CLOSED_RETENTION_DAYS is deleted by the sweep, which runs
+  only when called, on the date it is given (S-period, section 29).
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -158,6 +159,13 @@ def _encode(value) -> str:
 def _marks(values) -> str:
     """``?,?,?``: one SQL parameter per value, for ``IN (...)``."""
     return ",".join("?" * len(values))
+
+
+def notice(number: int, creator: str) -> str:
+    """What a closed ticket's creator is told (owner answer S-closed, build-plan section 27)."""
+    return (f"#{number} is closed: it could not be finished. {creator}, as its creator you may amend it and "
+            f"repost it, which opens it again with its history, or delete it. If nobody reacts to it for "
+            f"{CLOSED_RETENTION_DAYS} days, it is deleted, with its history.")
 
 
 def _moment(when) -> datetime:
@@ -394,6 +402,8 @@ class Store:
         `note` adds details to that entry, such as the reason a person gave. A finished task's status
         never changes again, and a task becomes finished only in an approver's update whose note
         names the decision it rests on (`_decided`), whatever path leads there (owner answer S-finish).
+        Whatever path closes a task, a second entry follows the first: a notice to its creator, by
+        `system`, that it is closed and what they may do (`notice`; owner answer S-closed).
         """
         item = self._item(db, number)
         require(expected_version is None or expected_version == item["version"], "version_conflict",
@@ -430,6 +440,9 @@ class Store:
         self.write_journal(db, number, actor, self.acting_role(db, actor, role), action, details)
         if ended:
             db.execute("UPDATE items SET claimed_by=NULL, lease_until=NULL WHERE number=?", (number,))
+            if changes["status"] == CLOSED:
+                self.write_journal(db, number, SYSTEM, SYSTEM, "notice",
+                                   {"to": item["created_by"], "text": notice(number, item["created_by"])})
         elif self._holds(db, number, actor):
             self._renew(db, number)
         return self._item(db, number)
@@ -568,6 +581,29 @@ class Store:
             return self.update(db, number, actor, role=role, expected_version=expected_version,
                                action="status_changed", status=status)
 
+    def close(self, number: int, actor: str, reason: str) -> dict:
+        """A worker closes a task that cannot be finished, with the reason (owner answers S-closed and
+        S-close, build-plan sections 27 and 29).
+
+        The worker holds the claim and acts in the worker role, and the reason is required. The journal
+        records who closed it, when and why; the claim is handed back; and a notice on the ticket tells
+        its creator that it is closed and that they may amend it and repost it, or delete it. A closed
+        task is not claimed, opened, resumed or finished, and one nobody reacts to for
+        CLOSED_RETENTION_DAYS is deleted by the sweep. A task waiting on a proposal is decided in the
+        approval queue first; a task that may still be finished later is released instead (T-release).
+        """
+        with self.transaction() as db:
+            return self.closing(db, number, actor, reason)
+
+    def closing(self, db, number: int, actor: str, reason: str) -> dict:
+        """`close` inside an open transaction."""
+        reason = text(reason, "reason")
+        item = self.hold(db, number, actor)  # the actor's live claim; refuses a task whose work has ended
+        role = self.acting_role(db, actor, "worker")
+        require(not item["data"].get("proposal"), "proposal_pending",
+                f"#{number} waits on a proposal: an approver decides it first, in the approval queue")
+        return self.update(db, number, actor, role=role, action=CLOSED, note={"reason": reason}, status=CLOSED)
+
     def finish(self, number: int, approver: str, decision: str) -> dict:
         """Finish a task: it is done and correct (owner answers S-finished and S-finish, build-plan
         sections 27 and 29).
@@ -644,7 +680,7 @@ class Store:
 
     def _last_reaction(self, db, number: int) -> Optional[datetime]:
         """When anyone last wrote on a ticket: its latest journal entry, or the latest on a document about
-        it (a comment, an amendment, a finding about it)."""
+        it (a comment, an amendment, a finding about it, the notice to its creator)."""
         at = db.execute("SELECT MAX(at) FROM journal WHERE item = ? OR item IN"
                         " (SELECT source FROM links WHERE type = 'about' AND target = ?)", (number, number)).fetchone()[0]
         return datetime.fromisoformat(at) if at else None
@@ -706,7 +742,8 @@ class Store:
         ``today`` is the date the sweep runs on: a date (taken at midnight UTC) or a datetime with its
         time zone. The sweep reads no clock, and nothing runs it but a call. A ticket's last reaction is
         the latest journal entry on it, or on a document about it (a comment, an amendment, a finding
-        about it): the ticket is deleted once that is more than CLOSED_RETENTION_DAYS before
+        about it, the notice to its creator): the ticket is deleted once that is more than
+        CLOSED_RETENTION_DAYS before
         ``today``, and kept until then. Each deletion is its own transaction, by `system`: one audit line
         (the ticket's number, when it was closed and when it was deleted, and no content), then the
         ticket, its journal and the documents only about it. A finished ticket is never deleted, however

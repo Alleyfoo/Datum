@@ -84,6 +84,15 @@ def test_an_admission_finishes_the_ticket_and_a_drop_closes_it(store):
     assert dispositions.drop(store, dropped, "ville", "Not needed")["status"] == CLOSED
 
 
+def test_a_drop_closes_the_ticket_and_its_creator_is_notified(store):
+    # S-closed (build-plan section 27): whatever closes a ticket, its creator, here the hook, is told
+    task = _ticket(store)
+    dispositions.drop(store, task, "ville", "Duplicate of last week's export")
+    dropped, told = store.journal(task)[-2:]
+    assert (dropped["action"], told["action"], told["actor"], told["details"]["to"]) == (
+        "dropped", "notice", "system", "hook")
+
+
 def test_a_file_is_accepted_once_and_stays_accepted(store):
     first = _ticket(store)
     dispositions.propose(store, first, "ville", "import", "fits", payload=_import(store, first))
