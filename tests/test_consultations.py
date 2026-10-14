@@ -6,7 +6,7 @@ import pytest
 from babel.checks import Check
 from babel.record import consultations as cons
 from babel.record import queue
-from babel.record.store import CLOSED, ENDS, RecordError
+from babel.record.store import CLOSED, ENDS, FINISHED, RecordError
 
 # the clock and store fixtures are in conftest.py
 
@@ -159,6 +159,22 @@ def test_a_proposed_reply_waits_for_an_approver_and_nothing_is_sent(store):
     assert card.splitlines()[0] == f"#{number} consultation · {cons.SHOWN[decided['status']]}"
     [decision] = store.documents_about(number, "decision")
     assert card.splitlines()[-1] == f"Reply: approved by anna (decision #{decision['number']}): Checked against the facts"
+
+
+def test_an_approver_finishes_a_consultation_and_its_card_says_by_whom_and_why(store):
+    # S-finish (build-plan section 29): finished only with a decision an approver records, with a reason
+    number = _start(store)
+    _answer(store, number)
+    assert _code(cons.finish, store, number, "ville", "Answered") == "role_missing"  # a worker never finishes
+    cons.release(store, number, "ville", "Answered on the phone; for the approver")
+    item = cons.finish(store, number, "anna", "The customer has the answer")
+    assert (item["status"], item["claimed_by"]) == (FINISHED, None)
+    [decision] = store.documents_about(number, "decision")
+    card = cons.view_text(cons.view(store, number)).splitlines()
+    assert card[0] == f"#{number} consultation · finished"
+    assert card[-1] == f"Finished by anna (decision #{decision['number']}): The customer has the answer"
+    other = store.add_task("hook", "A file arrived")
+    assert _code(cons.finish, store, other, "anna", "Fine") == "not_a_consultation"
 
 
 def test_once_released_the_card_says_who_had_the_consultation_and_why(store):

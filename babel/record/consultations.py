@@ -186,6 +186,17 @@ def resume(store: Store, number: int, actor: str) -> dict:
         return store.resuming(db, number, actor)
 
 
+def finish(store: Store, number: int, approver: str, decision: str) -> dict:
+    """An approver finishes a consultation: it is done and correct (owner answers S-finished and
+    S-finish, build-plan sections 27 and 29). Only a named person with the approver role finishes it,
+    with the decision in their own words, kept as a decision document about it; it goes to the finished
+    list with its whole history. A worker never finishes one, and a reply waiting in the approval queue
+    is decided there instead."""
+    with store.transaction() as db:
+        _consultation(store._item(db, number))
+        return store.finishing(db, number, approver, decision)
+
+
 #: the journal's actions that hand a consultation to someone, or back
 HANDOVERS = ("opened", "released", "resumed")
 
@@ -316,7 +327,7 @@ def handovers_text(moves: Sequence[dict]) -> List[Tuple[str, str]]:
 def view_text(page: dict) -> str:
     """A consultation as a card: who has it (and, once it has changed hands, who had it before and
     why it was released), the person's answers, a page of questions, the open questions of all,
-    the checks and the reply."""
+    the checks and the reply, or the approver's decision that finished it."""
     item = page["item"]
     data = item["data"]
     out = [f"#{item['number']} consultation · {SHOWN[item['status']]}{holder(item)}", item["title"]]
@@ -345,8 +356,9 @@ def view_text(page: dict) -> str:
     decided = page.get("decisions") or []
     if decided and not data.get("proposal"):
         last = decided[-1]
-        out.append(f"Reply: {last['data']['decision']} by {last['data']['approver']} "
-                   f"(decision #{last['number']}): {last['data']['reason']}")
+        said = f"by {last['data']['approver']} (decision #{last['number']}): {last['data']['reason']}"
+        out.append(f"Finished {said}" if last["data"]["decision"] == FINISHED
+                   else f"Reply: {last['data']['decision']} {said}")
     else:
         out.append("Reply: " + _approval(item))
     return "\n".join(out)
