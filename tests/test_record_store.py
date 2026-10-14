@@ -350,7 +350,9 @@ def test_a_store_written_with_done_opens_with_closed(store, clock):
     reopened = Store(store.path, clock=clock)
     item = reopened.get(finished)
     assert (item["status"], item["version"], item["updated_at"]) == ("closed", before["version"] + 1, reopened.now())
-    *history, migrated = reopened.journal(finished)
+    entries = reopened.journal(finished)
+    [migrated] = [e for e in entries if e["action"] == "migrated"]
+    history = entries[:entries.index(migrated)]
     assert history[-1]["details"]["status"]["after"] == "done"  # what was written then stays written
     assert (migrated["actor"], migrated["role"], migrated["action"], migrated["at"]) == (
         "system", "system", "migrated", reopened.now())
