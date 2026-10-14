@@ -238,3 +238,16 @@ def test_the_status_filter_lists_open_in_progress_and_closed_tickets(store):
     assert [t["number"] for t in cons.tickets(store, "in_progress")] == [working]
     assert [t["number"] for t in cons.tickets(store, "closed")] == [closed]
     assert _code(cons.tickets, store, "needs_input") == "invalid_argument"
+
+
+def test_the_status_filter_has_the_owners_four_values_and_finished_is_the_finished_list(store):
+    # S-states (build-plan section 29): open, in_progress (needs_input listed under it), closed and finished
+    assert cons.STATUSES == {"open": ("open",), "in_progress": ("in_progress", "needs_input"),
+                             "closed": ("closed",), "finished": ("finished",)}
+    closed, finished = _start(store), _start(store)
+    store.set_status(closed, "ville", CLOSED)
+    cons.release(store, finished, "ville", "Answered on the phone; for the approver")
+    store.finish(finished, "anna", "The customer has the answer")
+    assert [t["number"] for t in cons.tickets(store, "finished")] == [finished]
+    assert [t["number"] for t in cons.tickets(store, "closed")] == [closed]  # a closed one never reaches finished
+    assert cons.ticket_line(store.get(finished)).endswith("·  finished")

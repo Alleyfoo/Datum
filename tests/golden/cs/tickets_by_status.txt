@@ -72,5 +72,8 @@ Open questions, of all 2: none
 Checks: 2 run; the last passed
 Reply: approved by anna (decision #2): Checked against the facts; PO-4718 goes to CH-02, SC-01 is followed up separately
 
+>>> search(status="finished")
+search status finished: no ticket.
+
 >>> search(text="zzz", status="open")
 search "zzz" with status open: no ticket.

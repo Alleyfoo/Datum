@@ -26,18 +26,20 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 from babel.checks import Check, describe
 
 from . import queue
-from .store import CLOSED, Store, require, text
+from .store import CLOSED, FINISHED, Store, require, text
 
 TYPE = "consultation"
 #: questions shown per page; the open questions are always counted over all of them
 PAGE = 20
-#: the ticket statuses a person searches by (build-plan section 12), and the store's statuses each one
-#: lists. A ticket waiting for an approver keeps its own status, needs_input, in the approval queue, and
-#: is listed under in_progress: open point P25-b, implemented as recommended and not yet confirmed by
-#: the owner (build-plan section 25). To list it elsewhere, change this mapping and the test naming it.
-STATUSES = {"open": ("open",), "in_progress": ("in_progress", "needs_input"), "closed": (CLOSED,)}
+#: the ticket statuses a person searches by, and the store's statuses each one lists: open, in_progress,
+#: closed and finished (owner answer S-states, build-plan section 29). A ticket waiting for an approver
+#: keeps its own status, needs_input, in the approval queue, and is listed under in_progress (owner answer
+#: P25-b, build-plan section 26). To list it elsewhere, change this mapping and the test naming it.
+STATUSES = {"open": ("open",), "in_progress": ("in_progress", "needs_input"), "closed": (CLOSED,),
+            "finished": (FINISHED,)}
 #: the store's statuses in the words a person reads
-SHOWN = {"open": "open", "in_progress": "in_progress", "needs_input": "waiting for an approver", CLOSED: "closed"}
+SHOWN = {"open": "open", "in_progress": "in_progress", "needs_input": "waiting for an approver", CLOSED: "closed",
+         FINISHED: "finished"}
 REPLY = "reply"
 
 
@@ -204,8 +206,8 @@ def handovers(store: Store, number: int) -> List[dict]:
 
 
 def tickets(store: Store, status: str) -> List[dict]:
-    """Every ticket with this status, as a person names it: open, in_progress or closed. in_progress
-    also lists the tickets waiting for an approver (STATUSES)."""
+    """Every ticket with this status, as a person names it: open, in_progress, closed or finished.
+    in_progress also lists the tickets waiting for an approver (STATUSES); finished is the finished list."""
     require(status in STATUSES, "invalid_argument", f"status must be one of {', '.join(STATUSES)}")
     return [item for item in store.items("task") if item["status"] in STATUSES[status]]
 

@@ -128,6 +128,16 @@ def test_several_tickets_are_listed_and_text_narrows_them(store, search):
         'search "ch-02" with status in_progress: 1 ticket, shown')
 
 
+def test_finished_tickets_are_searched_by_their_own_status(store, search):
+    number = cons.start(store, "ville", "Consultation: finished line", subject={})["number"]
+    cons.release(store, number, "ville", "Answered on the phone; for the approver")
+    store.finish(number, "anna", "The customer has the answer")
+    assert search(status="finished").startswith("search status finished: 1 ticket, shown; viewing it changes "
+                                                f"nothing.\n\n#{number} consultation · finished\n"
+                                                "Consultation: finished line\n")
+    assert search(status="closed") == "search status closed: no ticket."
+
+
 def test_a_status_with_no_ticket_is_reported(store, search):
     assert search(status="closed") == "search status closed: no ticket."
     cons.start(store, "ville", "Consultation: Pulp mill customer · CH-02", subject={})

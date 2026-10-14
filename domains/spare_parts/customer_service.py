@@ -67,7 +67,7 @@ You cannot send anything to a customer and cannot approve anything: a named appr
 reply outside this chat.
 """
 
-Status = Literal["open", "in_progress", "closed"]
+Status = Literal["open", "in_progress", "closed", "finished"]
 Question = Literal["Availability", "Lead time", "Service demand"]
 State = Literal["stopped", "planned"]
 
@@ -273,9 +273,10 @@ def build(store: Store, data: Optional[ServiceData] = None, *, actor: str) -> Re
     def search(text: str = "", status: Optional[Status] = None) -> str:
         """Find a customer, machine or part by id, name or description. One match opens its card,
         several are listed for the person to choose (never choose for them), none is reported. With
-        status (open, in_progress or closed), list tickets of that status instead, narrowed by text
-        if given: "what is waiting" is search(status="open"); in_progress also lists the tickets
-        whose reply waits for an approver, marked so. Writes nothing."""
+        status (open, in_progress, closed or finished), list tickets of that status instead, narrowed
+        by text if given: "what is waiting" is search(status="open"); in_progress also lists the
+        tickets whose reply waits for an approver, marked so; closed ones could not be finished, and
+        finished ones are done, with an approver's decision. Writes nothing."""
         if status is not None:
             return search_tickets(store, text, status)
         if not text.strip():
