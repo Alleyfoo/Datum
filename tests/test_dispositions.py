@@ -32,25 +32,24 @@ def _import(store, task):
     return {**SUBJECT, "file_kind": "stock_export", "schema_version": 1, "finding": finding["number"]}
 
 
-def test_a_worker_drops_a_file_with_a_reason_and_nothing_is_deleted(store, data_root):
+def test_an_approver_drops_a_file_with_a_reason_and_nothing_is_deleted(store, data_root):
     kept = inbox.preserve(data_root, "C-100", FIXTURES / "stock_export_2026-08-21.xlsx")
-    task = _ticket(store)
-    item = dispositions.drop(store, task, "ville", "Duplicate of last week's export")
-    assert (item["status"], item["data"]["resolution"], item["claimed_by"]) == (CLOSED, "dropped", None)
+    task = _ticket(store, by="anna")
+    item = dispositions.drop(store, task, "anna", "Duplicate of last week's export")
+    assert (item["status"] in ENDS, item["data"]["resolution"], item["claimed_by"]) == (True, "dropped", None)
     [decision] = store.documents_about(task, "decision")
     assert decision["data"]["decision"] == "dropped"
-    assert (decision["data"]["by"], decision["data"]["role"]) == ("ville", "worker")
+    assert (decision["data"]["by"], decision["data"]["role"]) == ("anna", "approver")
     assert decision["data"]["reason"] == "Duplicate of last week's export"
     dropped = [e for e in store.journal(task) if e["action"] == "dropped"]
     assert dropped[0]["details"]["reason"] == "Duplicate of last week's export"
     assert kept.path.exists() and inbox.verify(data_root, "C-100", kept.source_id)["matches"]
 
 
-def test_dropping_needs_the_claim_a_reason_and_a_person(store):
+def test_dropping_needs_a_reason_and_a_person(store):
     task = store.add_task("hook", "A file arrived")
-    assert _code(dispositions.drop, store, task, "ville", "not needed") == "claim_required"
-    store.claim(task, "ville")
-    assert _code(dispositions.drop, store, task, "ville", "") == "invalid_argument"
+    store.claim(task, "anna")
+    assert _code(dispositions.drop, store, task, "anna", "") == "invalid_argument"
     other = store.add_task("hook", "Another file")
     store.claim(other, "hook")
     assert _code(dispositions.drop, store, other, "hook", "not needed") == "role_missing"
@@ -76,21 +75,24 @@ def test_a_worker_cannot_admit_an_approver_can(store):
     assert "accepted as stock_export version 1 for C-100" in decision["body"]
 
 
-def test_an_admission_finishes_the_ticket_and_a_drop_closes_it(store):
-    # S-finish and S-closed (build-plan sections 27 and 29): an approver's admission finishes; a drop closes
-    admitted, dropped = _ticket(store), _ticket(store)
+def test_an_admission_finishes_the_ticket_and_a_worker_who_cannot_process_the_file_closes_it(store):
+    # S-finish and S-closed (build-plan sections 27 and 29): an approver's admission finishes; a worker
+    # closes work it cannot process, with the reason (the owner's decision on R6-Q3, section 30)
+    admitted, unprocessable = _ticket(store), _ticket(store)
     dispositions.propose(store, admitted, "ville", "import", "Fits", payload=_import(store, admitted))
     assert dispositions.admit(store, admitted, "anna", "Trial checked")["status"] == FINISHED
-    assert dispositions.drop(store, dropped, "ville", "Not needed")["status"] == CLOSED
+    assert store.close(unprocessable, "ville", "The workbook's sheets cannot be read")["status"] == CLOSED
 
 
-def test_a_drop_closes_the_ticket_and_its_creator_is_notified(store):
-    # S-closed (build-plan section 27): whatever closes a ticket, its creator, here the hook, is told
+def test_a_worker_closes_a_file_it_cannot_process_and_a_notice_follows(store):
+    # S-closed (build-plan section 27): a close is followed by its notice; a worker's inability to process
+    # a file is a close, not a drop: no drop decision, no resolution
     task = _ticket(store)
-    dispositions.drop(store, task, "ville", "Duplicate of last week's export")
-    dropped, told = store.journal(task)[-2:]
-    assert (dropped["action"], told["action"], told["actor"], told["details"]["to"]) == (
-        "dropped", "notice", "system", "hook")
+    store.close(task, "ville", "The workbook's sheets cannot be read")
+    closed, told = store.journal(task)[-2:]
+    assert (closed["action"], closed["details"]["reason"], told["action"], told["actor"]) == (
+        "closed", "The workbook's sheets cannot be read", "notice", "system")
+    assert store.documents_about(task, "decision") == [] and "resolution" not in store.get(task)["data"]
 
 
 def test_a_file_is_accepted_once_and_stays_accepted(store):
