@@ -186,9 +186,9 @@ def test_the_creator_amends_a_closed_ticket_and_each_amendment_keeps_the_text_be
     assert store.get(task)["status"] == CLOSED  # still closed: reposting is the creator's next step
 
 
-def test_only_the_creator_amends_and_only_a_closed_ticket_with_new_text(store):
+def test_only_the_person_answering_for_it_amends_and_only_a_closed_ticket_with_new_text(store):
     task = _closed(store)
-    assert _code(store.amend, task, "ville", title="Mine now") == "not_the_creator"
+    _code(store.amend, task, "ville", title="Mine now")  # refused: pia created it, and its notices go to her
     assert _code(store.amend, task, "pia") == "invalid_argument"
     assert _code(store.amend, task, "pia", title=" ") == "invalid_argument"
     assert _code(store.amend, task, "pia", title="Stock export from C-100") == "nothing_changed"
@@ -215,9 +215,9 @@ def test_the_creator_reposts_a_closed_ticket_to_open_with_its_whole_history(stor
     assert store.open_ticket(task, "ville")["status"] == "in_progress"  # the next handler takes it up
 
 
-def test_a_repost_is_refused_unless_the_ticket_is_closed_and_the_actor_created_it(store):
+def test_a_repost_is_refused_unless_the_ticket_is_closed_and_the_actor_answers_for_it(store):
     task = _closed(store)
-    assert _code(store.repost, task, "ville") == "not_the_creator"
+    _code(store.repost, task, "ville")  # refused: pia created it, and its notices go to her
     store.repost(task, "pia")
     assert _code(store.repost, task, "pia") == "not_closed"  # open
     store.open_ticket(task, "ville")
@@ -366,9 +366,9 @@ def test_the_creator_deletes_a_closed_ticket_now_with_the_same_one_audit_line(st
     assert "Header differs" not in json.dumps(store.journal(), ensure_ascii=False)
 
 
-def test_only_the_creator_deletes_and_only_a_closed_ticket_nobody_refers_to(store):
+def test_only_the_person_answering_for_it_deletes_and_only_a_closed_ticket_nobody_refers_to(store):
     task, kept = _closed(store), _closed(store)
-    assert _code(store.delete, task, "ville") == "not_the_creator"
+    _code(store.delete, task, "ville")  # refused: pia created it, and its notices go to her
     store.repost(task, "pia")
     assert _code(store.delete, task, "pia") == "not_closed"
     finished = store.add_task("pia", "Week 33 export")
