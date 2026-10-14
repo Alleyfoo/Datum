@@ -1,9 +1,10 @@
 """A role's tools: plain functions with typed signatures that return text, described for MCP.
 
 The tool surface of Parts-Service-Desk desk/mcp_server.py (at 46c859a) was built on the MCP SDK.
-Here no dependency is added: a registry holds one role's tools, describes each for a client (its
-name, its description and an input schema read from the signature) and calls a tool by name with
-JSON arguments. Which tools a role has is its registry, so a role's tool list is a policy, not a
+The registry itself needs no dependency: it holds one role's tools, describes each for a client
+(its name, its description and an input schema read from the signature) and calls a tool by name
+with JSON arguments. The protocol server (server.py) serves a registry to an MCP client over stdio,
+with the SDK. Which tools a role has is its registry, so a role's tool list is a policy, not a
 separate process (build-plan G5).
 
 No model is called inside a tool. Tools compute and record; the assistant on the other side of
