@@ -6,17 +6,21 @@ history, leaving one audit line."""
 
 import json
 import sqlite3
+import subprocess
+import sys
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 import pytest
 
 from babel.record import consultations as cons
-from babel.record import queue
+from babel.record import queue, sweep
 from babel.record.store import CLOSED, CLOSED_RETENTION_DAYS, FINISHED, REVIEW_QUEUE, RecordError, Store, notice
 
 # the clock and store fixtures are in conftest.py
 
 DAY = timedelta(days=1)
+ROOT = Path(__file__).resolve().parent.parent
 NOTICE = ("#{n} is closed: it could not be finished. pia, as its creator you may amend it and repost it, which "
           "opens it again with its history, or delete it. If nobody reacts to it for 30 days, it is deleted, "
           "with its history.")
@@ -324,6 +328,54 @@ def test_the_sweep_takes_its_date_reads_no_clock_and_runs_only_when_called(store
     assert store.sweep(date(2026, 11, 8)) == [first, second]
     assert _code(store.sweep, datetime(2026, 12, 1)) == "invalid_argument"  # a time needs its time zone
     assert _code(store.sweep, "2026-12-01") == "invalid_argument"
+
+
+def _run_sweep(*args):
+    """The daily sweep as a scheduler runs it: the command, in a process of its own."""
+    return subprocess.run([sys.executable, "-m", "babel.record.sweep", *args], cwd=ROOT, capture_output=True,
+                          text=True, timeout=120)
+
+
+def test_the_daily_sweep_is_a_command_that_runs_on_the_date_it_is_given(store, capsys):
+    # the owner's review of round six (build-plan section 30): an entry point a daily scheduler calls
+    task = _closed(store)  # closed at 09:00 on 2026-10-08
+    early = _run_sweep("--store", str(store.path), "--today", "2026-11-07")
+    assert (early.returncode, early.stdout, early.stderr) == (0, "sweep 2026-11-07: nothing to delete\n", "")
+    ran = _run_sweep("--store", str(store.path), "--today", "2026-11-08")
+    assert (ran.returncode, ran.stdout, ran.stderr) == (0, f"sweep 2026-11-08: deleted #{task}\n", "")
+    [line] = _audit_lines(store)  # stamped with the date it was given: it read no clock
+    assert (line["actor"], line["at"], line["details"]["ticket"]) == ("system", "2026-11-08T00:00:00+00:00", task)
+    assert sweep.main(["--store", str(store.path), "--today", "2026-11-08"]) == 0  # again: nothing is left
+    assert capsys.readouterr() == ("sweep 2026-11-08: nothing to delete\n", "")
+
+
+def test_a_failing_sweep_exits_non_zero_and_says_why_on_stderr(tmp_path):
+    broken = tmp_path / "broken.sqlite"
+    broken.write_bytes(b"These bytes are not a SQLite database. " * 10)
+    failed = _run_sweep("--store", str(broken), "--today", "2026-11-08")
+    assert (failed.returncode, failed.stdout) == (1, "")
+    assert "Traceback" in failed.stderr
+    assert "sweep failed on 2026-11-08: DatabaseError: file is not a database" in failed.stderr
+    missing = tmp_path / "nowhere" / "babel.sqlite"
+    gone = _run_sweep("--store", str(missing), "--today", "2026-11-08")
+    assert (gone.returncode, gone.stdout) == (1, "") and "there is no store at" in gone.stderr
+    assert not missing.parent.exists()  # nothing is created
+    for wrong in (["--store", str(broken)], ["--store", str(broken), "--today", "8.11.2026"],
+                  ["--store", str(broken), "--today", "2026-02-30"]):
+        refused = _run_sweep(*wrong)
+        assert (refused.returncode, refused.stdout) == (2, "") and "--today" in refused.stderr, wrong
+
+
+def test_the_command_reports_a_failure_of_the_sweep_itself(store, monkeypatch, capsys):
+    _closed(store)
+
+    def failing(self, today):
+        raise sqlite3.IntegrityError("FOREIGN KEY constraint failed")
+    monkeypatch.setattr(Store, "sweep", failing)
+    assert sweep.main(["--store", str(store.path), "--today", "2026-11-08"]) == 1
+    out, err = capsys.readouterr()
+    assert out == "" and "Traceback" in err
+    assert err.endswith("sweep failed on 2026-11-08: IntegrityError: FOREIGN KEY constraint failed\n")
 
 
 def test_a_finished_ticket_is_never_deleted_however_old(store, clock):
