@@ -5,7 +5,9 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
 - one numbering scheme: a task and a document never share a number, and no number is reused;
 - a decision or a finding is a document, which records what was concluded;
 - a comment records what happened; comments and every state change are journal entries, and
-  the journal is append-only (enforced by the database, not only by this code);
+  the journal is append-only (enforced by the database, not only by this code). The one exception
+  is the owner's (S-del and S-keep, build-plan section 28): a closed ticket is deleted in time, its
+  journal and the documents only about it with it, leaving one audit line without content;
 - a `blocks` link keeps a task out of the ready list until its blocker's work ends;
 - a claim is a lease: it runs out by itself, one day after its holder's last write (owner answer
   P22, build-plan section 20), every write by its holder renews it, the end of the task's work
@@ -24,7 +26,8 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   opens, renamed it;
 - the creator of a closed ticket (the item's `created_by`) may amend its title or body, each
   amendment a journal entry with the text before and after, and repost it: open again, with its
-  history (S-closed, section 27).
+  history (S-closed, section 27). A closed ticket nobody reacts to for CLOSED_RETENTION_DAYS is
+  deleted by the sweep, which runs only when called, on the date it is given (S-period, section 29).
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -41,7 +44,7 @@ import json
 import re
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional
 
@@ -58,16 +61,19 @@ ENDS = (CLOSED, FINISHED)
 #: what a decision document says when a task may be finished on it: an approval, or a finish itself
 FINISHING_DECISIONS = ("approved", "finished")
 #: the store's version, kept in SQLite's user_version; an older store is brought up to it once, when opened
-VERSION = 1
+VERSION = 2
 DOCUMENT_TYPES = ("decision", "finding")
 LINK_TYPES = ("blocks", "about")
 LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to P22 (build-plan section 20)
+#: how many days a closed ticket is kept after its last reaction; then the sweep deletes it, with its history
+#: (owner answers S-del, S-keep and S-period, build-plan sections 28 and 29). A named setting
+CLOSED_RETENTION_DAYS = 30
 SYSTEM = "system"
 #: words that make a name agent-like; such a name is never accepted as an approver
 AGENT_WORDS = {"agent", "assistant", "llm", "system", "mcp", "claude", "bot", "gpt", "chatgpt",
                "copilot", "gemini", "codex", "ollama", "hook"}
 
-SCHEMA = """
+SCHEMA = f"""
 CREATE TABLE IF NOT EXISTS users (
     name TEXT PRIMARY KEY,
     kind TEXT NOT NULL CHECK (kind IN ('person', 'agent', 'service')),
@@ -104,13 +110,21 @@ CREATE TABLE IF NOT EXISTS journal (
     action TEXT NOT NULL,
     details TEXT NOT NULL,
     at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS deleting (
+    number INTEGER PRIMARY KEY);
 CREATE TRIGGER IF NOT EXISTS journal_no_update BEFORE UPDATE ON journal
 BEGIN SELECT RAISE(ABORT, 'the journal is append-only'); END;
-CREATE TRIGGER IF NOT EXISTS journal_no_delete BEFORE DELETE ON journal
-BEGIN SELECT RAISE(ABORT, 'the journal is append-only'); END;
-CREATE TRIGGER IF NOT EXISTS items_no_delete BEFORE DELETE ON items
-BEGIN SELECT RAISE(ABORT, 'items are never deleted, so a number is never reused'); END;
+CREATE TRIGGER IF NOT EXISTS journal_no_delete_but_closed BEFORE DELETE ON journal
+WHEN NOT EXISTS (SELECT 1 FROM deleting WHERE number = OLD.item)
+BEGIN SELECT RAISE(ABORT, 'the journal is append-only: only a deleted closed ticket takes its entries'); END;
+CREATE TRIGGER IF NOT EXISTS items_no_delete_but_closed BEFORE DELETE ON items
+WHEN NOT EXISTS (SELECT 1 FROM deleting WHERE number = OLD.number)
+     OR (OLD.kind = 'task' AND OLD.status != '{CLOSED}')
+BEGIN SELECT RAISE(ABORT, 'items are never deleted, but a closed ticket and its documents; no number is reused'); END;
 """
+# `deleting` holds the numbers the store deletes, inside the one transaction that deletes them, and is
+# empty at every other time: the two delete guards refuse every row it does not name, and any task that
+# is not closed. Only _delete fills it. AUTOINCREMENT keeps a deleted number from being used again.
 
 
 class RecordError(ValueError):
@@ -145,6 +159,15 @@ def _marks(values) -> str:
     return ",".join("?" * len(values))
 
 
+def _moment(when) -> datetime:
+    """The date a sweep runs on, in UTC: a datetime with its time zone, or a date, taken at midnight UTC."""
+    if isinstance(when, datetime):
+        require(when.tzinfo is not None, "invalid_argument", "the sweep's date needs its time zone")
+        return when.astimezone(timezone.utc)
+    require(isinstance(when, date), "invalid_argument", "the sweep needs the date it runs on")
+    return datetime(when.year, when.month, when.day, tzinfo=timezone.utc)
+
+
 class Store:
     def __init__(self, path, *, clock: Optional[Callable[[], datetime]] = None, lease: timedelta = LEASE):
         self.path = Path(path)
@@ -169,6 +192,9 @@ class Store:
         itself is never rewritten: it keeps what was written at the time.
 
         1. The status `done` is called `closed` (owner answer P25, build-plan section 25).
+        2. A closed ticket is deleted in time (owner answers S-del and S-period, build-plan sections 28
+           and 29): the older delete guards, which refused every delete, give way to the ones in SCHEMA,
+           which let the store delete a closed ticket and nothing else. No item changes.
         """
         with self.transaction() as db:
             version = db.execute("PRAGMA user_version").fetchone()[0]
@@ -182,6 +208,9 @@ class Store:
                     self.write_journal(db, number, SYSTEM, SYSTEM, "migrated", {
                         "status": {"before": "done", "after": CLOSED},
                         "reason": "the status done is called closed (owner answer P25, build-plan section 25)"})
+            if version < 2:
+                db.execute("DROP TRIGGER IF EXISTS items_no_delete")
+                db.execute("DROP TRIGGER IF EXISTS journal_no_delete")
             db.execute(f"PRAGMA user_version={VERSION}")
 
     def ensure(self, script: str) -> None:
@@ -234,9 +263,10 @@ class Store:
             db.close()
 
     def write_journal(self, db, item: Optional[int], actor: str, role: str, action: str,
-                      details: Optional[dict] = None) -> int:
+                      details: Optional[dict] = None, *, at: Optional[str] = None) -> int:
+        """One journal entry, stamped now, or at `at` (the sweep's date: it reads no clock)."""
         cursor = db.execute("INSERT INTO journal (item, actor, role, action, details, at) VALUES (?,?,?,?,?,?)",
-                            (item, actor, role, action, _encode(details or {}), self.now()))
+                            (item, actor, role, action, _encode(details or {}), at or self.now()))
         return cursor.lastrowid
 
     # -- users and roles ------------------------------------------------------------------
@@ -608,6 +638,85 @@ class Store:
         with self.transaction() as db:
             self._created(db, number, actor)
             return self.update(db, number, actor, action="reposted", status="open")
+
+    # -- closed tickets are deleted in time ------------------------------------------------------
+
+    def _last_reaction(self, db, number: int) -> Optional[datetime]:
+        """When anyone last wrote on a ticket: its latest journal entry, or the latest on a document about
+        it (a comment, an amendment, a finding about it)."""
+        at = db.execute("SELECT MAX(at) FROM journal WHERE item = ? OR item IN"
+                        " (SELECT source FROM links WHERE type = 'about' AND target = ?)", (number, number)).fetchone()[0]
+        return datetime.fromisoformat(at) if at else None
+
+    def _idle(self, db, number: int, cutoff: datetime) -> bool:
+        """Whether a task is closed and nobody has written on it since `cutoff`."""
+        row = db.execute("SELECT status FROM items WHERE number = ? AND kind = 'task'", (number,)).fetchone()
+        last = self._last_reaction(db, number) if row is not None and row[0] == CLOSED else None
+        return last is not None and last < cutoff
+
+    def _closed_at(self, db, number: int) -> str:
+        """When a closed task was closed: the latest journal entry that moved it to closed."""
+        for at, details in db.execute("SELECT at, details FROM journal WHERE item = ? ORDER BY seq DESC", (number,)):
+            status = json.loads(details).get("status")
+            if isinstance(status, dict) and status.get("after") == CLOSED:
+                return at
+        return db.execute("SELECT updated_at FROM items WHERE number = ?", (number,)).fetchone()[0]
+
+    def _delete(self, db, number: int, actor: str, role: str, at: str) -> None:
+        """Delete a closed task inside an open transaction (owner answers S-del and S-keep, build-plan
+        section 28). First one audit line: an entry on no item, with the task's number, when it was
+        closed and when it is deleted, and no content. Then the task, its journal, its links, and the
+        documents only about it, with their journals and links. The database refuses any row this does
+        not mark in `deleting`, and any task that is not closed, and a row another kept record refers
+        to (a schema version drafted on the ticket): the transaction is then rolled back whole."""
+        documents = [r[0] for r in db.execute(
+            "SELECT DISTINCT l.source FROM links l JOIN items d ON d.number = l.source"
+            " WHERE l.type = 'about' AND l.target = ? AND d.kind = 'document' AND NOT EXISTS"
+            " (SELECT 1 FROM links o WHERE o.source = l.source AND o.type = 'about' AND o.target != ?)",
+            (number, number))]
+        gone = [number, *documents]
+        marks = _marks(gone)
+        self.write_journal(db, None, actor, role, "deleted",
+                           {"ticket": number, "closed_at": self._closed_at(db, number), "deleted_at": at}, at=at)
+        db.executemany("INSERT INTO deleting (number) VALUES (?)", [(n,) for n in gone])
+        db.execute(f"DELETE FROM journal WHERE item IN ({marks})", gone)
+        db.execute(f"DELETE FROM links WHERE source IN ({marks}) OR target IN ({marks})", gone + gone)
+        db.execute(f"DELETE FROM items WHERE number IN ({marks})", gone)
+        db.execute("DELETE FROM deleting")
+
+    def sweep(self, today) -> List[int]:
+        """Delete every closed ticket nobody has reacted to for more than CLOSED_RETENTION_DAYS, and
+        return their numbers (owner answers S-del, S-keep and S-period, build-plan sections 28 and 29).
+
+        ``today`` is the date the sweep runs on: a date (taken at midnight UTC) or a datetime with its
+        time zone. The sweep reads no clock, and nothing runs it but a call. A ticket's last reaction is
+        the latest journal entry on it, or on a document about it (a comment, an amendment, a finding
+        about it): the ticket is deleted once that is more than CLOSED_RETENTION_DAYS before
+        ``today``, and kept until then. Each deletion is its own transaction, by `system`: one audit line
+        (the ticket's number, when it was closed and when it was deleted, and no content), then the
+        ticket, its journal and the documents only about it. A finished ticket is never deleted, however
+        old. A closed ticket that a kept record still refers to (a schema version drafted on it) stays:
+        the database refuses to delete it, and the sweep leaves it closed.
+        """
+        moment = _moment(today)
+        stamp, cutoff = moment.isoformat(timespec="seconds"), moment - timedelta(days=CLOSED_RETENTION_DAYS)
+        with self.reading() as db:
+            closed = [r[0] for r in db.execute("SELECT number FROM items WHERE kind = 'task' AND status = ?"
+                                               " ORDER BY number", (CLOSED,)).fetchall()]
+            due = [number for number in closed if self._idle(db, number, cutoff)]
+        deleted = []
+        for number in due:
+            try:
+                with self.transaction() as db:
+                    if not self._idle(db, number, cutoff):
+                        continue  # someone wrote on it, or reposted it, since it was read above
+                    self._delete(db, number, SYSTEM, SYSTEM, stamp)
+            except sqlite3.IntegrityError as error:
+                if "FOREIGN KEY" not in str(error):
+                    raise
+                continue  # a kept record still refers to it: the database keeps it, and so does the sweep
+            deleted.append(number)
+        return deleted
 
     def comment(self, number: int, actor: str, body: str, *, role: Optional[str] = None) -> int:
         """A comment records what happened. Anyone may comment, also on a finished item."""
