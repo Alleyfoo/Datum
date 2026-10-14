@@ -304,6 +304,7 @@ def test_the_documents_only_about_it_go_with_it_and_the_others_stay(store, clock
     shared = store.add_document("ville", "finding", "One supplier", "Both files come from one supplier", about=task)
     store.link("ville", shared, "about", other)
     store.link("ville", task, "blocks", other)
+    store.finish(other, "anna", "Imported and checked")  # the task it blocked waits on it no more
     assert store.sweep(clock() + 31 * DAY) == [task]
     assert (_code(store.get, only), store.journal(only)) == ("unknown_item", [])
     assert (store.get(shared)["title"], store.linked(shared, "about")) == ("One supplier", [other])

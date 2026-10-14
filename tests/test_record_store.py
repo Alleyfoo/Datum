@@ -133,13 +133,12 @@ def test_finishing_hands_the_claim_back(store):
     assert _code(store.claim, task, "pia") == f"item_{CLOSED}"
 
 
-def test_blocked_tasks_are_not_ready_until_the_blocker_is_closed(store):
+def test_blocked_tasks_are_not_ready_until_the_blocker_is_finished(store):
     first = store.add_task("hook", "Create the schema")
     second = store.add_task("hook", "Import the file")
     store.link("ville", first, "blocks", second)
     assert [t["number"] for t in store.ready()] == [first]
-    store.claim(first, "ville")
-    store.close(first, "ville", "No schema is needed after all")
+    store.finish(first, "anna", "The schema is in and correct")
     assert [t["number"] for t in store.ready()] == [second]
 
 
