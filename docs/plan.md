@@ -61,8 +61,9 @@ with origins recorded, rather than merging the labs.
 
 Current status, item by item, is in [backlog.md](backlog.md); the order of the remaining work is in
 [work-order.md](work-order.md). Summary: the schema registry, the synthetic company, the intake chain, the ticket
-store with its end states, the desk views and the customer-service slice are built and tested. The demo surface,
-the analyst tools, the worklist and the MCP protocol server are not built yet.
+store with its end states, the desk views and the customer-service slice are built and tested, and so are the MCP
+protocol server and a synthetic demo run (build-plan section 32, on `build/mcp-server`). The demo surface, the
+analyst tools and the worklist are not built yet.
 
 **Next up.** The intake chain runs end to end on synthetic data: a file is preserved, staged,
 cleaned, tried against its company's schema and routed to a ticket; a new schema version, also an

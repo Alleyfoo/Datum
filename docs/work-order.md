@@ -62,7 +62,10 @@ and round six's four questions (build-plan sections 25 to 31).
 12. **Demo surface (C18) and replay (C19).** A plant map, the conversation replay of the customer-service scene, the
     ticket view and the approval queue. Replays are recorded tool runs, deterministic, hostable. No live model in the
     replay. Demo steps 1 to 5 in [demo.md](demo.md) must run from a clean checkout. The sweep of closed tickets is
-    run by a call with its date; who calls it, and when, belongs here or with the manager's schedule.
+    run by a call with its date; who calls it, and when, belongs here or with the manager's schedule. Started: the
+    demo run (C29, `scripts/demo_run.py`) runs the intake steps, the consultation and a close with one sweep from a
+    clean checkout and writes `demo.json`, each call in the replay format, for the static page (P11-site) to read.
+    Still to build: the page itself, and steps 4 and 5 (the analysis ticket, after C14 and C15).
 13. **Reads still open (Read rows).** R10 (evidence packet), R11 (case and worker separation), R12 (no model in
     execution), R13 (tiers), R16 (workbook reading, mostly done in C2), R19 (forecast methods, needed for C14 only if
     a forecast is shown), R20 (coverage map for the plant view). Each read is recorded in provenance.md with its commit.
@@ -73,7 +76,8 @@ and round six's four questions (build-plan sections 25 to 31).
 
 - Folder watcher (C3b): polling with a stability window; plan only (owner answer Q2).
 - Mail collectors (C24), OCR and PDF (P3), unit conversion (P14), multi-warehouse optimisation (P18 limit).
-- Second domain (C23), live model mode (C21), Claude Desktop connection (C22). The connection is MCP, so any client.
+- Second domain (C23), live model mode (C21). The MCP server exists (C28), so any MCP client connects; the Claude
+  Desktop connection (C22) waits only for the per-call check (C12, P6).
 - Forecast methods per demand group (P4), exception share measurement (P16), interim ERP export format (P17): all need
   real data.
 - Per-call identity check against a real environment (P6), tolerance for fits (P10), ticket grouping (P2).
@@ -95,3 +99,5 @@ and round six's four questions (build-plan sections 25 to 31).
 **Update (2026-10-12, sixth round):** P25-b is answered (`needs_input` under `in_progress`). P11 is answered as a static page built from the records (build-plan section 26). Both are recorded in [build-plan.md](build-plan.md) section 26.
 
 **Update (2026-10-14, round six):** the end states are built on `build/round-six`, not merged (B4): `closed` and `finished`, closing with a reason and the creator's notice, amend, repost and delete, finishing by an approver's decision, and the 30-day sweep. 392 tests pass. The choices and four questions for the owner (R6-Q1 to R6-Q4) are in [build-plan.md](build-plan.md) section 30.
+
+**Update (2026-10-14, MCP server and demo run):** built on `build/mcp-server`, not merged. The MCP protocol server (C28): `python -m babel.mcp.server --store PATH` serves the customer-service tools over stdio, and the README says how a client connects. The synthetic demo run (C29): `scripts/demo_run.py --out DIR` writes the scenario as `demo.json` and `demo.md` beside its record, the same bytes on every run (item 12 above). One defect found on the way, B7 (a decided consultation's receipt labels the reply's check as a draft's), is open in [backlog.md](backlog.md). 441 tests pass. The dependency and the choices the run made are in [build-plan.md](build-plan.md) section 32. Next: the static page that reads `demo.json` (C18, P11-site), then the worklist (item 5).
