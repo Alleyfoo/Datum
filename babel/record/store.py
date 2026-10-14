@@ -61,10 +61,11 @@ FINISHED = "finished"
 TASK_STATUSES = ("open", "in_progress", "needs_input", CLOSED, FINISHED)
 #: the statuses a task's work ends in: its claim is handed back, and it is not claimed, opened or resumed again
 ENDS = (CLOSED, FINISHED)
-#: what a decision document says when a task may be finished on it: an approval, or a finish itself
-FINISHING_DECISIONS = ("approved", "finished")
+#: what a decision document says when a task may be finished on it: an approval, a finish itself, or an
+#: approver's drop of a file, a completed disposition (the owner's decision on R6-Q3, build-plan section 30)
+FINISHING_DECISIONS = ("approved", "finished", "dropped")
 #: the store's version, kept in SQLite's user_version; an older store is brought up to it once, when opened
-VERSION = 3
+VERSION = 4
 DOCUMENT_TYPES = ("decision", "finding")
 LINK_TYPES = ("blocks", "about")
 LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to P22 (build-plan section 20)
@@ -169,6 +170,21 @@ def notice(number: int, creator: str) -> str:
             f"{CLOSED_RETENTION_DAYS} days, it is deleted, with its history.")
 
 
+def _finishes(found: dict) -> Optional[str]:
+    """Why an older store's closed ticket is finished on its last decision, or None (migration steps 3
+    and 4): an approver's approval (owner answer S-finish, build-plan section 29), or a drop of a file by
+    an approver, acting as one (the owner's decision on R6-Q3, section 30), each with a reason. Older
+    code closed the ticket for both."""
+    if not str(found.get("reason") or "").strip():
+        return None
+    if found.get("decision") in ("approved", FINISHED) and found.get("approver"):
+        return "an approver's approval finishes a ticket (owner answer S-finish, build-plan section 29)"
+    if found.get("decision") == "dropped" and found.get("role") == "approver" and found.get("by"):
+        return ("an approver's drop of a file is a completed disposition (the owner's decision on R6-Q3, "
+                "build-plan section 30)")
+    return None
+
+
 def _moment(when) -> datetime:
     """The date a sweep runs on, in UTC: a datetime with its time zone, or a date, taken at midnight UTC."""
     if isinstance(when, datetime):
@@ -210,6 +226,11 @@ class Store:
            decision is an approver's approval, with a reason, is finished: it keeps its whole history
            and is never deleted. Each other closed ticket stays closed and gets the notice to its
            creator now, so its CLOSED_RETENTION_DAYS start when its creator is told. No ticket is lost.
+        4. An approver's drop of a file is a completed disposition (the owner's decision on R6-Q3,
+           build-plan section 30). Older code closed the ticket of every drop. A closed ticket whose last
+           decision is a drop by an approver, acting as one, with a reason, is finished, as step 3
+           finishes an approval's; a drop by a worker stays closed. Steps 3 and 4 look at each closed
+           ticket once, so a ticket they finish is never told it is closed.
         """
         with self.transaction() as db:
             version = db.execute("PRAGMA user_version").fetchone()[0]
@@ -226,21 +247,18 @@ class Store:
             if version < 2:
                 db.execute("DROP TRIGGER IF EXISTS items_no_delete")
                 db.execute("DROP TRIGGER IF EXISTS journal_no_delete")
-            if version < 3:
+            if version < 4:
                 for row in db.execute("SELECT number, data, created_by FROM items WHERE kind='task' AND status=?"
                                       " ORDER BY number", (CLOSED,)).fetchall():
                     number, creator = row["number"], row["created_by"]
                     last = (json.loads(row["data"]).get("decisions") or [None])[-1]
-                    found = self._decision(db, number, last)
-                    if (found.get("decision") in FINISHING_DECISIONS and found.get("approver")
-                            and str(found.get("reason") or "").strip()):
+                    why = _finishes(self._decision(db, number, last))
+                    if why:  # steps 3 and 4
                         db.execute("UPDATE items SET status=?, updated_at=?, version=version+1 WHERE number=?",
                                    (FINISHED, self.now(), number))
                         self.write_journal(db, number, SYSTEM, SYSTEM, "migrated", {
-                            "status": {"before": CLOSED, "after": FINISHED}, "decision": last,
-                            "reason": "an approver's approval finishes a ticket (owner answer S-finish, "
-                                      "build-plan section 29)"})
-                    else:
+                            "status": {"before": CLOSED, "after": FINISHED}, "decision": last, "reason": why})
+                    elif version < 3:  # step 3: a store from version 3 on told the creator when it closed
                         self.write_journal(db, number, SYSTEM, SYSTEM, "notice",
                                            {"to": creator, "text": notice(number, creator)})
             db.execute(f"PRAGMA user_version={VERSION}")

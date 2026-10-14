@@ -95,6 +95,74 @@ def test_a_worker_closes_a_file_it_cannot_process_and_a_notice_follows(store):
     assert store.documents_about(task, "decision") == [] and "resolution" not in store.get(task)["data"]
 
 
+def test_an_approvers_drop_finishes_the_ticket_and_keeps_its_history(store, data_root, clock):
+    # the owner's decision on R6-Q3 (build-plan section 30): an approver's deliberate drop of a file that
+    # is not needed is a completed disposition: finished, with the decision and its reason, never deleted
+    kept = inbox.preserve(data_root, "C-100", FIXTURES / "stock_export_2026-08-21.xlsx")
+    task = _ticket(store)
+    store.release(task, "ville")
+    item = dispositions.drop(store, task, "anna", "Duplicate of last week's export")
+    assert (item["status"], item["claimed_by"], item["data"]["resolution"]) == (FINISHED, None, "dropped")
+    [decision] = store.documents_about(task, "decision")
+    assert (decision["data"]["decision"], decision["data"]["approver"], decision["data"]["reason"]) == (
+        "dropped", "anna", "Duplicate of last week's export")
+    assert item["data"]["decisions"] == [decision["number"]]
+    claimed, dropped = store.journal(task)[-2:]
+    assert (claimed["actor"], claimed["action"], dropped["actor"], dropped["role"], dropped["action"]) == (
+        "anna", "claimed", "anna", "approver", "dropped")
+    assert dropped["details"]["status"] == {"before": "open", "after": FINISHED}
+    assert "notice" not in [e["action"] for e in store.journal(task)]  # finished: nothing to tell
+    history = store.journal(task)
+    clock.advance(days=3650)
+    assert store.sweep(clock()) == []
+    assert (store.get(task)["status"], store.journal(task)) == (FINISHED, history)
+    assert kept.path.exists() and inbox.verify(data_root, "C-100", kept.source_id)["matches"]
+
+
+def test_a_worker_does_not_drop_a_file_and_an_approvers_drop_respects_anothers_lease(store, clock):
+    task = _ticket(store)  # ville, a worker, holds it
+    assert _code(dispositions.drop, store, task, "ville", "Not needed") == "role_missing"
+    store.add_user("drafting-assistant", ["worker"], kind="agent")
+    assert _code(dispositions.drop, store, task, "drafting-assistant", "Not needed") == "role_missing"
+    assert _code(dispositions.drop, store, task, "anna", "Not needed") == "claim_conflict"  # ville's live lease
+    assert (store.get(task)["status"], store.documents_about(task, "decision")) == ("open", [])
+    clock.advance(seconds=store.lease.total_seconds() + 60)
+    assert dispositions.drop(store, task, "anna", "Not needed")["status"] == FINISHED
+
+
+def test_a_workers_proposed_drop_waits_for_an_approver_whose_approval_finishes_the_ticket(store):
+    # the owner's decision on R6-Q3: a worker's decision to discard data goes to an approver before it is final
+    task = _ticket(store)
+    dispositions.propose(store, task, "ville", "drop", "Duplicate of last week's export", payload=SUBJECT)
+    item = store.get(task)
+    assert (item["status"], item["claimed_by"], "resolution" in item["data"]) == ("needs_input", None, False)
+    [waiting] = queue.pending(store)
+    assert (waiting["number"], waiting["action"], waiting["proposed_by"], waiting["payload"]) == (
+        task, "drop", "ville", SUBJECT)
+    assert _code(dispositions.drop, store, task, "anna", "Not needed") == "proposal_pending"  # decided in the queue
+    assert _code(dispositions.approve_drop, store, task, "ville", "Fine") == "role_missing"
+    item = dispositions.approve_drop(store, task, "anna", "Yes: the same rows as last week")
+    assert (item["status"], item["data"]["resolution"]) == (FINISHED, "dropped")
+    [decision] = store.documents_about(task, "decision")
+    assert (decision["data"]["decision"], decision["data"]["action"], decision["data"]["approver"]) == (
+        "approved", "drop", "anna")
+    assert decision["data"]["dropped"] == SUBJECT and "The file stays in the inbox" in decision["body"]
+
+
+def test_a_proposed_drop_names_the_tickets_own_file_and_a_rejection_sends_it_back(store):
+    task = _ticket(store)
+    assert _code(dispositions.propose, store, task, "ville", "drop", "Not needed", payload={}) == "invalid_argument"
+    assert _code(dispositions.propose, store, task, "ville", "drop", "Not needed",
+                 payload={**SUBJECT, "source_id": "src_2"}) == "invalid_argument"
+    plain = store.add_task("hook", "Not about a file")
+    store.claim(plain, "ville")
+    assert _code(dispositions.propose, store, plain, "ville", "drop", "Not needed", payload=SUBJECT) == "invalid_argument"
+    dispositions.propose(store, task, "ville", "drop", "Not needed", payload=SUBJECT)
+    item = dispositions.reject(store, task, "anna", "We need this export: it is the corrected one")
+    assert (item["status"], item["claimed_by"], "resolution" in item["data"]) == ("open", None, False)
+    assert [t["number"] for t in store.ready()] == [task]
+
+
 def test_a_file_is_accepted_once_and_stays_accepted(store):
     first = _ticket(store)
     dispositions.propose(store, first, "ville", "import", "fits", payload=_import(store, first))

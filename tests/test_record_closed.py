@@ -355,6 +355,56 @@ def test_an_older_store_finishes_its_approved_closed_tickets_and_tells_the_creat
     assert len(reopened.journal()) == entries
 
 
+def _as_round_six_left_it(store):
+    """Leave the store as round six wrote it: no guard on how a ticket is created or closed, and version 3."""
+    db = sqlite3.connect(store.path)
+    try:
+        db.executescript("""
+            DROP TRIGGER IF EXISTS items_closed_with_a_reason;
+            DROP TRIGGER IF EXISTS items_created_open;
+            DROP TABLE IF EXISTS closing;
+            PRAGMA user_version=3;""")
+    finally:
+        db.close()
+
+
+@pytest.mark.parametrize("older, told", [(_with_the_old_guards, True), (_as_round_six_left_it, False)],
+                         ids=["round five", "round six"])
+def test_an_older_store_finishes_what_its_approvers_dropped_and_keeps_its_workers_drops_closed(
+        store, clock, older, told):
+    # the owner's decision on R6-Q3 (build-plan section 30): older code closed the ticket of every drop
+    by_approver, by_worker = store.add_task("hook", "Week 33 export"), store.add_task("hook", "Week 34 export")
+    decisions = {}
+    for number, by, role in ((by_approver, "anna", "approver"), (by_worker, "ville", "worker")):
+        decisions[number] = store.add_document(
+            by, "decision", f"Dropped: #{number}", f"Dropped by {by} ({role}): a duplicate",
+            data={"decision": "dropped", "disposition": "drop", "ticket": number, "by": by, "role": role,
+                  "reason": "A duplicate of last week's export"}, about=number, role=role)
+    older(store)
+    db = sqlite3.connect(store.path)
+    try:  # as older code left a drop: the decision on the ticket, and the ticket closed
+        for number, decision in decisions.items():
+            db.execute("UPDATE items SET status='closed', data=? WHERE number=?",
+                       (json.dumps({"decisions": [decision]}), number))
+        db.commit()
+    finally:
+        db.close()
+    clock.advance(hours=1)
+    reopened = Store(store.path, clock=clock)
+    assert [reopened.get(n)["status"] for n in (by_approver, by_worker)] == [FINISHED, CLOSED]
+    migrated = reopened.journal(by_approver)[-1]
+    assert (migrated["actor"], migrated["action"], migrated["at"]) == ("system", "migrated", reopened.now())
+    assert (migrated["details"]["status"], migrated["details"]["decision"]) == (
+        {"before": "closed", "after": "finished"}, decisions[by_approver])
+    assert "notice" not in [e["action"] for e in reopened.journal(by_approver)]  # never told it is closed
+    # a worker's drop stays closed; round five's store tells its creator now, round six told it at the close
+    assert ("notice" in [e["action"] for e in reopened.journal(by_worker)]) is told
+    entries = len(reopened.journal())
+    Store(store.path, clock=clock)  # opened again: the steps have run, and nothing more changes
+    assert len(reopened.journal()) == entries
+    assert reopened.sweep(clock() + 3650 * DAY) == [by_worker]  # the finished one is never deleted
+
+
 def test_an_older_store_opens_with_every_ticket_and_lets_a_closed_one_go_in_time(store, clock):
     closed, working = _closed(store), store.add_task("hook", "Another file arrived")
     _with_the_old_guards(store)
