@@ -91,6 +91,87 @@ def test_whatever_closes_a_ticket_its_creator_is_notified(store):
         assert (told["action"], told["details"]) == ("notice", {"to": creator, "text": notice(number, creator)})
 
 
+def test_set_status_never_closes_a_ticket_close_does_with_its_reason(store):
+    # the owner's decision on R6-Q4 (build-plan section 30): no reasonless closure
+    task = store.add_task("pia", "Stock export from C-100")
+    store.claim(task, "ville")
+    with pytest.raises(RecordError, match=rf"#{task} is closed only with a reason: close\(number, actor, reason\)") as refused:
+        store.set_status(task, "ville", CLOSED)
+    assert refused.value.code == "reason_required"
+    assert store.get(task)["status"] == "open"
+    assert [e["action"] for e in store.journal(task)] == ["created", "claimed"]  # no close and no notice
+    assert store.close(task, "ville", "The supplier no longer sends this export")["status"] == CLOSED
+
+
+def test_no_path_closes_a_ticket_without_its_reason_the_worker_role_and_the_claim(store):
+    # the check sits at the store's boundary, Store.update, which every change of status goes through
+    task = store.add_task("pia", "Stock export from C-100")
+    store.claim(task, "ville")
+    for actor, role, note, code in [
+            ("ville", None, None, "reason_required"),
+            ("ville", None, {"reason": "  "}, "reason_required"),
+            ("ville", None, {"decision": 7}, "reason_required"),
+            ("anna", None, {"reason": "Not ours"}, "role_missing"),  # an approver who decides never closes
+            ("pia", "approver", {"reason": "Not ours"}, "role_missing"),
+            ("pia", None, {"reason": "Not ours"}, "claim_required")]:  # a worker, but ville holds the claim
+        with pytest.raises(RecordError) as refused:
+            with store.transaction() as db:
+                store.update(db, task, actor, role=role, note=note, status=CLOSED)
+        assert refused.value.code == code, (actor, role, note)
+    waiting = store.add_task("pia", "Week 35 export")
+    store.claim(waiting, "ville")
+    queue.propose(store, waiting, "ville", "import", "Fits the schema")
+    with pytest.raises(RecordError) as refused:  # an approval whose effect would close the ticket
+        queue.approve(store, waiting, "anna", "Not ours after all", effect=lambda db, item, proposal: {"status": CLOSED})
+    assert (refused.value.code, store.journal(waiting)[-1]["action"]) == ("role_missing", "approval_refused")
+    for status in (CLOSED, FINISHED):  # nor is a task created closed, or finished
+        with pytest.raises(RecordError) as refused:
+            with store.transaction() as db:
+                store.create_item(db, "pia", "task", "task", "Born ended", status=status)
+        assert refused.value.code == "invalid_status"
+    assert [store.get(n)["status"] for n in (task, waiting)] == ["open", "needs_input"]
+    assert "notice" not in [e["action"] for e in store.journal()]
+
+
+def test_the_database_refuses_a_close_the_store_has_not_marked_with_its_actor_and_reason(store):
+    task = store.add_task("pia", "Stock export from C-100")
+    db = sqlite3.connect(store.path)
+    try:
+        with pytest.raises(sqlite3.DatabaseError, match="a ticket is closed only by close"):
+            db.execute("UPDATE items SET status='closed' WHERE number=?", (task,))
+        for status in ("closed", "finished"):
+            with pytest.raises(sqlite3.DatabaseError, match="a task is never created closed or finished"):
+                db.execute("INSERT INTO items (kind, type, title, body, data, status, created_by, created_at,"
+                           " updated_at, version) VALUES ('task', 'task', 'Born ended', '', '{}', ?, 'pia', '', '', 1)",
+                           (status,))
+    finally:
+        db.rollback()
+        db.close()
+    assert [i["status"] for i in store.items()] == ["open"]
+
+
+def test_every_close_records_who_closed_the_ticket_and_why(store, clock):
+    old = store.add_task("pia", "Week 32 export")
+    db = sqlite3.connect(store.path)
+    try:  # as the code before P25 left a close: the status done, and a store without a version
+        db.execute("UPDATE items SET status='done' WHERE number=?", (old,))
+        db.execute("PRAGMA user_version=0")
+        db.commit()
+    finally:
+        db.close()
+    reopened = Store(store.path, clock=clock)  # the migration closes it, as the store's own system user
+    task = _closed(reopened)
+    call = cons.start(reopened, "ville", "Consultation: Customer one", subject={})["number"]
+    cons.close(reopened, call, "ville", "The customer's machine is not one of ours")
+    closes = [e for e in reopened.journal() if (e["details"].get("status") or {}).get("after") == CLOSED]
+    assert [(e["item"], e["actor"], e["details"]["reason"]) for e in closes] == [
+        (old, "system", "the status done is called closed (owner answer P25, build-plan section 25)"),
+        (task, "ville", "The supplier no longer sends this export"),
+        (call, "ville", "The customer's machine is not one of ours")]
+    with reopened.reading() as db:  # the database's mark lasts for the closing transaction only
+        assert db.execute("SELECT COUNT(*) FROM closing").fetchone()[0] == 0
+
+
 def test_the_creator_amends_a_closed_ticket_and_each_amendment_keeps_the_text_before_and_after(store):
     task = _closed(store)
     amended = store.amend(task, "pia", title="Stock export from C-100, week 35")

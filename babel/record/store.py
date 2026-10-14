@@ -25,12 +25,15 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   `done` for `closed` before (P25, section 25), and closed a ticket for every end, an approval's
   too; migration steps, run once when an older store opens, rename it, and finish the closed
   tickets an approval ended;
-- a worker closes a task that cannot be finished, with the reason (S-close, section 29), and
-  whatever path closes a task, a notice on it tells its creator (the item's `created_by`). The
-  creator may amend its title or body, each amendment a journal entry with the text before and
-  after, and repost it: open again, with its history; or delete it (S-closed, section 27). A
-  closed ticket nobody reacts to for CLOSED_RETENTION_DAYS is deleted by the sweep, which runs
-  only when called, on the date it is given (S-period, section 29).
+- a worker closes a task that cannot be finished, with the reason (S-close, section 29). That is
+  the only way a task is closed (the owner's decision on R6-Q4, section 30): every path to
+  `closed` goes through `update`, which refuses a close that lacks the reason, the worker role or
+  the worker's claim, and the database refuses a close the store has not marked with its actor
+  and reason, and a task created closed or finished. A notice on a closed task tells its creator
+  (the item's `created_by`). The creator may amend its title or body, each amendment a journal
+  entry with the text before and after, and repost it: open again, with its history; or delete it
+  (S-closed, section 27). A closed ticket nobody reacts to for CLOSED_RETENTION_DAYS is deleted by
+  the sweep, which runs only when called, on the date it is given (S-period, section 29).
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -116,6 +119,17 @@ CREATE TABLE IF NOT EXISTS journal (
     at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS deleting (
     number INTEGER PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS closing (
+    number INTEGER PRIMARY KEY,
+    actor TEXT NOT NULL REFERENCES users(name),
+    reason TEXT NOT NULL CHECK (trim(reason) != ''));
+CREATE TRIGGER IF NOT EXISTS items_closed_with_a_reason BEFORE UPDATE OF status ON items
+WHEN NEW.status = '{CLOSED}' AND OLD.status IS NOT '{CLOSED}'
+     AND NOT EXISTS (SELECT 1 FROM closing WHERE number = NEW.number)
+BEGIN SELECT RAISE(ABORT, 'a ticket is closed only by close(), which records who closed it and why'); END;
+CREATE TRIGGER IF NOT EXISTS items_created_open BEFORE INSERT ON items
+WHEN NEW.kind = 'task' AND NEW.status IN ('{CLOSED}', '{FINISHED}')
+BEGIN SELECT RAISE(ABORT, 'a task is never created closed or finished: close() closes it, and only an approver finishes it'); END;
 CREATE TRIGGER IF NOT EXISTS journal_no_update BEFORE UPDATE ON journal
 BEGIN SELECT RAISE(ABORT, 'the journal is append-only'); END;
 CREATE TRIGGER IF NOT EXISTS journal_no_delete_but_closed BEFORE DELETE ON journal
@@ -129,6 +143,9 @@ BEGIN SELECT RAISE(ABORT, 'items are never deleted, but a closed ticket and its 
 # `deleting` holds the numbers the store deletes, inside the one transaction that deletes them, and is
 # empty at every other time: the two delete guards refuse every row it does not name, and any task that
 # is not closed. Only _delete fills it. AUTOINCREMENT keeps a deleted number from being used again.
+# `closing` holds the task the store closes, with who closes it and why, inside the transaction that
+# closes it, and is empty at every other time: the close guard refuses any change to `closed` it does not
+# name (the owner's decision on R6-Q4: no reasonless closure). Only update and the migration fill it.
 
 
 class RecordError(ValueError):
@@ -237,13 +254,16 @@ class Store:
             if version >= VERSION:
                 return  # another connection brought it up while this one waited for the lock
             if version < 1:
+                reason = "the status done is called closed (owner answer P25, build-plan section 25)"
                 for (number,) in db.execute("SELECT number FROM items WHERE kind='task' AND status='done'"
                                             " ORDER BY number").fetchall():
+                    # the close guard lets a ticket become closed only with its actor and reason marked
+                    db.execute("INSERT INTO closing (number, actor, reason) VALUES (?,?,?)", (number, SYSTEM, reason))
                     db.execute("UPDATE items SET status=?, updated_at=?, version=version+1 WHERE number=?",
                                (CLOSED, self.now(), number))
+                    db.execute("DELETE FROM closing WHERE number=?", (number,))
                     self.write_journal(db, number, SYSTEM, SYSTEM, "migrated", {
-                        "status": {"before": "done", "after": CLOSED},
-                        "reason": "the status done is called closed (owner answer P25, build-plan section 25)"})
+                        "status": {"before": "done", "after": CLOSED}, "reason": reason})
             if version < 2:
                 db.execute("DROP TRIGGER IF EXISTS items_no_delete")
                 db.execute("DROP TRIGGER IF EXISTS journal_no_delete")
@@ -396,6 +416,9 @@ class Store:
                     data: Optional[dict] = None, status: str, origin: Optional[str] = None,
                     role: Optional[str] = None) -> int:
         title = text(title, "title", 200)
+        require(kind != "task" or status not in ENDS, "invalid_status",
+                "a task is never created closed or finished: close() closes it, with its reason, and only an "
+                "approver's decision finishes it")
         stamp = self.now()
         cursor = db.execute(
             "INSERT INTO items (kind, type, title, body, data, status, origin, created_by, created_at,"
@@ -440,11 +463,14 @@ class Store:
                note: Optional[dict] = None, **fields) -> dict:
         """Change fields of an item inside an open transaction; one journal entry per call.
 
-        `note` adds details to that entry, such as the reason a person gave. A finished task's status
+        `note` adds details to that entry, such as the reason a person gave. This is the boundary every
+        change of a task's status goes through, whichever path asks for it. A finished task's status
         never changes again, and a task becomes finished only in an approver's update whose note
-        names the decision it rests on (`_decided`), whatever path leads there (owner answer S-finish).
-        Whatever path closes a task, a second entry follows the first: a notice to its creator, by
-        `system`, that it is closed and what they may do (`notice`; owner answer S-closed).
+        names the decision it rests on (`_decided`; owner answer S-finish). A task becomes closed only
+        in an update by a worker who holds its claim, whose note gives the reason (`_closer`; the
+        owner's decision on R6-Q4), and the database refuses a close this has not marked. A second
+        entry follows a close: a notice to the task's creator, by `system`, that it is closed and what
+        they may do (`notice`; owner answer S-closed).
         """
         item = self._item(db, number)
         require(expected_version is None or expected_version == item["version"], "version_conflict",
@@ -463,13 +489,21 @@ class Store:
                         f"#{number} is {CLOSED}: it could not be finished, and does not reach the finished list")
                 role = self.approver(db, actor)  # a worker, an agent or a service account never finishes
                 self._decided(db, number, actor, (note or {}).get("decision"))
+            elif changes["status"] == CLOSED:
+                role = self._closer(db, item, actor, role, note)
         if not changes and not note:
             return item
         if changes:
             columns = {k: (_encode(v) if k == "data" else v) for k, v in changes.items()}
             assignments = ", ".join(f"{k}=?" for k in columns)
+            closes = changes.get("status") == CLOSED
+            if closes:  # the close guard's mark: who closes it, and why, for this transaction only
+                db.execute("INSERT INTO closing (number, actor, reason) VALUES (?,?,?)",
+                           (number, actor, note["reason"]))
             db.execute(f"UPDATE items SET {assignments}, updated_at=?, version=version+1 WHERE number=?",
                        (*columns.values(), self.now(), number))
+            if closes:
+                db.execute("DELETE FROM closing WHERE number=?", (number,))
         details = dict(note or {})
         details.update({k: {"before": item[k], "after": v} for k, v in changes.items() if k != "data"})
         if "data" in changes:
@@ -504,6 +538,25 @@ class Store:
         require(found.get("approver") == approver and found.get("decision") in FINISHING_DECISIONS
                 and str(found.get("reason") or "").strip() != "", "decision_required",
                 f"#{number} is {FINISHED} only with a decision an approver records about it, with a reason")
+
+    def _closer(self, db, item: dict, actor: str, role: Optional[str], note: Optional[dict]) -> str:
+        """Require what every close needs, whatever path asks for it (owner answers S-close and S-closed,
+        build-plan sections 27 and 29, and the owner's decision on R6-Q4, section 30): the reason, in the
+        update's note; a worker, acting as one (an approver who decides, an agent without the worker
+        role, a service account never closes); the worker's live claim; and no proposal waiting for an
+        approver, who decides it first. Returns the role the close is taken in."""
+        number = item["number"]
+        reason = (note or {}).get("reason")
+        require(isinstance(reason, str) and reason.strip() != "", "reason_required",
+                f"#{number} is {CLOSED} only with a reason: close(number, actor, reason) records who closed it and why")
+        role = self.acting_role(db, actor, role or "worker")
+        require(role == "worker", "role_missing", f"a worker closes a ticket; {actor} acts as {role} here")
+        if item["claimed_by"] == actor and not item["lease_active"]:
+            raise RecordError("claim_expired", f"your lease on #{number} ran out at {item['lease_until']}; claim it again")
+        require(item["claimed_by"] == actor, "claim_required", f"claim #{number} before closing it")
+        require(not item["data"].get("proposal"), "proposal_pending",
+                f"#{number} waits on a proposal: an approver decides it first, in the approval queue")
+        return role
 
     # -- claims as leases ---------------------------------------------------------------------
 
@@ -621,6 +674,9 @@ class Store:
 
     def set_status(self, number: int, actor: str, status: str, *, role: Optional[str] = None,
                    expected_version: Optional[int] = None) -> dict:
+        """The holder changes a task's status. It never closes one: a close needs its reason, so the
+        boundary (`update`) refuses it here, and close() is the way (the owner's decision on R6-Q4,
+        build-plan section 30); nor does it finish one, which needs an approver's decision."""
         with self.transaction() as db:
             self.hold(db, number, actor)
             return self.update(db, number, actor, role=role, expected_version=expected_version,
@@ -641,13 +697,11 @@ class Store:
             return self.closing(db, number, actor, reason)
 
     def closing(self, db, number: int, actor: str, reason: str) -> dict:
-        """`close` inside an open transaction."""
+        """`close` inside an open transaction. The boundary (`update`, `_closer`) checks the worker role,
+        the claim and that no proposal waits; this checks the reason's text first."""
         reason = text(reason, "reason")
-        item = self.hold(db, number, actor)  # the actor's live claim; refuses a task whose work has ended
-        role = self.acting_role(db, actor, "worker")
-        require(not item["data"].get("proposal"), "proposal_pending",
-                f"#{number} waits on a proposal: an approver decides it first, in the approval queue")
-        return self.update(db, number, actor, role=role, action=CLOSED, note={"reason": reason}, status=CLOSED)
+        self.hold(db, number, actor)  # the actor's live claim; refuses a task whose work has ended
+        return self.update(db, number, actor, role="worker", action=CLOSED, note={"reason": reason}, status=CLOSED)
 
     def finish(self, number: int, approver: str, decision: str) -> dict:
         """Finish a task: it is done and correct (owner answers S-finished and S-finish, build-plan
