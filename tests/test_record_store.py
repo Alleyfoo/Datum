@@ -128,7 +128,8 @@ def test_finishing_hands_the_claim_back(store):
     store.claim(task, "ville")
     closed = store.set_status(task, "ville", CLOSED)
     assert (closed["status"], closed["claimed_by"], closed["lease_until"]) == (CLOSED, None, None)
-    assert store.journal(task)[-1]["details"]["released"] == "ville"
+    [entry] = [e for e in store.journal(task) if e["action"] == "status_changed"]  # the entry that closed it
+    assert entry["details"]["released"] == "ville"
     assert _code(store.claim, task, "pia") == f"item_{CLOSED}"
 
 
@@ -318,7 +319,8 @@ def test_done_is_called_closed_among_a_tasks_statuses(store):
     store.claim(task, "ville")
     assert _code(store.set_status, task, "ville", "done") == "invalid_status"
     closed = store.set_status(task, "ville", "closed")
-    assert store.journal(task)[-1]["details"]["status"] == {"before": "open", "after": "closed"}
+    [entry] = [e for e in store.journal(task) if e["action"] == "status_changed"]  # the entry that closed it
+    assert entry["details"]["status"] == {"before": "open", "after": "closed"}
     with pytest.raises(RecordError, match=f"#{task} is closed") as refused:
         store.claim(task, "pia")
     assert (closed["status"], refused.value.code) == ("closed", "item_closed")
