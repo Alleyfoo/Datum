@@ -21,7 +21,9 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   is done and correct; only an approver finishes it, with a decision recorded about it, with a
   reason (S-finish), and it stays finished, with its whole history (S-finished). The store kept
   `done` for `closed` before (P25, section 25); one migration step, run once when an older store
-  opens, renamed it.
+  opens, renamed it;
+- the creator of a closed ticket (the item's `created_by`) may amend its title or body, each
+  amendment a journal entry with the text before and after (S-closed, section 27).
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -566,6 +568,37 @@ class Store:
         data = {**item["data"], "decisions": item["data"].get("decisions", []) + [document]}
         return self.update(db, number, approver, role=role, action=FINISHED,
                            note={"reason": decision, "decision": document}, data=data, status=FINISHED)
+
+    # -- what the creator does with a closed ticket ----------------------------------------------
+
+    def _created(self, db, number: int, actor: str) -> dict:
+        """A closed task that the actor created: its creator is the item's `created_by` (owner answer
+        S-closed, build-plan section 27: the creator amends and reposts it, or deletes it)."""
+        item = self._item(db, number)
+        require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
+        require(item["created_by"] == actor, "not_the_creator",
+                f"#{number} was created by {item['created_by']}: only its creator does this")
+        require(item["status"] == CLOSED, "not_closed",
+                f"#{number} is {item['status']}: only a {CLOSED} ticket is amended, reposted or deleted by its creator")
+        return item
+
+    def amend(self, number: int, actor: str, *, title: Optional[str] = None, body: Optional[str] = None) -> dict:
+        """The creator amends a closed ticket: a new title, a new body, or both (owner answer S-closed).
+
+        Each amendment is one journal entry with the text before and after it. The ticket stays closed
+        until its creator reposts it; nothing else about it changes.
+        """
+        fields = {}
+        if title is not None:
+            fields["title"] = text(title, "title", 200)
+        if body is not None:
+            fields["body"] = text(body, "body", 20_000)
+        require(bool(fields), "invalid_argument", "an amendment gives a new title, a new body or both")
+        with self.transaction() as db:
+            item = self._created(db, number, actor)
+            require(any(item[k] != v for k, v in fields.items()), "nothing_changed",
+                    f"#{number} says that already: the amendment changes nothing")
+            return self.update(db, number, actor, action="amended", **fields)
 
     def comment(self, number: int, actor: str, body: str, *, role: Optional[str] = None) -> int:
         """A comment records what happened. Anyone may comment, also on a finished item."""
