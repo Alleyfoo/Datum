@@ -11,7 +11,8 @@ holder's claim and is an attributed journal entry:
 - each question asked: answered with its facts and receipt, or open while it waits for a fact only
   the person knows (asked again once the person has answered, it is answered);
 - each check run on a drafted answer;
-- the proposed reply, through the approval queue (C6). Nothing is sent: an approver decides.
+- the proposed reply, through the approval queue (C6). Nothing is sent: an approver decides, and an
+  approval finishes the consultation (S-finish).
 
 The domain pack supplies the subject, the facts and the texts; this module keeps them, pages the
 questions and draws the receipt. It knows no domain, calls no model and reads no clock of its own.
@@ -191,7 +192,7 @@ def finish(store: Store, number: int, approver: str, decision: str) -> dict:
     S-finish, build-plan sections 27 and 29). Only a named person with the approver role finishes it,
     with the decision in their own words, kept as a decision document about it; it goes to the finished
     list with its whole history. A worker never finishes one, and a reply waiting in the approval queue
-    is decided there instead."""
+    is decided there instead, where an approval finishes the consultation too."""
     with store.transaction() as db:
         _consultation(store._item(db, number))
         return store.finishing(db, number, approver, decision)

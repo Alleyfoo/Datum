@@ -4,7 +4,9 @@ It replaces the lab's command-line review script with a step inside the ticket f
 of a ticket proposes an action with a reason; the ticket is parked (`needs_input`) and the claim
 handed back, so it waits in the queue for any approver. Only a person who holds the approver role
 and whose name is not agent-like decides. Approving or rejecting writes a decision document about
-the ticket with the approver's name and reason, and every step is a journal entry.
+the ticket with the approver's name and reason, and every step is a journal entry. An approval is
+the decision an approver records about the ticket, with a reason, so it finishes the ticket (owner
+answer S-finish, build-plan section 29); a rejection sends it back to the workers.
 
 An approval may carry an effect: the action's own record, written in the same transaction. If the
 effect refuses, nothing changes except a journal entry that records the refusal and its reason.
@@ -14,7 +16,7 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional
 
-from .store import CLOSED, ENDS, RecordError, Store, require, text
+from .store import ENDS, FINISHED, RecordError, Store, require, text
 
 #: effect(db, ticket, proposal) -> None or a dict with any of: "status", "title", "data",
 #: "proposal" (the next step, which parks the ticket again), "record" (kept on the decision),
@@ -79,7 +81,8 @@ def _refused(store: Store, number: int, actor: str, verb: str, error: RecordErro
 
 def approve(store: Store, number: int, approver: str, reason: str, *, effect: Optional[Effect] = None,
             expect: Optional[str] = None) -> dict:
-    """Approve what a ticket waits on. Without an effect saying otherwise, the ticket is closed."""
+    """Approve what a ticket waits on. Without an effect saying otherwise, the ticket is finished: the
+    approval is the approver's decision about it, with a reason (S-finish)."""
     reason = text(reason, "reason")
     try:
         with store.transaction() as db:
@@ -104,7 +107,7 @@ def approve(store: Store, number: int, approver: str, reason: str, *, effect: Op
             follow = outcome.get("proposal")
             if follow:
                 data["proposal"] = {"payload": {}, **follow, "by": approver, "role": role, "at": store.now()}
-            fields = {"data": data, "status": outcome.get("status", "needs_input" if follow else CLOSED)}
+            fields = {"data": data, "status": outcome.get("status", "needs_input" if follow else FINISHED)}
             if outcome.get("title"):
                 fields["title"] = outcome["title"]
             updated = store.update(db, number, approver, role=role, action="approved",

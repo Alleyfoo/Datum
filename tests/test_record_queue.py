@@ -1,7 +1,7 @@
 import pytest
 
 from babel.record import queue
-from babel.record.store import ENDS, RecordError
+from babel.record.store import ENDS, FINISHED, RecordError
 
 
 def _code(call, *args, **kwargs):
@@ -67,6 +67,16 @@ def test_an_approval_is_a_named_decision_document_about_the_ticket(store):
     approved = [e for e in store.journal(task) if e["action"] == "approved"][0]
     assert (approved["actor"], approved["role"], approved["details"]["decision"]) == ("anna", "approver", decision["number"])
     assert queue.pending(store) == []
+
+
+def test_an_approval_finishes_the_ticket(store):
+    # S-finish (build-plan section 29): an approval is a decision an approver records about it, with a reason
+    task = _proposed(store)
+    finished = queue.approve(store, task, "anna", "Checked the trial; admit it")
+    assert (finished["status"], finished["claimed_by"]) == (FINISHED, None)
+    approved = [e for e in store.journal(task) if e["action"] == "approved"][0]
+    assert approved["details"]["status"] == {"before": "needs_input", "after": "finished"}
+    assert _code(store.claim, task, "pia") == "item_finished"
 
 
 def test_the_drafter_may_also_approve_when_holding_both_roles(store):

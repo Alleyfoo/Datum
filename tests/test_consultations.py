@@ -161,6 +161,16 @@ def test_a_proposed_reply_waits_for_an_approver_and_nothing_is_sent(store):
     assert card.splitlines()[-1] == f"Reply: approved by anna (decision #{decision['number']}): Checked against the facts"
 
 
+def test_an_approved_reply_finishes_the_consultation(store):
+    number = _start(store)
+    _answer(store, number)
+    cons.propose_reply(store, number, "ville", answer_text="7 days.", customer_answer="7 days.", against=1,
+                       check=PASS, reason="Reply")
+    queue.approve(store, number, "anna", "Checked against the facts")
+    assert store.get(number)["status"] == FINISHED
+    assert ([t["number"] for t in cons.tickets(store, "finished")], cons.tickets(store, "closed")) == ([number], [])
+
+
 def test_an_approver_finishes_a_consultation_and_its_card_says_by_whom_and_why(store):
     # S-finish (build-plan section 29): finished only with a decision an approver records, with a reason
     number = _start(store)

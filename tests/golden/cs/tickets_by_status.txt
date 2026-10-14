@@ -57,9 +57,12 @@ Checks: none run
 Reply: nothing queued yet: propose_reply queues the reply for an approver, a named person with the approver role. Nothing is sent
 
 >>> search(status="closed")
-search status closed: 1 ticket, shown; viewing it changes nothing.
+search status closed: no ticket.
 
-#1 consultation · closed
+>>> search(status="finished")
+search status finished: 1 ticket, shown; viewing it changes nothing.
+
+#1 consultation · finished
 Consultation: Pulp mill customer · CH-02 Chip pile reclaim screw · SP-1601 Screw flight section, 400 mm
 
 From the person
@@ -71,9 +74,6 @@ Questions 1-2 of 2
 Open questions, of all 2: none
 Checks: 2 run; the last passed
 Reply: approved by anna (decision #2): Checked against the facts; PO-4718 goes to CH-02, SC-01 is followed up separately
-
->>> search(status="finished")
-search status finished: no ticket.
 
 >>> search(text="zzz", status="open")
 search "zzz" with status open: no ticket.

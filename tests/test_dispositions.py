@@ -5,7 +5,7 @@ import pytest
 
 from babel.intake import accepted, dispositions, inbox
 from babel.record import queue
-from babel.record.store import CLOSED, ENDS, RecordError
+from babel.record.store import CLOSED, ENDS, FINISHED, RecordError
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SUBJECT = {"company_id": "C-100", "source_id": "src_1"}
@@ -74,6 +74,14 @@ def test_a_worker_cannot_admit_an_approver_can(store):
     [decision] = store.documents_about(task, "decision")
     assert decision["data"]["accepted"]["source_id"] == "src_1"
     assert "accepted as stock_export version 1 for C-100" in decision["body"]
+
+
+def test_an_admission_finishes_the_ticket_and_a_drop_closes_it(store):
+    # S-finish and S-closed (build-plan sections 27 and 29): an approver's admission finishes; a drop closes
+    admitted, dropped = _ticket(store), _ticket(store)
+    dispositions.propose(store, admitted, "ville", "import", "Fits", payload=_import(store, admitted))
+    assert dispositions.admit(store, admitted, "anna", "Trial checked")["status"] == FINISHED
+    assert dispositions.drop(store, dropped, "ville", "Not needed")["status"] == CLOSED
 
 
 def test_a_file_is_accepted_once_and_stays_accepted(store):

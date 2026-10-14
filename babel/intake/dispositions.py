@@ -9,7 +9,8 @@
   inbox and the ticket records that it was dropped and why; nothing is deleted.
 
 A worker can drop; an approver is needed to admit. Each decision is a document about the ticket
-and every step is a journal entry. Writing admitted rows to extracts/ (Publish) is not built yet.
+and every step is a journal entry. An admission is an approval, so it finishes the ticket (owner
+answer S-finish); a drop closes it. Writing admitted rows to extracts/ (Publish) is not built yet.
 
 An import names the trial finding it rests on: a finding about the same ticket that says the file
 fits that file kind and schema version. Proposing and admitting both check it, so nothing is

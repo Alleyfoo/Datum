@@ -71,7 +71,7 @@ def scenario(root: Path) -> Dict[str, str]:
         steps.append(run(tool, arguments))
     out = {"consultation_CH-02_SP-1601": "\n\n".join(steps)}
 
-    # the tickets after the call: the reply approved and closed, one call released unconcluded, one at work
+    # the tickets after the call: the reply approved and finished, one call released unconcluded, one at work
     reason = "Checked against the facts; PO-4718 goes to CH-02, SC-01 is followed up separately"
     queue.approve(store, 1, APPROVER, reason)
     steps = [f"--- in the approval queue, {APPROVER} (approver) approves the reply on #1: \"{reason}\""]
