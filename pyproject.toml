@@ -11,6 +11,8 @@ dependencies = [
     # Excel reader and writer, pinned (build-plan G7, owner answer Q3): staging reads in
     # read-only mode, and the synthetic stock export is written with it.
     "openpyxl==3.1.5",
+    # MCP Python SDK, pinned (build-plan section 32): the stdio protocol server of babel/mcp/server.py.
+    "mcp==2.2.0",
 ]
 
 [project.optional-dependencies]

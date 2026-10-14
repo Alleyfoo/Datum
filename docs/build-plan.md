@@ -476,3 +476,14 @@ protocol server yet); the package builds and installs with `pip install -e .[tes
 references to private material are removed from the documents; stale statements are corrected; the lab capture
 scripts are marked maintainer-only; a CI workflow runs the tests on every push. Open owner decisions: the licence,
 and whether to rewrite the git history (author email and old local paths).
+
+## 32. The MCP server and one synthetic demo run
+
+The run's brief: an MCP stdio server that serves the registered role tools (the customer-service role first), and one
+deterministic demo run on the synthetic company, written as plain files for the static page (P11-site, section 26).
+
+**Dependency** (G12: each addition is recorded with its reason).
+
+| Dependency | Pinned | Why | What it brings |
+|---|---|---|---|
+| `mcp`, the MCP Python SDK | 2.2.0 | The protocol server, `python -m babel.mcp.server` (`babel/mcp/server.py`): the stdio transport, the JSON-RPC session and its handshake, and the wire types, which a hand-written server would have to reimplement and keep up with the specification. The tests reach the server with the SDK's own in-memory and stdio clients. 2.2.0 is the version the two reference servers are built on (Parts-Service-Desk, Shopflow-furniture). | `mcp-types` (the same version), `pydantic`, `anyio`, `jsonschema`, `opentelemetry-api`, and the SDK's HTTP side (`starlette`, `sse-starlette`, `uvicorn`, `httpx2`, `python-multipart`, `pyjwt`), which the stdio server never starts; `pywin32` on Windows. Python 3.10 or newer, so the 3.11 target (Q10) stands. |
