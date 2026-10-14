@@ -16,7 +16,8 @@
     resume(consultation)           take up an open call (or one whose lease ran out) as it was
                                    left; a closed or finished one is not resumed
     close(consultation, reason)    close a call that cannot be finished at all, with the reason;
-                                   whoever opened it is told how to amend and repost it, or delete it
+                                   the person who answers for it is told how to amend and repost it,
+                                   or delete it
 
 Ported from Parts-Service-Desk desk/mcp_server.py at 46c859a (origin in docs/provenance.md) and
 rewritten on this repository's company data, ticket store and approval queue. The lab's menu tools
@@ -66,8 +67,9 @@ Run check on your draft and fix what it flags, then propose_reply.
 If the call cannot be finished now, release it with the reason (for example, the customer will call
 back); nothing on it is lost. When the call is taken up again, resume it by its number: it comes
 back as it was left, with who released it and why. If the call cannot be finished at all (for
-example, it is about a machine the company does not serve), close it with the reason: whoever opened
-it is told how to amend it and repost it, or delete it. A closed consultation is not resumed.
+example, it is about a machine the company does not serve), close it with the reason: the person who
+answers for the call (whoever opened it, or an approver when an agent did) is told how to amend it and
+repost it, or delete it. A closed consultation is not resumed.
 
 You cannot send anything to a customer and cannot approve anything: a named approver decides on the
 reply outside this chat.
@@ -445,10 +447,11 @@ def build(store: Store, data: Optional[ServiceData] = None, *, actor: str) -> Re
     def close(consultation: int, reason: str) -> str:
         """Close a consultation that cannot be finished at all: for example, the call is about a
         machine or a part the company does not serve, or the customer has withdrawn it. The reason is
-        required and stays with it. A closed consultation is neither resumed nor finished; whoever
-        opened it is told on the ticket that they may amend it and repost it, or delete it, and one
-        nobody reacts to is deleted after a set time, which the notice states. If the call can still be
-        finished later, release it instead. Only the consultant who has the call can close it."""
+        required and stays with it. A closed consultation is neither resumed nor finished; the person
+        who answers for it (whoever opened it, or an approver when an agent did) is told on the ticket
+        that they may amend it and repost it, or delete it, and one no person reacts to is deleted after
+        a set time, which the notice states. If the call can still be finished later, release it
+        instead. Only the consultant who has the call can close it."""
         consultations.close(store, consultation, actor, reason)
         return "\n".join([
             f"Consultation #{consultation} closed: it could not be finished, and nothing was sent.",

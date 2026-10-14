@@ -5,9 +5,10 @@ Starting one opens it at once, which hands it to the agent working the call: cla
 ``in_progress`` (owner answer T-open). Released without a conclusion, it goes back to ``open``
 (T-release), with the reason why; resumed, it is handed to the agent who takes it up, as it was
 left (P26). Its card lists these handovers once it has changed hands. A call that cannot be finished
-at all is closed by its worker, with the reason, and whoever opened it is told what they may do
-(S-close, S-closed); an approver's decision finishes it (S-finish). Every write needs the holder's
-claim and is an attributed journal entry:
+at all is closed by its worker, with the reason, and the person who answers for it is told what
+they may do: whoever opened it, or the approval queue when an agent did (S-close, S-closed and the
+owner's decision on R6-Q2); an approver's decision finishes it (S-finish). Every write needs the
+holder's claim and is an attributed journal entry:
 
 - a fact only the person knows, recorded as the person's answer, never guessed;
 - each question asked: answered with its facts and receipt, or open while it waits for a fact only
@@ -193,8 +194,9 @@ def close(store: Store, number: int, actor: str, reason: str) -> dict:
     """A worker closes a consultation that cannot be finished (owner answers S-close and S-closed,
     build-plan sections 27 and 29): for example, the call was about a machine the company does not
     serve. Only its holder closes it, in the worker role, and the reason is required. Everything on it
-    is kept, and whoever opened it is told on the ticket that they may amend it and repost it, or
-    delete it. A call that may still be finished later is released instead (T-release)."""
+    is kept, and the person who answers for it (whoever opened it, or an approver from the approval
+    queue when an agent did) is told on the ticket that they may amend it and repost it, or delete it.
+    A call that may still be finished later is released instead (T-release)."""
     with store.transaction() as db:
         _consultation(store._item(db, number))
         return store.closing(db, number, actor, reason)
@@ -231,8 +233,8 @@ def handovers(store: Store, number: int) -> List[dict]:
 
 
 def closing(entries: Sequence[dict]) -> Optional[dict]:
-    """The last close in a journal: who closed the ticket, why, and the notice its creator was given
-    after it. None if it was never closed."""
+    """The last close in a journal: who closed the ticket, why, and the notice given after it to the
+    person who answers for the ticket. None if it was never closed."""
     for n, entry in reversed(list(enumerate(entries))):
         status = entry["details"].get("status")
         if isinstance(status, dict) and status.get("after") == CLOSED:
@@ -354,7 +356,7 @@ def view_text(page: dict) -> str:
     """A consultation as a card: who has it (and, once it has changed hands, who had it before and
     why it was released), the person's answers, a page of questions, the open questions of all,
     the checks and the reply, or the approver's decision that finished it. A closed one also says
-    who closed it and why, and the notice its creator was given."""
+    who closed it and why, and the notice given to the person who answers for it."""
     item = page["item"]
     data = item["data"]
     out = [f"#{item['number']} consultation · {SHOWN[item['status']]}{holder(item)}", item["title"]]
