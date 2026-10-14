@@ -409,29 +409,40 @@ Recorded as a conflict with the logging rule, made on purpose by the owner. The 
 
 ## 30. Round six: the end states, as built
 
-**Status:** built on branch `build/round-six`, not merged; 392 tests pass. In order: the store names the end states
-(`68823ec`), tests stop pinning `closed` after an approval and the old status lists (`61d84fd`, `2b83465`); `finished`
-beside `closed`, reached only by an approver's decision (`9c90ef7`, completing the edits the round had left
-uncommitted); the filter lists `finished` (`acc95a3`); an approver finishes a consultation (`a47e58a`); an approval
-finishes its ticket (`d131e50`); the creator amends (`5a44c19`), reposts (`8a5f8df`) and deletes (`1e9faf9`) a closed
-ticket; the 30-day sweep (`0acfb0e`); a worker closes a ticket and its creator is notified (`9770411`, tests changed
-first in `b2a56d7`); an older store's closed tickets are migrated (`c750868`, test changed first in `846da13`); a
-consultation's close and its card (`2ebd20a`); `close` is the consultant's tool (`261ee9c`, test changed first in
-`703eed9`); docstrings (`96eafb2`).
+**Status:** built on branch `build/round-six`, with the owner's review of round six (below); 422 tests pass. To be
+merged into `main` by fast-forward, as the owner asked. In order: the store names the end states (`68823ec`), tests
+stop pinning `closed` after an approval and the old status lists (`61d84fd`, `2b83465`); `finished` beside `closed`,
+reached only by an approver's decision (`9c90ef7`, completing the edits the round had left uncommitted); the filter
+lists `finished` (`acc95a3`); an approver finishes a consultation (`a47e58a`); an approval finishes its ticket
+(`d131e50`); the creator amends (`5a44c19`), reposts (`8a5f8df`) and deletes (`1e9faf9`) a closed ticket; the 30-day
+sweep (`0acfb0e`); a worker closes a ticket and its creator is notified (`9770411`, tests changed first in `b2a56d7`);
+an older store's closed tickets are migrated (`c750868`, test changed first in `846da13`); a consultation's close and
+its card (`2ebd20a`); `close` is the consultant's tool (`261ee9c`, test changed first in `703eed9`); docstrings
+(`96eafb2`); 392 tests passed then. The review's answers follow, `c9a15a8` to `a404a57` (the table under "The owner's
+review of round six, as built").
 
 What the round delivers, in the store (`babel/record/store.py`) unless named:
 
 - statuses `open`, `in_progress`, `needs_input`, `closed`, `finished`; the filter (`consultations.STATUSES`, the
   search tool) lists `open`, `in_progress` (with `needs_input`), `closed` and `finished`, the finished list;
 - `close(number, actor, reason)` for workers, `consultations.close` and the consultant's tool `close(consultation,
-  reason)`; the notice to the creator; a closed ticket never reaches `finished`;
-- `amend` and `repost` for the creator of a closed ticket;
-- `finish(number, approver, decision)` and `consultations.finish` for approvers; an approval finishes its ticket;
-- `CLOSED_RETENTION_DAYS = 30` and `sweep(today)`, with one audit line per deleted ticket;
+  reason)`: the only way a ticket is closed, checked in `Store.update` and refused by the database otherwise, so
+  `set_status` cannot close; the notice to the person who answers for the ticket, its recipient; a closed ticket
+  never reaches `finished`;
+- a closed blocker keeps blocking until it is reposted and finished, or an approver decides the dependency
+  (`resolve_dependency`); while a task waits on it, it is not deleted;
+- `amend`, `repost` and `delete` for the person who answers for a closed ticket: its creator when a person, its
+  recipient, or an approver for a ticket addressed to the approval queue; never a service or an agent;
+- `finish(number, approver, decision)` and `consultations.finish` for approvers; an approval finishes its ticket, and
+  so does an approver's drop of a file (`dispositions.drop`, `dispositions.approve_drop`);
+- `CLOSED_RETENTION_DAYS = 30` and `sweep(today)`, with one audit line per deleted ticket; only a person's reaction
+  starts the 30 days again; the command `python -m babel.record.sweep --store PATH --today YYYY-MM-DD`
+  (`babel/record/sweep.py`) for a daily scheduler, with a non-zero exit code and the error on stderr when it fails;
 - `release` unchanged (T-release): back to `open`, neither a close nor a finish;
-- migration steps 2 and 3 (store version 3): older stores open with every ticket.
+- migration steps 2 to 5 (store version 5): older stores open with every ticket.
 
-Choices the build made where the brief left them open. Each is in its commit message too.
+Choices the build made where the brief left them open. Each is in its commit message too. A row marked *Changed*
+was answered or changed by the owner's review; it states the contract now, and the review's tables below say how.
 
 | ID | Choice | Why, and what it means |
 |---|---|---|
