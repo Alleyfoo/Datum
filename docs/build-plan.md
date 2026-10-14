@@ -490,7 +490,8 @@ deterministic demo run on the synthetic company, written as plain files for the 
 
 **Status:** built on branch `build/mcp-server`, not merged. In order: the dependency (`e1e3784`); the server with its
 tests and origin (`9ed36ff`, backlog C28 and R13); its README section, "Connecting an MCP client" (`52e097b`); the
-demo run and its test (`e7d2e32`, backlog C29); `*.egg-info/` ignored (`18b9fad`); these documents. 441 tests pass:
+demo run and its test (`e7d2e32`, backlog C29); `*.egg-info/` ignored (`18b9fad`); its README section, "Running the
+demo" (`4394554`); the backlog, the work order and this section (`be8d38c`). 441 tests pass:
 the 422 before, 9 for the server and 10 for the demo run. The run found one defect, B7 in [backlog.md](backlog.md),
 and left it open: it is outside the brief, and fixing it changes a tool's text.
 
