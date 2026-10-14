@@ -3,7 +3,8 @@ import sqlite3
 
 import pytest
 
-from babel.record.store import CLOSED, TASK_STATUSES, RecordError, Store, agent_like
+from babel.record import queue
+from babel.record.store import CLOSED, ENDS, FINISHED, TASK_STATUSES, RecordError, Store, agent_like
 
 # the clock and store fixtures are in conftest.py
 
@@ -366,3 +367,98 @@ def test_anyone_may_comment_even_on_a_finished_task(store):
     store.comment(task, "anna", "Checked after the fact.")
     assert store.journal(task)[-1]["details"] == {"body": "Checked after the fact."}
     assert store.journal(task)[-1]["role"] == "approver"
+
+
+def test_a_tasks_statuses_are_the_owners_five_and_its_work_ends_in_two(store):
+    # S-states and S-two (build-plan sections 27 and 29): closed, it could not be finished; finished, it is done
+    assert TASK_STATUSES == ("open", "in_progress", "needs_input", "closed", "finished")
+    assert (ENDS, CLOSED, FINISHED) == (("closed", "finished"), "closed", "finished")
+
+
+def _worked(store, worker="ville"):
+    """A task the worker opened, worked on and released for an approver to look at."""
+    task = store.add_task("hook", "A file arrived")
+    store.open_ticket(task, worker)
+    store.comment(task, worker, "All 19 rows read.")
+    store.release(task, worker, reason="Done on my side")
+    return task
+
+
+def test_an_approver_finishes_a_task_with_a_decision_and_its_reason(store):
+    # S-finish (build-plan section 29): finished only with a decision an approver records, with a reason
+    task = _worked(store)
+    finished = store.finish(task, "anna", "Checked: the file is in and correct")
+    assert (finished["status"], finished["claimed_by"], finished["lease_until"]) == (FINISHED, None, None)
+    [decision] = store.documents_about(task, "decision")
+    assert decision["data"] == {"decision": "finished", "ticket": task, "approver": "anna",
+                                "reason": "Checked: the file is in and correct"}
+    assert decision["body"] == "Finished by anna (approver): Checked: the file is in and correct"
+    assert finished["data"]["decisions"] == [decision["number"]]
+    claimed, entry = store.journal(task)[-2:]
+    assert (claimed["actor"], claimed["role"], claimed["action"]) == ("anna", "approver", "claimed")
+    assert (entry["actor"], entry["role"], entry["action"]) == ("anna", "approver", "finished")
+    assert entry["details"] == {"reason": "Checked: the file is in and correct", "decision": decision["number"],
+                                "status": {"before": "open", "after": "finished"}, "data": ["decisions"],
+                                "released": "anna"}
+
+
+def test_a_worker_an_agent_or_a_service_never_finishes_a_task(store):
+    store.add_user("drafter", ["worker"], kind="agent")
+    task = _worked(store)
+    assert _code(store.finish, task, "ville", "Looks done") == "role_missing"
+    assert _code(store.finish, task, "drafter", "Looks done") == "agent_approver"
+    assert _code(store.finish, task, "hook", "Looks done") == "agent_approver"
+    assert _code(store.finish, task, "anna", "  ") == "invalid_argument"  # a decision says why
+    store.claim(task, "ville")
+    assert _code(store.set_status, task, "ville", FINISHED) == "role_missing"  # nor by setting the status
+    store.release(task, "ville")
+    store.claim(task, "pia")
+    assert _code(store.set_status, task, "pia", FINISHED) == "decision_required"  # an approver, with no decision
+    assert (store.get(task)["status"], store.documents_about(task)) == ("open", [])
+
+
+def test_a_finished_task_stays_finished_with_its_whole_history(store):
+    # S-finished (build-plan section 27): it goes to the finished list, and its whole history is saved
+    task = _worked(store)
+    store.finish(task, "anna", "Checked and correct")
+    history = store.journal(task)
+    assert _code(store.claim, task, "pia") == "item_finished"
+    assert _code(store.open_ticket, task, "pia") == "not_open"
+    assert _code(store.resume, task, "pia") == "item_finished"
+    assert _code(store.finish, task, "pia", "Once more") == "item_finished"
+    with store.transaction() as db:  # nor by any other path: a finished task's status never changes
+        with pytest.raises(RecordError) as refused:
+            store.update(db, task, "anna", status="open")
+    assert refused.value.code == "item_finished"
+    assert (store.journal(task), store.get(task)["status"]) == (history, FINISHED)
+    store.comment(task, "anna", "Looked at it again.")  # a comment is still welcome, and kept with the rest
+    assert store.journal(task) == history + [store.journal(task)[-1]]
+
+
+def test_a_ticket_waiting_on_a_proposal_is_finished_in_the_approval_queue(store):
+    task = store.add_task("hook", "A file arrived")
+    store.claim(task, "ville")
+    queue.propose(store, task, "ville", "import", "Fits the schema")
+    assert _code(store.finish, task, "anna", "Fine") == "proposal_pending"
+    assert store.get(task)["status"] == "needs_input"
+
+
+def test_an_approver_finishes_a_task_once_another_holders_lease_is_over(store, clock):
+    task = store.add_task("hook", "A customer called")
+    store.open_ticket(task, "ville")
+    assert _code(store.finish, task, "anna", "Answered") == "claim_conflict"
+    clock.advance(seconds=store.lease.total_seconds() + 60)
+    assert store.finish(task, "anna", "Answered")["status"] == FINISHED
+
+
+def test_a_closed_task_does_not_reach_the_finished_list(store):
+    task = store.add_task("hook", "A file arrived")
+    store.claim(task, "ville")
+    store.set_status(task, "ville", CLOSED)
+    assert _code(store.finish, task, "anna", "Done after all") == "item_closed"
+    decision = store.add_document("anna", "decision", f"Finished: #{task}", "Done after all", about=task,
+                                  data={"decision": "finished", "approver": "anna", "reason": "Done after all"})
+    with store.transaction() as db:  # not even with an approver's decision about it, by another path
+        with pytest.raises(RecordError) as refused:
+            store.update(db, task, "anna", note={"decision": decision}, status=FINISHED)
+    assert (refused.value.code, store.get(task)["status"]) == ("item_closed", CLOSED)

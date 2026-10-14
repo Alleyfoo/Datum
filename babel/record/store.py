@@ -6,19 +6,22 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
 - a decision or a finding is a document, which records what was concluded;
 - a comment records what happened; comments and every state change are journal entries, and
   the journal is append-only (enforced by the database, not only by this code);
-- a `blocks` link keeps a task out of the ready list until its blocker is closed;
+- a `blocks` link keeps a task out of the ready list until its blocker's work ends;
 - a claim is a lease: it runs out by itself, one day after its holder's last write (owner answer
-  P22, build-plan section 20), every write by its holder renews it, closing releases it, and a
-  holder whose lease ran out must claim again;
+  P22, build-plan section 20), every write by its holder renews it, the end of the task's work
+  releases it, and a holder whose lease ran out must claim again;
 - opening an open ticket hands it to an agent: claimed, and `in_progress`; released without a
   decision, it goes back to `open` (owner answers T-open and T-release, build-plan section 10),
   and the release may say why. A lease that runs out leaves the status as it is (owner answer
   Q-stale, section 20). Resuming takes up an open ticket, or one whose holder's lease ran out,
   and the journal records who resumed it (owner answer P26, section 25);
-- a task's statuses are `open`, `in_progress`, `needs_input` (it waits on an approver's decision)
-  and `closed`: its work has stopped, which says nothing of success; it may end in a decision, a
-  drop, or neither (owner answer P25, build-plan section 25). The store kept `done` for `closed`
-  before; one migration step, run once when an older store opens, renames it.
+- a task's statuses are `open`, `in_progress`, `needs_input` (it waits on an approver's decision),
+  `closed` and `finished` (owner answers S-two and S-states, build-plan sections 27 and 29). Its
+  work ends in one of the last two. `closed`: it could not be finished (S-closed). `finished`: it
+  is done and correct; only an approver finishes it, with a decision recorded about it, with a
+  reason (S-finish), and it stays finished, with its whole history (S-finished). The store kept
+  `done` for `closed` before (P25, section 25); one migration step, run once when an older store
+  opens, renamed it.
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -41,11 +44,16 @@ from typing import Callable, Iterable, List, Optional
 
 ROLES = ("approver", "worker")
 USER_KINDS = ("person", "agent", "service")
-#: a task's last status: its work has stopped and its claim is handed back. Named once, here
+#: a task that could not be finished (owner answer S-closed, build-plan section 27). Named once, here
 CLOSED = "closed"  # the owner's name for it (P25, build-plan section 25); the store said "done" before
-TASK_STATUSES = ("open", "in_progress", "needs_input", CLOSED)
+#: a task that is done and correct, with an approver's decision (owner answers S-finished and S-finish,
+#: build-plan sections 27 and 29). It stays finished, and its history is never deleted
+FINISHED = "finished"
+TASK_STATUSES = ("open", "in_progress", "needs_input", CLOSED, FINISHED)
 #: the statuses a task's work ends in: its claim is handed back, and it is not claimed, opened or resumed again
-ENDS = (CLOSED,)
+ENDS = (CLOSED, FINISHED)
+#: what a decision document says when a task may be finished on it: an approval, or a finish itself
+FINISHING_DECISIONS = ("approved", "finished")
 #: the store's version, kept in SQLite's user_version; an older store is brought up to it once, when opened
 VERSION = 1
 DOCUMENT_TYPES = ("decision", "finding")
@@ -349,7 +357,9 @@ class Store:
                note: Optional[dict] = None, **fields) -> dict:
         """Change fields of an item inside an open transaction; one journal entry per call.
 
-        `note` adds details to that entry, such as the reason a person gave.
+        `note` adds details to that entry, such as the reason a person gave. A finished task's status
+        never changes again, and a task becomes finished only in an approver's update whose note
+        names the decision it rests on (`_decided`), whatever path leads there (owner answer S-finish).
         """
         item = self._item(db, number)
         require(expected_version is None or expected_version == item["version"], "version_conflict",
@@ -360,6 +370,14 @@ class Store:
             statuses = TASK_STATUSES if item["kind"] == "task" else ("current",)
             require(fields["status"] in statuses, "invalid_status", f"status must be one of {statuses}")
         changes = {k: v for k, v in fields.items() if v != item[k]}
+        if "status" in changes:
+            require(item["status"] != FINISHED, f"item_{FINISHED}",
+                    f"#{number} is {FINISHED}: it stays {FINISHED}, with its whole history")
+            if changes["status"] == FINISHED:
+                require(item["status"] != CLOSED, f"item_{CLOSED}",
+                        f"#{number} is {CLOSED}: it could not be finished, and does not reach the finished list")
+                role = self.approver(db, actor)  # a worker, an agent or a service account never finishes
+                self._decided(db, number, actor, (note or {}).get("decision"))
         if not changes and not note:
             return item
         if changes:
@@ -381,6 +399,19 @@ class Store:
         elif self._holds(db, number, actor):
             self._renew(db, number)
         return self._item(db, number)
+
+    def _decided(self, db, number: int, approver: str, decision) -> None:
+        """Require the decision a task is finished on: a decision document about the task that this
+        approver recorded, with a reason, approving it or finishing it (owner answer S-finish)."""
+        row = None
+        if type(decision) is int:
+            row = db.execute("SELECT d.data FROM items d JOIN links l ON l.source=d.number AND l.type='about'"
+                             " WHERE d.number=? AND d.kind='document' AND d.type='decision' AND l.target=?",
+                             (decision, number)).fetchone()
+        found = json.loads(row[0]) if row else {}
+        require(found.get("approver") == approver and found.get("decision") in FINISHING_DECISIONS
+                and str(found.get("reason") or "").strip() != "", "decision_required",
+                f"#{number} is {FINISHED} only with a decision an approver records about it, with a reason")
 
     # -- claims as leases ---------------------------------------------------------------------
 
@@ -451,7 +482,7 @@ class Store:
 
         An open ticket is claimed by the actor and becomes `in_progress`, and the journal records
         who opened it and when. Opening a ticket that is already `in_progress` changes nothing. A
-        ticket that waits on a decision, or is closed, is not opened.
+        ticket that waits on a decision, or whose work has ended (closed or finished), is not opened.
         """
         with self.transaction() as db:
             return self.opening(db, number, actor, role)
@@ -474,7 +505,7 @@ class Store:
         `in_progress` whose holder's lease ran out (Q-stale leaves its status) are handed to the
         actor: claimed, `in_progress`, and the journal records who resumed it. A ticket the actor
         already holds changes nothing, and one another holds on a live lease is refused. A ticket
-        waiting on a decision is resumed once it is decided; a closed ticket never is.
+        waiting on a decision is resumed once it is decided; a closed or finished ticket never is.
         """
         with self.transaction() as db:
             return self.resuming(db, number, actor, role)
@@ -502,6 +533,39 @@ class Store:
             self.hold(db, number, actor)
             return self.update(db, number, actor, role=role, expected_version=expected_version,
                                action="status_changed", status=status)
+
+    def finish(self, number: int, approver: str, decision: str) -> dict:
+        """Finish a task: it is done and correct (owner answers S-finished and S-finish, build-plan
+        sections 27 and 29).
+
+        Only an approver finishes it, and only with a decision: a decision document about the task
+        with the approver's name and ``decision``, the reason in the approver's words. The approver
+        takes the claim for it, so another's live lease is respected, and the claim is handed back as
+        the task is finished. A finished task stays finished and keeps its whole history. A task
+        waiting on a proposal is decided in the approval queue instead, where an approval finishes it,
+        and a task whose work has ended, closed or finished, is not finished.
+        """
+        decision = text(decision, "decision")
+        with self.transaction() as db:
+            return self.finishing(db, number, approver, decision)
+
+    def finishing(self, db, number: int, approver: str, decision: str) -> dict:
+        """`finish` inside an open transaction."""
+        decision = text(decision, "decision")
+        role = self.approver(db, approver)
+        item = self._item(db, number)
+        require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
+        require(not item["data"].get("proposal"), "proposal_pending",
+                f"#{number} waits on a proposal: approve or reject it in the approval queue; an approval finishes it")
+        self.take(db, number, approver, role)  # refuses a task whose work has ended, and another's live lease
+        document = self.document(db, approver, "decision", f"Finished: #{number}",
+                                 f"Finished by {approver} (approver): {decision}",
+                                 data={"decision": FINISHED, "ticket": number, "approver": approver,
+                                       "reason": decision},
+                                 about=number, role=role)
+        data = {**item["data"], "decisions": item["data"].get("decisions", []) + [document]}
+        return self.update(db, number, approver, role=role, action=FINISHED,
+                           note={"reason": decision, "decision": document}, data=data, status=FINISHED)
 
     def comment(self, number: int, actor: str, body: str, *, role: Optional[str] = None) -> int:
         """A comment records what happened. Anyone may comment, also on a finished item."""
