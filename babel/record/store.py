@@ -32,11 +32,17 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   the only way a task is closed (the owner's decision on R6-Q4, section 30): every path to
   `closed` goes through `update`, which refuses a close that lacks the reason, the worker role or
   the worker's claim, and the database refuses a close the store has not marked with its actor
-  and reason, and a task created closed or finished. A notice on a closed task tells its creator
-  (the item's `created_by`). The creator may amend its title or body, each amendment a journal
-  entry with the text before and after, and repost it: open again, with its history; or delete it
-  (S-closed, section 27). A closed ticket nobody reacts to for CLOSED_RETENTION_DAYS is deleted by
-  the sweep, which runs only when called, on the date it is given (S-period, section 29).
+  and reason, and a task created closed or finished;
+- a notice on a closed task tells the person who answers for it, its recipient: a person named
+  when the task is created, by default its creator when the creator is a person, or else the
+  approval queue, which approvers review; the task keeps its originator, a service or an agent
+  too, as `created_by` (the owner's decision on R6-Q2, section 30). Its creator when a person, its
+  recipient, or an approver for a task addressed to the approval queue, may amend its title or
+  body, each amendment a journal entry with the text before and after, and repost it: open again,
+  with its history; or delete it (S-closed, section 27). Each acts as themselves: a service or an
+  agent never does, even on a task it created. A closed ticket nobody reacts to for
+  CLOSED_RETENTION_DAYS is deleted by the sweep, which runs only when called, on the date it is
+  given (S-period, section 29).
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -55,7 +61,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional
+from typing import Callable, Iterable, List, Optional, Tuple
 
 ROLES = ("approver", "worker")
 USER_KINDS = ("person", "agent", "service")
@@ -71,7 +77,7 @@ ENDS = (CLOSED, FINISHED)
 #: approver's drop of a file, a completed disposition (the owner's decision on R6-Q3, build-plan section 30)
 FINISHING_DECISIONS = ("approved", "finished", "dropped")
 #: the store's version, kept in SQLite's user_version; an older store is brought up to it once, when opened
-VERSION = 4
+VERSION = 5
 DOCUMENT_TYPES = ("decision", "finding")
 LINK_TYPES = ("blocks", "about")
 LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to P22 (build-plan section 20)
@@ -79,6 +85,11 @@ LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to
 #: (owner answers S-del, S-keep and S-period, build-plan sections 28 and 29). A named setting
 CLOSED_RETENTION_DAYS = 30
 SYSTEM = "system"
+#: the recipient of a task that no named person answers for: the approval queue, which named people with the
+#: approver role review (queue.py). An intake ticket goes there until real identities name the company's
+#: responsible data owner (P6), and so does any task a service or an agent created (the owner's decision on
+#: R6-Q2, build-plan section 30). It is not a user's name: add_user refuses it
+REVIEW_QUEUE = "approval queue"
 #: words that make a name agent-like; such a name is never accepted as an approver
 AGENT_WORDS = {"agent", "assistant", "llm", "system", "mcp", "claude", "bot", "gpt", "chatgpt",
                "copilot", "gemini", "codex", "ollama", "hook"}
@@ -104,7 +115,8 @@ CREATE TABLE IF NOT EXISTS items (
     created_by TEXT NOT NULL REFERENCES users(name),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
-    version INTEGER NOT NULL);
+    version INTEGER NOT NULL,
+    recipient TEXT);
 CREATE TABLE IF NOT EXISTS links (
     source INTEGER NOT NULL REFERENCES items(number),
     type TEXT NOT NULL CHECK (type IN ('blocks', 'about')),
@@ -183,11 +195,19 @@ def _marks(values) -> str:
     return ",".join("?" * len(values))
 
 
-def notice(number: int, creator: str) -> str:
-    """What a closed ticket's creator is told (owner answer S-closed, build-plan section 27)."""
-    return (f"#{number} is closed: it could not be finished. {creator}, as its creator you may amend it and "
-            f"repost it, which opens it again with its history, or delete it. If nobody reacts to it for "
-            f"{CLOSED_RETENTION_DAYS} days, it is deleted, with its history.")
+def notice(number: int, recipient: str, creator: Optional[str] = None) -> str:
+    """What the person who answers for a closed ticket is told (owner answer S-closed, build-plan section 27):
+    its recipient, by name, or an approver, from the approval queue (the owner's decision on R6-Q2, section
+    30). `creator` is the ticket's `created_by`; left out, the recipient is the creator."""
+    if recipient == REVIEW_QUEUE:
+        who = f"{creator} opened it and does not answer for it, so it is for the {REVIEW_QUEUE}: an approver may"
+    elif creator in (None, recipient):
+        who = f"{recipient}, as its creator you may"
+    else:
+        who = f"{recipient}, as the person who answers for it (it was opened by {creator}) you may"
+    return (f"#{number} is closed: it could not be finished. {who} amend it and repost it, which opens it again "
+            f"with its history, or delete it. If nobody reacts to it for {CLOSED_RETENTION_DAYS} days, it is "
+            f"deleted, with its history.")
 
 
 def _finishes(found: dict) -> Optional[str]:
@@ -251,11 +271,23 @@ class Store:
            decision is a drop by an approver, acting as one, with a reason, is finished, as step 3
            finishes an approval's; a drop by a worker stays closed. Steps 3 and 4 look at each closed
            ticket once, so a ticket they finish is never told it is closed.
+        5. Notices reach a person who answers for the ticket (the owner's decision on R6-Q2, build-plan
+           section 30). Every task gets its recipient as a new task does: its creator when a person,
+           the approval queue otherwise. Done first, so that step 3 tells the recipient; it changes no
+           status, title or body, so it writes no entry. A closed ticket whose last notice went to
+           someone else (its creator, a service or an agent, which reads none) is told again, to its
+           recipient, so its CLOSED_RETENTION_DAYS start when a person who can act on it is told.
         """
         with self.transaction() as db:
             version = db.execute("PRAGMA user_version").fetchone()[0]
             if version >= VERSION:
                 return  # another connection brought it up while this one waited for the lock
+            if version < 5:  # step 5, its first half: the recipient, before step 3 writes any notice
+                if "recipient" not in {r["name"] for r in db.execute("PRAGMA table_info(items)")}:
+                    db.execute("ALTER TABLE items ADD COLUMN recipient TEXT")
+                db.execute("UPDATE items SET recipient = CASE WHEN (SELECT kind FROM users WHERE name = items.created_by)"
+                           " = 'person' THEN created_by ELSE ? END WHERE kind = 'task' AND recipient IS NULL",
+                           (REVIEW_QUEUE,))
             if version < 1:
                 reason = "the status done is called closed (owner answer P25, build-plan section 25)"
                 for (number,) in db.execute("SELECT number FROM items WHERE kind='task' AND status='done'"
@@ -271,9 +303,9 @@ class Store:
                 db.execute("DROP TRIGGER IF EXISTS items_no_delete")
                 db.execute("DROP TRIGGER IF EXISTS journal_no_delete")
             if version < 4:
-                for row in db.execute("SELECT number, data, created_by FROM items WHERE kind='task' AND status=?"
-                                      " ORDER BY number", (CLOSED,)).fetchall():
-                    number, creator = row["number"], row["created_by"]
+                for row in db.execute("SELECT number, data, created_by, recipient FROM items WHERE kind='task'"
+                                      " AND status=? ORDER BY number", (CLOSED,)).fetchall():
+                    number = row["number"]
                     last = (json.loads(row["data"]).get("decisions") or [None])[-1]
                     why = _finishes(self._decision(db, number, last))
                     if why:  # steps 3 and 4
@@ -282,8 +314,14 @@ class Store:
                         self.write_journal(db, number, SYSTEM, SYSTEM, "migrated", {
                             "status": {"before": CLOSED, "after": FINISHED}, "decision": last, "reason": why})
                     elif version < 3:  # step 3: a store from version 3 on told the creator when it closed
-                        self.write_journal(db, number, SYSTEM, SYSTEM, "notice",
-                                           {"to": creator, "text": notice(number, creator)})
+                        self._notify(db, row)
+            if version < 5:  # step 5, its second half: tell the recipient what no person was told
+                for row in db.execute("SELECT number, created_by, recipient FROM items WHERE kind='task'"
+                                      " AND status=? ORDER BY number", (CLOSED,)).fetchall():
+                    told = db.execute("SELECT details FROM journal WHERE item=? AND action='notice'"
+                                      " ORDER BY seq DESC LIMIT 1", (row["number"],)).fetchone()
+                    if told is not None and json.loads(told[0]).get("to") != row["recipient"]:
+                        self._notify(db, row)
             db.execute(f"PRAGMA user_version={VERSION}")
 
     def ensure(self, script: str) -> None:
@@ -350,6 +388,7 @@ class Store:
         require(kind in USER_KINDS, "invalid_argument", f"user kind must be one of {USER_KINDS}")
         require(set(roles) <= set(ROLES), "invalid_role", f"roles must be among {ROLES}")
         require(kind != "service" or not roles, "invalid_role", "a service account holds no role")
+        require(name != REVIEW_QUEUE, "invalid_argument", f"{name!r} is the approval queue's name, not a user's")
         if "approver" in roles:
             require(kind == "person", "agent_approver", "only a person can hold the approver role")
             require(not agent_like(name), "agent_approver", f"{name!r} looks like an agent's name")
@@ -415,33 +454,53 @@ class Store:
             row = db.execute("SELECT number FROM items WHERE origin=?", (origin,)).fetchone()
         return row[0] if row else None
 
+    def _recipient(self, db, kind: str, creator: str, recipient: Optional[str]) -> Optional[str]:
+        """Who a task's notices go to (the owner's decision on R6-Q2, build-plan section 30): the person
+        named, or the approval queue (REVIEW_QUEUE); by default its creator, when the creator is a person,
+        and the approval queue when a service or an agent created it. A document has none."""
+        if kind != "task":
+            require(recipient is None, "invalid_argument", "only a task has a recipient")
+            return None
+        if recipient is None:
+            return creator if self._user(db, creator)["kind"] == "person" else REVIEW_QUEUE
+        if recipient != REVIEW_QUEUE:
+            require(self._user(db, recipient)["kind"] == "person", "not_a_person",
+                    f"{recipient} is not a person: a task's notices go to a person, or to the {REVIEW_QUEUE}")
+        return recipient
+
     def create_item(self, db, actor: str, kind: str, type_: str, title: str, *, body: str = "",
                     data: Optional[dict] = None, status: str, origin: Optional[str] = None,
-                    role: Optional[str] = None) -> int:
+                    role: Optional[str] = None, recipient: Optional[str] = None) -> int:
+        """Create a task or a document inside an open transaction. A task's `recipient` answers for it
+        and gets its notices (`_recipient`); its creator stays `created_by`."""
         title = text(title, "title", 200)
         require(kind != "task" or status not in ENDS, "invalid_status",
                 "a task is never created closed or finished: close() closes it, with its reason, and only an "
                 "approver's decision finishes it")
+        recipient = self._recipient(db, kind, actor, recipient)
         stamp = self.now()
         cursor = db.execute(
             "INSERT INTO items (kind, type, title, body, data, status, origin, created_by, created_at,"
-            " updated_at, version) VALUES (?,?,?,?,?,?,?,?,?,?,1)",
-            (kind, type_, title, body, _encode(data or {}), status, origin, actor, stamp, stamp))
+            " updated_at, version, recipient) VALUES (?,?,?,?,?,?,?,?,?,?,1,?)",
+            (kind, type_, title, body, _encode(data or {}), status, origin, actor, stamp, stamp, recipient))
         number = cursor.lastrowid
-        self.write_journal(db, number, actor, self.acting_role(db, actor, role), "created",
-                           {"kind": kind, "type": type_, "title": title, "origin": origin})
+        details = {"kind": kind, "type": type_, "title": title, "origin": origin}
+        if kind == "task":
+            details["recipient"] = recipient
+        self.write_journal(db, number, actor, self.acting_role(db, actor, role), "created", details)
         return number
 
     def add_task(self, actor: str, title: str, *, body: str = "", data: Optional[dict] = None,
-                 origin: Optional[str] = None, role: Optional[str] = None) -> int:
-        """Open a task. A task with the same origin is returned instead of a second one."""
+                 origin: Optional[str] = None, role: Optional[str] = None, recipient: Optional[str] = None) -> int:
+        """Open a task. A task with the same origin is returned instead of a second one. `recipient` is
+        the person who answers for it, or REVIEW_QUEUE; by default its creator, when a person."""
         with self.transaction() as db:
             if origin is not None:
                 row = db.execute("SELECT number FROM items WHERE origin=?", (origin,)).fetchone()
                 if row:
                     return row[0]
             return self.create_item(db, actor, "task", "task", title, body=body, data=data,
-                                    status="open", origin=origin, role=role)
+                                    status="open", origin=origin, role=role, recipient=recipient)
 
     def add_document(self, actor: str, type_: str, title: str, body: str, *, data: Optional[dict] = None,
                      about: Optional[int] = None, role: Optional[str] = None) -> int:
@@ -472,8 +531,9 @@ class Store:
         names the decision it rests on (`_decided`; owner answer S-finish). A task becomes closed only
         in an update by a worker who holds its claim, whose note gives the reason (`_closer`; the
         owner's decision on R6-Q4), and the database refuses a close this has not marked. A second
-        entry follows a close: a notice to the task's creator, by `system`, that it is closed and what
-        they may do (`notice`; owner answer S-closed).
+        entry follows a close: a notice, by `system`, to the person who answers for the task, its
+        recipient, that it is closed and what they may do (`_notify`; owner answer S-closed and the
+        owner's decision on R6-Q2).
         """
         item = self._item(db, number)
         require(expected_version is None or expected_version == item["version"], "version_conflict",
@@ -519,11 +579,18 @@ class Store:
         if ended:
             db.execute("UPDATE items SET claimed_by=NULL, lease_until=NULL WHERE number=?", (number,))
             if changes["status"] == CLOSED:
-                self.write_journal(db, number, SYSTEM, SYSTEM, "notice",
-                                   {"to": item["created_by"], "text": notice(number, item["created_by"])})
+                self._notify(db, item)
         elif self._holds(db, number, actor):
             self._renew(db, number)
         return self._item(db, number)
+
+    def _notify(self, db, item) -> None:
+        """The notice on a closed task, by `system`, to its recipient: the person who answers for it, or
+        the approval queue (owner answer S-closed, build-plan section 27, and the owner's decision on
+        R6-Q2, section 30)."""
+        number, recipient = item["number"], item["recipient"]
+        self.write_journal(db, number, SYSTEM, SYSTEM, "notice",
+                           {"to": recipient, "text": notice(number, recipient, item["created_by"])})
 
     def _decision(self, db, number: int, document) -> dict:
         """What a decision document about the task says (its data), or nothing if it is not one."""
@@ -739,24 +806,38 @@ class Store:
         return self.update(db, number, approver, role=role, action=FINISHED,
                            note={"reason": decision, "decision": document}, data=data, status=FINISHED)
 
-    # -- what the creator does with a closed ticket ----------------------------------------------
+    # -- what the person who answers for a closed ticket does with it ------------------------------
 
-    def _created(self, db, number: int, actor: str) -> dict:
-        """A closed task that the actor created: its creator is the item's `created_by` (owner answer
-        S-closed, build-plan section 27: the creator amends and reposts it, or deletes it)."""
+    def _responsible(self, db, number: int, actor: str) -> Tuple[dict, str]:
+        """A closed task the actor answers for, and the role the actor acts in (owner answer S-closed,
+        build-plan section 27, and the owner's decision on R6-Q2, section 30). The actor is a person,
+        acting as themselves: a service or an agent never is, even for a task it created. A person
+        answers for a task as its creator or its recipient, in their own role, or, for a task addressed
+        to the approval queue, as an approver, in that role."""
         item = self._item(db, number)
         require(item["kind"] == "task", "not_a_task", f"#{number} is a document")
-        require(item["created_by"] == actor, "not_the_creator",
-                f"#{number} was created by {item['created_by']}: only its creator does this")
+        user = self._user(db, actor)
+        require(user["kind"] == "person", "not_a_person",
+                f"{actor} is {'an agent' if user['kind'] == 'agent' else 'a service account'}: a person who answers "
+                f"for #{number} amends, reposts or deletes it, as themselves")
+        if actor in (item["created_by"], item["recipient"]):
+            role = self.acting_role(db, actor)
+        elif item["recipient"] == REVIEW_QUEUE and "approver" in user["roles"]:
+            role = self.approver(db, actor)
+        else:
+            who = (f"an approver, from the {REVIEW_QUEUE}" if item["recipient"] == REVIEW_QUEUE
+                   else item["recipient"])
+            raise RecordError("not_responsible", f"#{number} is answered for by {who}, not by {actor}")
         require(item["status"] == CLOSED, "not_closed",
-                f"#{number} is {item['status']}: only a {CLOSED} ticket is amended, reposted or deleted by its creator")
-        return item
+                f"#{number} is {item['status']}: only a {CLOSED} ticket is amended, reposted or deleted")
+        return item, role
 
     def amend(self, number: int, actor: str, *, title: Optional[str] = None, body: Optional[str] = None) -> dict:
-        """The creator amends a closed ticket: a new title, a new body, or both (owner answer S-closed).
+        """The person who answers for a closed ticket amends it: a new title, a new body, or both (owner
+        answer S-closed; who answers for it, `_responsible`).
 
-        Each amendment is one journal entry with the text before and after it. The ticket stays closed
-        until its creator reposts it; nothing else about it changes.
+        Each amendment is one journal entry with the text before and after it, by that person. The
+        ticket stays closed until it is reposted; nothing else about it changes.
         """
         fields = {}
         if title is not None:
@@ -765,18 +846,30 @@ class Store:
             fields["body"] = text(body, "body", 20_000)
         require(bool(fields), "invalid_argument", "an amendment gives a new title, a new body or both")
         with self.transaction() as db:
-            item = self._created(db, number, actor)
+            item, role = self._responsible(db, number, actor)
             require(any(item[k] != v for k, v in fields.items()), "nothing_changed",
                     f"#{number} says that already: the amendment changes nothing")
-            return self.update(db, number, actor, action="amended", **fields)
+            return self.update(db, number, actor, role=role, action="amended", **fields)
 
     def repost(self, number: int, actor: str) -> dict:
-        """The creator reposts a closed ticket: it is open again, for the next handler, with its whole
-        history kept, and the journal records the repost (owner answer S-closed). Refused unless the
-        ticket is closed."""
+        """The person who answers for a closed ticket reposts it: it is open again, for the next handler,
+        with its whole history kept, and the journal records the repost by that person (owner answer
+        S-closed; who answers for it, `_responsible`). Refused unless the ticket is closed."""
         with self.transaction() as db:
-            self._created(db, number, actor)
-            return self.update(db, number, actor, action="reposted", status="open")
+            _, role = self._responsible(db, number, actor)
+            return self.update(db, number, actor, role=role, action="reposted", status="open")
+
+    def notices(self, recipient: str) -> List[dict]:
+        """The closed tasks whose notices go to `recipient`, a person or REVIEW_QUEUE, oldest first: what
+        they are asked to react to, each with its number, title, creator and the text of its last notice
+        (the owner's decision on R6-Q2, build-plan section 30)."""
+        with self.reading() as db:
+            rows = db.execute("SELECT number, title, created_by FROM items WHERE kind = 'task' AND status = ?"
+                              " AND recipient = ? ORDER BY number", (CLOSED, recipient)).fetchall()
+            told = [db.execute("SELECT details FROM journal WHERE item = ? AND action = 'notice' ORDER BY seq DESC"
+                               " LIMIT 1", (row["number"],)).fetchone() for row in rows]
+        return [{"number": row["number"], "title": row["title"], "created_by": row["created_by"],
+                 "notice": json.loads(last[0])["text"] if last else None} for row, last in zip(rows, told)]
 
     # -- closed tickets are deleted in time ------------------------------------------------------
 
@@ -842,15 +935,15 @@ class Store:
         db.execute("DELETE FROM deleting")
 
     def delete(self, number: int, actor: str) -> None:
-        """The creator deletes a closed ticket now, the other choice it has besides amending and
-        reposting it (owner answer S-closed, build-plan section 27): deleted as the sweep deletes one,
-        with the same one audit line, attributed to the creator and stamped now. Refused unless the
-        ticket is closed and the actor created it, while a task still waits on it (still_blocking), and
-        while a kept record still refers to it."""
+        """The person who answers for a closed ticket deletes it now, the other choice besides amending
+        and reposting it (owner answer S-closed, build-plan section 27; who answers for it,
+        `_responsible`): deleted as the sweep deletes one, with the same one audit line, attributed to
+        that person and stamped now. Refused unless the ticket is closed and the actor answers for it,
+        while a task still waits on it (still_blocking), and while a kept record still refers to it."""
         try:
             with self.transaction() as db:
-                self._created(db, number, actor)
-                self._delete(db, number, actor, self.acting_role(db, actor), self.now())
+                _, role = self._responsible(db, number, actor)
+                self._delete(db, number, actor, role, self.now())
         except sqlite3.IntegrityError as error:
             if "FOREIGN KEY" not in str(error):
                 raise

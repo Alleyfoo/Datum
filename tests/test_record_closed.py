@@ -1,6 +1,8 @@
-"""Closed tickets (owner answers S-closed, S-del and S-period, build-plan sections 27 to 29): a ticket
-that cannot be finished is closed, and its creator may amend it and repost it, or delete it; one
-nobody reacts to for 30 days is deleted by the sweep, with its history, leaving one audit line."""
+"""Closed tickets (owner answers S-closed, S-del and S-period, build-plan sections 27 to 29, and the
+owner's review of round six, section 30): a ticket that cannot be finished is closed, only by close,
+with its reason; the person who answers for it (its creator, or its recipient) is told, and may amend
+it and repost it, or delete it; one nobody reacts to for 30 days is deleted by the sweep, with its
+history, leaving one audit line."""
 
 import json
 import sqlite3
@@ -10,7 +12,7 @@ import pytest
 
 from babel.record import consultations as cons
 from babel.record import queue
-from babel.record.store import CLOSED, CLOSED_RETENTION_DAYS, FINISHED, RecordError, Store, notice
+from babel.record.store import CLOSED, CLOSED_RETENTION_DAYS, FINISHED, REVIEW_QUEUE, RecordError, Store, notice
 
 # the clock and store fixtures are in conftest.py
 
@@ -170,6 +172,75 @@ def test_every_close_records_who_closed_the_ticket_and_why(store, clock):
         (call, "ville", "The customer's machine is not one of ours")]
     with reopened.reading() as db:  # the database's mark lasts for the closing transaction only
         assert db.execute("SELECT COUNT(*) FROM closing").fetchone()[0] == 0
+
+
+def _intake(store):
+    """A ticket the hook opened for an arriving file, which a worker could not process and closed."""
+    task = store.add_task("hook", "stock_export.xlsx: new kind of file for C-100: create a schema")
+    store.claim(task, "ville")
+    store.close(task, "ville", "The workbook's sheets cannot be read")
+    return task
+
+
+def test_a_closed_ticket_a_service_opened_is_notified_to_its_recipient_not_the_service(store):
+    # the owner's decision on R6-Q2 (build-plan section 30): notices reach a person who answers for the ticket
+    task = _intake(store)
+    item = store.get(task)
+    assert (item["created_by"], item["recipient"]) == ("hook", REVIEW_QUEUE)  # the hook stays its originator
+    assert store.journal(task)[0]["details"]["recipient"] == REVIEW_QUEUE
+    told = store.journal(task)[-1]
+    assert (told["actor"], told["action"], told["details"]["to"]) == ("system", "notice", REVIEW_QUEUE)
+    assert told["details"]["text"] == (
+        f"#{task} is closed: it could not be finished. hook opened it and does not answer for it, so it is for "
+        "the approval queue: an approver may amend it and repost it, which opens it again with its history, or "
+        "delete it. If nobody reacts to it for 30 days, it is deleted, with its history.")
+    assert [(n["number"], n["created_by"], n["notice"]) for n in store.notices(REVIEW_QUEUE)] == [
+        (task, "hook", told["details"]["text"])]
+    assert store.notices("hook") == []
+
+
+def test_a_person_answers_for_a_ticket_a_service_opened_and_the_journal_names_that_person(store):
+    task, other = _intake(store), _intake(store)
+    for call, args in ((store.amend, {"title": "Mine now"}), (store.repost, {}), (store.delete, {})):
+        assert _code(call, task, "hook", **args) == "not_a_person"  # though it opened the ticket
+        assert _code(call, task, "ville", **args) == "not_responsible"  # a worker does not answer for the queue
+    store.amend(task, "anna", title="stock_export.xlsx: the corrected export of week 35")
+    reposted = store.repost(task, "anna")
+    assert (reposted["status"], reposted["created_by"], reposted["title"]) == (
+        "open", "hook", "stock_export.xlsx: the corrected export of week 35")
+    assert [(e["actor"], e["role"], e["action"]) for e in store.journal(task)[-2:]] == [
+        ("anna", "approver", "amended"), ("anna", "approver", "reposted")]
+    store.delete(other, "pia")  # pia holds both roles: for the approval queue, she acts as an approver
+    [line] = _audit_lines(store)
+    assert (line["actor"], line["role"], line["details"]["ticket"]) == ("pia", "approver", other)
+
+
+def test_a_person_answers_for_a_ticket_an_agent_opened_and_the_agent_does_not(store):
+    store.add_user("drafting-assistant", ["worker"], kind="agent")
+    call = cons.start(store, "drafting-assistant", "Consultation: Customer one", subject={})["number"]
+    cons.close(store, call, "drafting-assistant", "The customer's machine is not one of ours")
+    assert store.get(call)["recipient"] == REVIEW_QUEUE
+    assert store.journal(call)[-1]["details"] == {"to": REVIEW_QUEUE,
+                                                  "text": notice(call, REVIEW_QUEUE, "drafting-assistant")}
+    assert f"Notice to {REVIEW_QUEUE}: #{call} is closed" in cons.view_text(cons.view(store, call))
+    assert _code(store.repost, call, "drafting-assistant") == "not_a_person"
+    assert store.repost(call, "anna")["status"] == "open"
+    assert [(e["actor"], e["action"]) for e in store.journal(call)[-1:]] == [("anna", "reposted")]
+
+
+def test_a_named_recipient_answers_for_a_ticket_and_is_told_by_name(store):
+    store.add_user("drafting-assistant", ["worker"], kind="agent")
+    assert _code(store.add_task, "hook", "A file arrived", recipient="drafting-assistant") == "not_a_person"
+    assert _code(store.add_task, "hook", "A file arrived", recipient="nobody") == "unknown_user"
+    assert _code(store.add_user, REVIEW_QUEUE, ["worker"]) == "invalid_argument"  # the queue is not a user
+    task = store.add_task("hook", "Stock export from C-200", recipient="ville")  # say, the company's data owner
+    store.claim(task, "pia")
+    store.close(task, "pia", "The supplier no longer sends this export")
+    assert store.journal(task)[-1]["details"] == {"to": "ville", "text": notice(task, "ville", "hook")}
+    assert "ville, as the person who answers for it (it was opened by hook) you may amend it" in notice(task, "ville", "hook")
+    assert _code(store.repost, task, "anna") == "not_responsible"  # a named person answers for it, not the queue
+    store.repost(task, "ville")
+    assert [(e["actor"], e["role"], e["action"]) for e in store.journal(task)[-1:]] == [("ville", "worker", "reposted")]
 
 
 def test_the_creator_amends_a_closed_ticket_and_each_amendment_keeps_the_text_before_and_after(store):
@@ -526,3 +597,36 @@ def test_an_older_store_opens_with_every_ticket_and_lets_a_closed_one_go_in_time
     assert not {"items_no_delete", "journal_no_delete"} & triggers and version >= 2
     assert reopened.sweep(clock() + 31 * DAY) == [closed]
     assert [i["number"] for i in reopened.items()] == [working]
+
+
+def test_an_older_store_gives_each_task_its_recipient_and_tells_the_approval_queue_what_the_hook_was_told(
+        store, clock, monkeypatch):
+    # the owner's decision on R6-Q2 (build-plan section 30): a notice older code addressed to the hook reached nobody
+    def to_the_creator(db, item):  # what the store wrote on a close before the decision
+        store.write_journal(db, item["number"], "system", "system", "notice",
+                            {"to": item["created_by"], "text": notice(item["number"], item["created_by"])})
+    monkeypatch.setattr(store, "_notify", to_the_creator)
+    by_hook, by_pia, working = (store.add_task(creator, f"Week {week} export")
+                                for creator, week in (("hook", 33), ("pia", 34), ("hook", 35)))
+    for number in (by_hook, by_pia):
+        store.claim(number, "ville")
+        store.close(number, "ville", "The workbook's sheets cannot be read")
+    db = sqlite3.connect(store.path)
+    try:  # and with no recipient, at version 4
+        db.executescript("ALTER TABLE items DROP COLUMN recipient; PRAGMA user_version=4;")
+    finally:
+        db.close()
+    before = [i["number"] for i in store.items()]
+    clock.advance(hours=1)
+    reopened = Store(store.path, clock=clock)
+    assert [i["number"] for i in reopened.items()] == before  # no ticket and no document is lost
+    assert [reopened.get(n)["recipient"] for n in (by_hook, by_pia, working)] == [REVIEW_QUEUE, "pia", REVIEW_QUEUE]
+    told = reopened.journal(by_hook)[-1]
+    assert (told["actor"], told["action"], told["at"]) == ("system", "notice", reopened.now())
+    assert told["details"] == {"to": REVIEW_QUEUE, "text": notice(by_hook, REVIEW_QUEUE, "hook")}
+    assert [e["details"]["to"] for e in reopened.journal(by_pia) if e["action"] == "notice"] == ["pia"]  # told once
+    assert [e["action"] for e in reopened.journal(working)] == ["created"]
+    assert reopened.sweep(clock() + 29 * DAY) == []  # the approval queue's 30 days start when it is told
+    entries = len(reopened.journal())
+    Store(store.path, clock=clock)  # opened again: the steps have run, and nothing more changes
+    assert len(reopened.journal()) == entries

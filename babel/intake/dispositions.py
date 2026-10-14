@@ -15,7 +15,8 @@ Three cases are kept apart:
   approval queue until an approver approves it (approve_drop, which finishes the ticket) or rejects
   it (the ticket goes back to the workers);
 - a worker who cannot process a file: not a drop. The worker closes the ticket with the reason
-  (Store.close), and the closed ticket's person is told what they may do.
+  (Store.close), and the approval queue, which answers for an intake ticket, is told what an
+  approver may do with it (the owner's decision on R6-Q2, build-plan section 30).
 
 Each decision is a document about the ticket and every step is a journal entry. An admission and an
 approved drop are approvals, so they finish the ticket (owner answer S-finish). Writing admitted

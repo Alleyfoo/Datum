@@ -18,7 +18,8 @@ trigger():
    must give its staged fingerprint, and the rebuilt sheets, cleaned and tried again, must give the
    same result digest. A result that does not reproduce is unclassified;
 6. opens one ticket with the routing text and the person's choices, and a finding document with
-   the evidence. A file that fits is proposed for import, so it waits for an approver.
+   the evidence. The hook is the ticket's creator, and the approval queue answers for it and gets
+   its notices (RECIPIENT). A file that fits is proposed for import, so it waits for an approver.
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, List, Optional, Sequence, Tuple
 
-from babel.record.store import RecordError, Store
+from babel.record.store import REVIEW_QUEUE, RecordError, Store
 from babel.schema.headers import Versioned
 
 from . import accepted, cleaning, dispositions, inbox, staging, trial
@@ -35,6 +36,10 @@ from .inbox import IntakeError
 from .schemas import provider as stored_schemas
 
 HOOK = "hook"
+#: who answers for an intake ticket and gets its notices: the company's responsible data owner, once real
+#: identities name one (P6); until then the approval queue, which named people with the approver role review.
+#: The hook stays the ticket's creator (the owner's decision on R6-Q2, build-plan section 30)
+RECIPIENT = REVIEW_QUEUE
 #: the person's choices on a ticket, by trial outcome (intake.md, routing by the hook's trial)
 CHOICES = {
     "no_schema": ["create_schema", "drop"],
@@ -107,7 +112,8 @@ def _open(store: Store, kept: inbox.Preserved, company_id: str, *, outcome: str,
             db, HOOK, "task", "task", f"{name}: {routing}",
             body=(f"{kept.original_name} arrived for {company_id} as {kept.source_id} "
                   f"(sha256 {kept.sha256}).\nTrial: {routing}.\nChoices: {' or '.join(CHOICES[outcome])}."),
-            data={"subject": subject}, status="open", origin=f"intake/{company_id}/{kept.source_id}")
+            data={"subject": subject}, status="open", origin=f"intake/{company_id}/{kept.source_id}",
+            recipient=RECIPIENT)
         finding = store.document(db, HOOK, "finding", finding_title, finding_body,
                                  data={"subject": subject, **finding_data}, about=ticket)
         store.update(db, ticket, HOOK, action="trial_recorded", note={"finding": finding, "outcome": outcome},

@@ -7,6 +7,7 @@ import pytest
 from babel.intake import accepted, dispositions, hook, inbox, staging
 from babel.intake.inbox import IntakeError
 from babel.record import queue
+from babel.record.store import REVIEW_QUEUE
 from babel.schema.headers import Column, HeaderSchema, Versioned
 from domains.spare_parts.exports import stock_export
 
@@ -33,6 +34,15 @@ def test_a_file_of_a_new_kind_asks_for_a_schema(data_root, store):
     assert ticket["status"] == "open" and queue.pending(store) == []
     [finding] = store.documents_about(arrival.ticket, "finding")
     assert finding["data"]["sheets"][0]["texts"] == ["Item", "Description", "Warehouse", "On hand", "Stock date"]
+
+
+def test_the_hook_opens_the_ticket_and_the_approval_queue_answers_for_it(data_root, store):
+    # the owner's decision on R6-Q2 (build-plan section 30): the hook stays the ticket's creator, and its notices
+    # go to the approval queue until real identities name the company's responsible data owner
+    arrival = hook.trigger(data_root, "C-100", EXPORT, store=store, schemas=_with())
+    ticket = store.get(arrival.ticket)
+    assert (ticket["created_by"], ticket["recipient"], hook.RECIPIENT) == ("hook", REVIEW_QUEUE, REVIEW_QUEUE)
+    assert store.journal(arrival.ticket)[0]["details"]["recipient"] == REVIEW_QUEUE
 
 
 def test_a_fitting_file_waits_for_an_approver_and_the_hook_admits_nothing(data_root, store):
