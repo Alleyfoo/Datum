@@ -406,3 +406,54 @@ Recorded as a conflict with the logging rule, made on purpose by the owner. The 
 | S-period | Yes, 30 days | A closed ticket is deleted after 30 days without a reaction. The period is a named setting. |
 | S-close | Workers can close | A worker may close a ticket with a reason when it cannot be finished. The creator is notified and told to amend and repost, or to delete. |
 | S-finish | Finishing needs a decision | A ticket becomes `finished` only with a decision recorded by an approver. Finished tickets go to the finished list, with their full history. |
+
+## 30. Round six: the end states, as built
+
+**Status:** built on branch `build/round-six`, not merged; 392 tests pass. In order: the store names the end states
+(`68823ec`), tests stop pinning `closed` after an approval and the old status lists (`61d84fd`, `2b83465`); `finished`
+beside `closed`, reached only by an approver's decision (`9c90ef7`, completing the edits the round had left
+uncommitted); the filter lists `finished` (`acc95a3`); an approver finishes a consultation (`a47e58a`); an approval
+finishes its ticket (`d131e50`); the creator amends (`5a44c19`), reposts (`8a5f8df`) and deletes (`1e9faf9`) a closed
+ticket; the 30-day sweep (`0acfb0e`); a worker closes a ticket and its creator is notified (`9770411`, tests changed
+first in `b2a56d7`); an older store's closed tickets are migrated (`c750868`, test changed first in `846da13`); a
+consultation's close and its card (`2ebd20a`); `close` is the consultant's tool (`261ee9c`, test changed first in
+`703eed9`); docstrings (`96eafb2`).
+
+What the round delivers, in the store (`babel/record/store.py`) unless named:
+
+- statuses `open`, `in_progress`, `needs_input`, `closed`, `finished`; the filter (`consultations.STATUSES`, the
+  search tool) lists `open`, `in_progress` (with `needs_input`), `closed` and `finished`, the finished list;
+- `close(number, actor, reason)` for workers, `consultations.close` and the consultant's tool `close(consultation,
+  reason)`; the notice to the creator; a closed ticket never reaches `finished`;
+- `amend` and `repost` for the creator of a closed ticket;
+- `finish(number, approver, decision)` and `consultations.finish` for approvers; an approval finishes its ticket;
+- `CLOSED_RETENTION_DAYS = 30` and `sweep(today)`, with one audit line per deleted ticket;
+- `release` unchanged (T-release): back to `open`, neither a close nor a finish;
+- migration steps 2 and 3 (store version 3): older stores open with every ticket.
+
+Choices the build made where the brief left them open. Each is in its commit message too.
+
+| ID | Choice | Why, and what it means |
+|---|---|---|
+| R6-edits | The uncommitted edits were finished, not reverted | They named the two end states and guarded `finished` correctly (`9c90ef7`). |
+| R6-creator | The creator is the item's `created_by` | Every item already records it; nothing new is stored. A consultation's creator is the consultant who opened it; an intake ticket's is the hook. |
+| R6-notice | The notice is a journal entry on the ticket | Action `notice`, by `system`, with `to` (the creator) and `text` (closed, could not be finished; amend and repost, or delete; deleted after 30 days without a reaction). `Store.update` writes it after every change to `closed`, whatever the path (`close`, an intake drop, the store's `set_status`), so no closed ticket is without one. It is a reaction like any other entry. A closed consultation's card shows who closed it, why, and the notice. |
+| R6-finish | `finish` checks the approver role on the actor | The store's approver rule: a person who holds the role and whose name is not agent-like. The decision is the approver's reason; `finish` writes it as a decision document about the ticket. `Store.update` checks every path to `finished` the same way, so an approval in the queue, which is such a decision, finishes its ticket. A finished ticket's status never changes again, and a closed ticket never becomes finished. |
+| R6-close | `close` needs the claim, the worker role and a reason | An approver who is not a worker, or a service, is refused. A ticket waiting on a proposal is refused: the approver decides it first. The store's `set_status` can still close without a reason, as before; no tool uses it, and its close is notified too. A drop still closes its ticket. |
+| R6-amend | Amend changes the title, the body or both | Only the creator, only while the ticket is closed (so no one edits a ticket a worker holds). Each amendment is one entry with the text before and after; unchanged text is refused. |
+| R6-repost | Repost: the creator, a closed ticket, back to `open` | One `reposted` entry; nothing before it changes. The next handler opens or resumes it. |
+| R6-delete | The creator's "delete" is a function of its own | `Store.delete`: at once, exactly as the sweep deletes, with the same audit line, attributed to the creator. Without it, the notice would offer a choice the creator could not take. |
+| R6-sweep | `Store.sweep(today)` | `today` is a date (midnight UTC) or a datetime with its time zone; no clock is read. "Older than 30 days" is more than 30 days: at 30 days to the second the ticket stays. A reaction is any journal entry on the ticket or on a document about it. The documents only about the ticket go with it; one also about another item stays, without the link. Each deletion is its own transaction. A closed ticket that a kept record refers to (a schema version drafted on it) stays: the database refuses, and the sweep tries again on its next run. |
+| R6-audit | The audit line is a journal entry on no item | `deleted`, by `system` (the sweep) or the creator (a delete), with `ticket`, `closed_at` and `deleted_at` only, stamped with the deletion time. The journal stays the one log. |
+| R6-guard | The database still refuses deletes | The two delete triggers now refuse every row the store has not marked, inside the deleting transaction, in the table `deleting` (empty at every other time), and any task that is not closed. The audit line can never be deleted. `AUTOINCREMENT` keeps a deleted number from being used again. |
+| R6-migration | "Lose no ticket" | Step 2 replaces an older store's delete guards. Step 3: a closed ticket whose last decision is an approver's approval becomes `finished` (older code closed it), and every other closed ticket gets the notice now, so its 30 days start when its creator is told. No item is deleted or renumbered. |
+| R6-tools | Only `close` is a consultant tool | The consultant's role cannot approve or decide (its instructions and its test say so), so finishing stays outside the chat, like an approval. `amend`, `repost` and `delete` are record functions for the creator of any ticket. |
+
+Questions the build raised for the owner (nothing is blocked; each was built as described above):
+
+| ID | Question | Built as |
+|---|---|---|
+| R6-Q1 | A `blocks` link: should a closed blocker (it could not be finished) keep blocking the task it blocks? | It stops blocking, as a finished one does (`ENDS`, `68823ec`); deleting it removes the link anyway. |
+| R6-Q2 | An intake ticket's creator is the hook, a service account: its notice has no reader. Should it go to someone else, for example the worker who dropped the file? | The notice goes to the hook, as to any creator. |
+| R6-Q3 | A drop closes the file's ticket, so it is deleted after 30 days with the drop's decision. Should an approver's drop finish the ticket instead, keeping the record? | A drop closes, as before; the file stays in the inbox and its ledger. |
+| R6-Q4 | Should the store's `set_status` stop closing a ticket without a reason? | It still may; no tool uses it, and its close is notified. |
