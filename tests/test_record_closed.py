@@ -380,6 +380,29 @@ def test_only_the_creator_deletes_and_only_a_closed_ticket_nobody_refers_to(stor
     assert _audit_lines(store) == []
 
 
+def test_a_closed_ticket_a_task_waits_on_is_not_deleted_until_the_dependency_is_resolved(store, clock):
+    # the owner's decision on R6-Q1 (build-plan section 30): deleting it would remove an unresolved blocker
+    # without a word, so the deletion is refused, by the sweep and by its creator alike
+    blocker, waiting = _closed(store), store.add_task("pia", "Import the week 34 export")
+    store.link("ville", blocker, "blocks", waiting)
+    assert store.sweep(clock() + 31 * DAY) == []
+    with pytest.raises(RecordError, match=f"#{blocker} stays: #{waiting} waits on it") as refused:
+        store.delete(blocker, "pia")
+    assert refused.value.code == "still_blocking"
+    assert (store.get(blocker)["status"], store.linked(waiting, "blocks", incoming=True)) == (CLOSED, [blocker])
+    assert store.ready() == [] and _audit_lines(store) == []
+    store.resolve_dependency(waiting, blocker, "anna", "The import goes ahead without it")
+    assert store.sweep(clock() + 31 * DAY) == [blocker]
+    assert [t["number"] for t in store.ready()] == [waiting]
+
+
+def test_a_closed_blocker_of_a_closed_task_goes_once_that_task_is_gone(store, clock):
+    blocker, waiting = _closed(store), _closed(store)
+    store.link("ville", blocker, "blocks", waiting)
+    assert store.sweep(clock() + 31 * DAY) == [waiting]  # reposted, a closed task would wait on it again
+    assert store.sweep(clock() + 32 * DAY) == [blocker]  # gone, it leaves nothing waiting
+
+
 def _with_the_old_guards(store):
     """Leave the store as round five wrote it: delete guards that refused every delete, no guard on how a
     ticket is created or closed, and version 1."""

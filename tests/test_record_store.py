@@ -142,6 +142,72 @@ def test_blocked_tasks_are_not_ready_until_the_blocker_is_finished(store):
     assert [t["number"] for t in store.ready()] == [second]
 
 
+def _blocked(store):
+    """A task that waits on another, which a worker closed: it could not be finished."""
+    blocker, waiting = store.add_task("pia", "Create the schema"), store.add_task("pia", "Import the file")
+    store.link("ville", blocker, "blocks", waiting)
+    store.claim(blocker, "ville")
+    store.close(blocker, "ville", "The supplier's export cannot be read")
+    return blocker, waiting
+
+
+def test_a_closed_blocker_keeps_blocking(store):
+    # the owner's decision on R6-Q1 (build-plan section 30): a closed prerequisite does not satisfy its dependency
+    blocker, waiting = _blocked(store)
+    assert store.get(blocker)["status"] == CLOSED
+    assert (store.ready(), store.linked(waiting, "blocks", incoming=True)) == ([], [blocker])
+
+
+def test_a_closed_blocker_corrected_reposted_and_finished_frees_the_task_it_blocks(store):
+    blocker, waiting = _blocked(store)
+    store.amend(blocker, "pia", body="Draft it from the corrected export of week 35")
+    store.repost(blocker, "pia")
+    assert [t["number"] for t in store.ready()] == [blocker]  # open again, and the task still waits on it
+    store.open_ticket(blocker, "ville")
+    store.release(blocker, "ville", reason="Drafted; for the approver")
+    assert [t["number"] for t in store.ready()] == [blocker]
+    store.finish(blocker, "anna", "The schema is in and correct")
+    assert [t["number"] for t in store.ready()] == [waiting]
+
+
+def test_an_approvers_decision_resolves_a_dependency_and_says_who_decided_and_why(store):
+    store.add_user("drafter", ["worker"], kind="agent")
+    blocker, waiting = _blocked(store)
+    assert _code(store.resolve_dependency, waiting, blocker, "ville", "Not needed") == "role_missing"
+    assert _code(store.resolve_dependency, waiting, blocker, "drafter", "Not needed") == "agent_approver"
+    assert _code(store.resolve_dependency, waiting, blocker, "anna", "  ") == "invalid_argument"
+    assert _code(store.resolve_dependency, blocker, waiting, "anna", "Backwards") == "not_blocked"
+    assert store.ready() == []
+    item = store.resolve_dependency(waiting, blocker, "anna", "The import can use the schema it has")
+    assert (item["number"], item["status"]) == (waiting, "open")  # no status changes
+    assert [t["number"] for t in store.ready()] == [waiting]
+    assert store.linked(waiting, "blocks", incoming=True) == []
+    [decision] = store.documents_about(waiting, "decision")
+    assert decision["data"] == {"decision": "dependency_resolved", "ticket": waiting, "blocker": blocker,
+                                "replacement": None, "approver": "anna",
+                                "reason": "The import can use the schema it has"}
+    entry = store.journal(waiting)[-1]
+    assert (entry["actor"], entry["role"], entry["action"]) == ("anna", "approver", "dependency_resolved")
+    assert entry["details"] == {"blocker": blocker, "decision": decision["number"],
+                                "reason": "The import can use the schema it has"}
+    assert store.get(blocker)["status"] == CLOSED  # the blocker is as it was
+    assert _code(store.resolve_dependency, waiting, blocker, "anna", "Again") == "not_blocked"
+
+
+def test_an_approvers_decision_replaces_a_dependency_with_another_task(store):
+    blocker, waiting = _blocked(store)
+    replacement = store.add_task("pia", "Create the schema from the week 35 export")
+    assert _code(store.resolve_dependency, waiting, blocker, "anna", "Same", replacement=blocker) == "invalid_argument"
+    store.resolve_dependency(waiting, blocker, "anna", "The week 35 export replaces it", replacement=replacement)
+    assert store.linked(waiting, "blocks", incoming=True) == [replacement]
+    assert [t["number"] for t in store.ready()] == [replacement]  # the task waits on the replacement now
+    [decision] = store.documents_about(waiting, "decision")
+    assert (decision["data"]["decision"], decision["data"]["replacement"]) == ("dependency_replaced", replacement)
+    assert store.journal(waiting)[-1]["details"]["replacement"] == replacement
+    store.finish(replacement, "anna", "The schema is in and correct")
+    assert [t["number"] for t in store.ready()] == [waiting]
+
+
 def test_a_task_held_by_someone_else_is_not_ready_for_others(store):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")

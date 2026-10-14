@@ -8,7 +8,10 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   the journal is append-only (enforced by the database, not only by this code). The one exception
   is the owner's (S-del and S-keep, build-plan section 28): a closed ticket is deleted in time, its
   journal and the documents only about it with it, leaving one audit line without content;
-- a `blocks` link keeps a task out of the ready list until its blocker's work ends;
+- a `blocks` link keeps a task out of the ready list until its blocker is finished. A closed
+  blocker went wrong, so it keeps blocking: until it is corrected, reposted and finished, or an
+  approver's decision resolves or replaces the dependency; and while a task waits on it, it is not
+  deleted (the owner's decision on R6-Q1, build-plan section 30);
 - a claim is a lease: it runs out by itself, one day after its holder's last write (owner answer
   P22, build-plan section 20), every write by its holder renews it, the end of the task's work
   releases it, and a holder whose lease ran out must claim again;
@@ -798,13 +801,31 @@ class Store:
                 return at
         return db.execute("SELECT updated_at FROM items WHERE number = ?", (number,)).fetchone()[0]
 
+    def _blocking(self, db, number: int) -> List[int]:
+        """The tasks that wait on this one: those it blocks that are not finished. A closed task keeps
+        them waiting (the owner's decision on R6-Q1, build-plan section 30)."""
+        return [r[0] for r in db.execute(
+            "SELECT l.target FROM links l JOIN items t ON t.number = l.target"
+            " WHERE l.source = ? AND l.type = 'blocks' AND t.status != ? ORDER BY l.target", (number, FINISHED))]
+
+    def _due(self, db, number: int, cutoff: datetime) -> bool:
+        """Whether the sweep deletes a task now: closed, nobody has reacted to it since `cutoff`, and no
+        task waits on it."""
+        return self._idle(db, number, cutoff) and not self._blocking(db, number)
+
     def _delete(self, db, number: int, actor: str, role: str, at: str) -> None:
         """Delete a closed task inside an open transaction (owner answers S-del and S-keep, build-plan
         section 28). First one audit line: an entry on no item, with the task's number, when it was
         closed and when it is deleted, and no content. Then the task, its journal, its links, and the
-        documents only about it, with their journals and links. The database refuses any row this does
-        not mark in `deleting`, and any task that is not closed, and a row another kept record refers
-        to (a schema version drafted on the ticket): the transaction is then rolled back whole."""
+        documents only about it, with their journals and links. A task that another task still waits on
+        is refused, so no unresolved blocker goes silently with it (the owner's decision on R6-Q1). The
+        database refuses any row this does not mark in `deleting`, and any task that is not closed, and
+        a row another kept record refers to (a schema version drafted on the ticket): the transaction is
+        then rolled back whole."""
+        waiting = self._blocking(db, number)
+        require(not waiting, "still_blocking",
+                f"#{number} stays: {', '.join(f'#{n}' for n in waiting)} waits on it, until it is reposted and "
+                f"finished or an approver resolves the dependency")
         documents = [r[0] for r in db.execute(
             "SELECT DISTINCT l.source FROM links l JOIN items d ON d.number = l.source"
             " WHERE l.type = 'about' AND l.target = ? AND d.kind = 'document' AND NOT EXISTS"
@@ -824,7 +845,8 @@ class Store:
         """The creator deletes a closed ticket now, the other choice it has besides amending and
         reposting it (owner answer S-closed, build-plan section 27): deleted as the sweep deletes one,
         with the same one audit line, attributed to the creator and stamped now. Refused unless the
-        ticket is closed and the actor created it, and while a kept record still refers to it."""
+        ticket is closed and the actor created it, while a task still waits on it (still_blocking), and
+        while a kept record still refers to it."""
         try:
             with self.transaction() as db:
                 self._created(db, number, actor)
@@ -845,22 +867,24 @@ class Store:
         CLOSED_RETENTION_DAYS before ``today``, and kept until then. Each deletion is its own
         transaction, by `system`: one audit line (the ticket's number, when it was closed and when it
         was deleted, and no content), then the ticket, its journal and the documents only about it. A
-        finished ticket is never deleted, however old. A closed ticket that a kept record still refers
-        to (a schema version drafted on it) stays: the database refuses to delete it, and the sweep
-        leaves it closed.
+        finished ticket is never deleted, however old. A closed ticket that an unfinished task still
+        waits on (it blocks it) stays, closed and blocking, until it is reposted and finished or an
+        approver resolves the dependency (the owner's decision on R6-Q1); the sweep tries again on its
+        next run. A closed ticket that a kept record still refers to (a schema version drafted on it)
+        stays: the database refuses to delete it, and the sweep leaves it closed.
         """
         moment = _moment(today)
         stamp, cutoff = moment.isoformat(timespec="seconds"), moment - timedelta(days=CLOSED_RETENTION_DAYS)
         with self.reading() as db:
             closed = [r[0] for r in db.execute("SELECT number FROM items WHERE kind = 'task' AND status = ?"
                                                " ORDER BY number", (CLOSED,)).fetchall()]
-            due = [number for number in closed if self._idle(db, number, cutoff)]
+            due = [number for number in closed if self._due(db, number, cutoff)]
         deleted = []
         for number in due:
             try:
                 with self.transaction() as db:
-                    if not self._idle(db, number, cutoff):
-                        continue  # someone wrote on it, or reposted it, since it was read above
+                    if not self._due(db, number, cutoff):
+                        continue  # someone wrote on it, reposted it or made it block a task since it was read
                     self._delete(db, number, SYSTEM, SYSTEM, stamp)
             except sqlite3.IntegrityError as error:
                 if "FOREIGN KEY" not in str(error):
@@ -900,14 +924,55 @@ class Store:
             return [r[0] for r in db.execute(
                 f"SELECT {other} FROM links WHERE {column}=? AND type=? ORDER BY {other}", (number, type_))]
 
+    def resolve_dependency(self, dependent: int, blocker: int, approver: str, reason: str, *,
+                           replacement: Optional[int] = None) -> dict:
+        """An approver decides a dependency whose blocker is not finished (the owner's decision on R6-Q1,
+        build-plan section 30): the dependent task no longer waits on the blocker (resolved), or waits
+        on `replacement` instead (replaced).
+
+        Without such a decision a task waits until its blocker is finished, a closed blocker corrected,
+        reposted and worked first. Only a named person with the approver role decides, with a reason.
+        The decision is a document about the dependent task, naming the blocker, the replacement if
+        any, the approver and the reason; the `blocks` link goes, the replacement's is made, and the
+        dependent's journal records the decision. Neither task's status changes. A closed blocker that
+        nothing waits on any more is deleted in time, like any closed ticket.
+        """
+        reason = text(reason, "reason")
+        with self.transaction() as db:
+            role = self.approver(db, approver)  # a worker, an agent or a service account never decides it
+            found = db.execute("SELECT b.status FROM links l JOIN items b ON b.number = l.source"
+                               " WHERE l.source = ? AND l.type = 'blocks' AND l.target = ?",
+                               (blocker, dependent)).fetchone()
+            require(found is not None and found[0] != FINISHED, "not_blocked",
+                    f"#{dependent} does not wait on #{blocker}: there is no dependency to decide")
+            require(replacement not in (blocker, dependent), "invalid_argument",
+                    "a replacement is another task than the blocker and the task that waits")
+            resolution = "resolved" if replacement is None else "replaced"
+            said = (f"#{dependent} no longer waits on #{blocker}" if replacement is None
+                    else f"#{dependent} waits on #{replacement} instead of #{blocker}")
+            document = self.document(
+                db, approver, "decision", f"Dependency {resolution}: #{dependent} on #{blocker}",
+                f"{said}, as {approver} (approver) decided: {reason}",
+                data={"decision": f"dependency_{resolution}", "ticket": dependent, "blocker": blocker,
+                      "replacement": replacement, "approver": approver, "reason": reason},
+                about=dependent, role=role)
+            db.execute("DELETE FROM links WHERE source = ? AND type = 'blocks' AND target = ?", (blocker, dependent))
+            details = {"blocker": blocker, "decision": document, "reason": reason}
+            if replacement is not None:
+                self._link(db, approver, replacement, "blocks", dependent, role)
+                details["replacement"] = replacement
+            self.write_journal(db, dependent, approver, role, f"dependency_{resolution}", details)
+            return self._item(db, dependent)
+
     def ready(self, actor: Optional[str] = None) -> List[dict]:
-        """Tasks someone can start: open or in progress, no unfinished blocker, not held by another."""
+        """Tasks someone can start: open or in progress, every blocker finished (a closed one keeps
+        blocking: the owner's decision on R6-Q1, build-plan section 30), not held by another."""
         with self.reading() as db:
             rows = db.execute(
                 "SELECT number FROM items i WHERE kind='task' AND status IN ('open','in_progress')"
                 " AND NOT EXISTS (SELECT 1 FROM links l JOIN items b ON b.number=l.source"
-                f"                 WHERE l.target=i.number AND l.type='blocks' AND b.status NOT IN ({_marks(ENDS)}))"
-                " ORDER BY number", ENDS).fetchall()
+                "                 WHERE l.target=i.number AND l.type='blocks' AND b.status != ?)"
+                " ORDER BY number", (FINISHED,)).fetchall()
             items = [self._item(db, r[0]) for r in rows]
         return [i for i in items if not i["lease_active"] or i["claimed_by"] == actor]
 
