@@ -38,10 +38,10 @@ from __future__ import annotations
 
 from typing import List, Literal, NamedTuple, Optional
 
-from babel.checks import check_answer, customer_part, describe
-from babel.mcp import Registry, ToolError
-from babel.record import consultations
-from babel.record.store import Store
+from datum.checks import check_answer, customer_part, describe
+from datum.mcp import Registry, ToolError
+from datum.record import consultations
+from datum.record.store import Store
 
 from . import tools
 from .data import WAREHOUSES, ServiceData, demo

@@ -35,7 +35,7 @@ import re
 from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from babel.schema.headers import Column, HeaderSchema
+from datum.schema.headers import Column, HeaderSchema
 
 from . import cleaning, staging
 from .staging import Dataset, Row, column_id

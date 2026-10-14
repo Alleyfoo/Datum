@@ -1,5 +1,7 @@
 # Datum
 
+*A governed record for company data, from intake to decision.*
+
 **Data is the map of the environment.** Datum keeps one record of what a company's data says, and lets each
 role draw its own view of it, with the evidence and the unknowns stated.
 
@@ -26,7 +28,7 @@ People decide what enters the record and what is approved.
   a finished ticket keeps its history.
 - **Customer-service slice:** search, consultations as tickets, availability and lead-time answers with a receipt,
   answer checks, and proposals for an approver. Golden tests cover the reference scenario.
-- **MCP server:** `python -m babel.mcp.server` serves a role's tools (the customer-service role first) to any MCP
+- **MCP server:** `python -m datum.mcp.server` serves a role's tools (the customer-service role first) to any MCP
   client over stdio. Each tool is a plain Python function in the role's registry; the server only passes calls
   and text through.
 - **Demo run:** `scripts/demo_run.py` runs one synthetic scenario end to end and writes it as plain files, for the
@@ -54,7 +56,7 @@ Python 3.11 or newer. The tests build their fixtures from the synthetic company 
 Closed tickets are deleted after their retention period. The sweep runs only when it is called:
 
 ```text
-python -m babel.record.sweep --store PATH_TO_STORE.sqlite --today YYYY-MM-DD
+python -m datum.record.sweep --store PATH_TO_STORE.sqlite --today YYYY-MM-DD
 ```
 
 It exits with a non-zero code and prints the error when it fails. Scheduling it is left to the operator.
@@ -65,7 +67,7 @@ The server speaks MCP over stdio: the client starts it as a command and talks to
 output. In the client's configuration (for example `claude_desktop_config.json`):
 
 ```json
-{ "mcpServers": { "datum": { "command": "python", "args": ["-m", "babel.mcp.server", "--store", "<path>"] } } }
+{ "mcpServers": { "datum": { "command": "python", "args": ["-m", "datum.mcp.server", "--store", "<path>"] } } }
 ```
 
 - `command` is the Python that has Datum installed (`pip install -e .`); give its full path if it is a virtual
@@ -126,8 +128,7 @@ worklist, and the scheduling of the manager run. There is no hosted demo yet.
 
 ## Code layout
 
-- `babel/`: the domain-free core (schema, intake, record, checks, the tool registry and the MCP server). The folder
-  keeps the project's earlier working name.
+- `datum/`: the domain-free core (schema, intake, record, checks, the tool registry and the MCP server).
 - `domains/spare_parts/`: the first domain pack (schema, synthetic company, rules, views, customer-service tools).
 - `tests/`: the test suite, golden files and synthetic fixtures.
 - `scripts/`: the demo run (`demo_run.py`) and golden-file regeneration. The `capture_lab_*` scripts are for the

@@ -4,7 +4,7 @@ from typing import Literal, Optional
 
 import pytest
 
-from babel.mcp import Registry, ToolError
+from datum.mcp import Registry, ToolError
 
 
 def _role():

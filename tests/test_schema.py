@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 import pytest
 
-from babel.schema import Entity, Field, Registry, SchemaError
+from datum.schema import Entity, Field, Registry, SchemaError
 
 
 def _registry():

@@ -31,8 +31,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-from babel.record import queue
-from babel.record.store import FINISHED, Store, require, text
+from datum.record import queue
+from datum.record.store import FINISHED, Store, require, text
 
 from . import accepted, schemas
 

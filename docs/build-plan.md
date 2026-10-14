@@ -10,7 +10,7 @@ confirm before the item they affect is built. Everything else is settled in
 | ID | Gap | Proposal | Blocks |
 |---|---|---|---|
 | G1 | Resolved by the owner: "schema" means the headers of a file kind (names, order, types). Mapping a header to its meaning is the Map stage, not the schema. | **Decided:** a file kind's schema is its header declaration, versioned per customer, with its approver recorded. Canonical meaning is declared by the domain pack and referenced by the mapping. | C4, C8, C9 |
-| G2 | Resolved by the owner: the old repository stays frozen; its data is imported, not its code extended. | **Decided:** the case store is ported into `babel/record` with its origin recorded. Data from the lab is copied in as import, with provenance, never edited in place. | C5, C15 |
+| G2 | Resolved by the owner: the old repository stays frozen; its data is imported, not its code extended. | **Decided:** the case store is ported into `datum/record` with its origin recorded. Data from the lab is copied in as import, with provenance, never edited in place. | C5, C15 |
 | G3 | Where state lives is not stated. | **Proposal:** SQLite for state (tickets, ledger, decisions, audit), as `mcp-messy-data` does; files for raw evidence, staging and extracts. | C1, C5 |
 | G4 | Resolved by the owner: identity is not set and the environment is unknown. | **Open, kept as a design principle, not built.** Principle 8 in `plan.md` says access is minimum per identity. Items that depend on an identity (C12, C22, C24) wait until the environment is known. The hook and collectors are built to run with no identity assumption beyond the file system they are given. | C12, C22, C24 |
 | G5 | One server or several, per role? | **Proposal:** one MCP server; per-call identity check (G4) decides which tools answer. Role tool lists are then a policy, not separate processes. | C12, C22 |
@@ -421,7 +421,7 @@ its card (`2ebd20a`); `close` is the consultant's tool (`261ee9c`, test changed 
 (`96eafb2`); 392 tests passed then. The review's answers follow, `c9a15a8` to `a404a57` (the table under "The owner's
 review of round six, as built").
 
-What the round delivers, in the store (`babel/record/store.py`) unless named:
+What the round delivers, in the store (`datum/record/store.py`) unless named:
 
 - statuses `open`, `in_progress`, `needs_input`, `closed`, `finished`; the filter (`consultations.STATUSES`, the
   search tool) lists `open`, `in_progress` (with `needs_input`), `closed` and `finished`, the finished list;
@@ -436,8 +436,8 @@ What the round delivers, in the store (`babel/record/store.py`) unless named:
 - `finish(number, approver, decision)` and `consultations.finish` for approvers; an approval finishes its ticket, and
   so does an approver's drop of a file (`dispositions.drop`, `dispositions.approve_drop`);
 - `CLOSED_RETENTION_DAYS = 30` and `sweep(today)`, with one audit line per deleted ticket; only a person's reaction
-  starts the 30 days again; the command `python -m babel.record.sweep --store PATH --today YYYY-MM-DD`
-  (`babel/record/sweep.py`) for a daily scheduler, with a non-zero exit code and the error on stderr when it fails;
+  starts the 30 days again; the command `python -m datum.record.sweep --store PATH --today YYYY-MM-DD`
+  (`datum/record/sweep.py`) for a daily scheduler, with a non-zero exit code and the error on stderr when it fails;
 - `release` unchanged (T-release): back to `open`, neither a close nor a finish;
 - migration steps 2 to 5 (store version 5): older stores open with every ticket.
 
@@ -486,7 +486,7 @@ deterministic demo run on the synthetic company, written as plain files for the 
 
 | Dependency | Pinned | Why | What it brings |
 |---|---|---|---|
-| `mcp`, the MCP Python SDK | 2.2.0 | The protocol server, `python -m babel.mcp.server` (`babel/mcp/server.py`): the stdio transport, the JSON-RPC session and its handshake, and the wire types, which a hand-written server would have to reimplement and keep up with the specification. The tests reach the server with the SDK's own in-memory and stdio clients. 2.2.0 is the version the two reference servers are built on (Parts-Service-Desk, Shopflow-furniture). | `mcp-types` (the same version), `pydantic`, `anyio`, `jsonschema`, `opentelemetry-api`, and the SDK's HTTP side (`starlette`, `sse-starlette`, `uvicorn`, `httpx2`, `python-multipart`, `pyjwt`), which the stdio server never starts; `pywin32` on Windows. Python 3.10 or newer, so the 3.11 target (Q10) stands. |
+| `mcp`, the MCP Python SDK | 2.2.0 | The protocol server, `python -m datum.mcp.server` (`datum/mcp/server.py`): the stdio transport, the JSON-RPC session and its handshake, and the wire types, which a hand-written server would have to reimplement and keep up with the specification. The tests reach the server with the SDK's own in-memory and stdio clients. 2.2.0 is the version the two reference servers are built on (Parts-Service-Desk, Shopflow-furniture). | `mcp-types` (the same version), `pydantic`, `anyio`, `jsonschema`, `opentelemetry-api`, and the SDK's HTTP side (`starlette`, `sse-starlette`, `uvicorn`, `httpx2`, `python-multipart`, `pyjwt`), which the stdio server never starts; `pywin32` on Windows. Python 3.10 or newer, so the 3.11 target (Q10) stands. |
 
 **Status:** built on branch `build/mcp-server`, not merged. In order: the dependency (`e1e3784`); the server with its
 tests and origin (`9ed36ff`, backlog C28 and R13); its README section, "Connecting an MCP client" (`52e097b`); the

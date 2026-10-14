@@ -6,8 +6,8 @@ import pytest
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
-from babel.intake import cleaning, inbox, staging
-from babel.intake.staging import StagingError
+from datum.intake import cleaning, inbox, staging
+from datum.intake.staging import StagingError
 from domains.spare_parts.exports import HEADERS
 
 FIXTURES = Path(__file__).parent / "fixtures"

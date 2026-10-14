@@ -11,7 +11,7 @@ from __future__ import annotations
 import sqlite3
 from typing import List, Optional
 
-from babel.record.store import RecordError, Store
+from datum.record.store import RecordError, Store
 
 TABLE = """
 CREATE TABLE IF NOT EXISTS accepted_files (

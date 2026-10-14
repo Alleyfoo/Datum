@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from babel.record.consultations import STATUSES
+from datum.record.consultations import STATUSES
 from cs_scenario import scenario
 
 TESTS = Path(__file__).parent

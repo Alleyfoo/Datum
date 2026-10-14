@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
-import babel.checks.answers
-import babel.mcp.registry
-import babel.record.consultations
+import datum.checks.answers
+import datum.mcp.registry
+import datum.record.consultations
 import domains.spare_parts.customer_service
-from babel.mcp import ToolError
-from babel.record import queue
-from babel.record.store import ENDS, RecordError, notice
+from datum.mcp import ToolError
+from datum.record import queue
+from datum.record.store import ENDS, RecordError, notice
 from cs_briefs import ANSWERS, REPLY
 from domains.spare_parts import tools
 from domains.spare_parts.customer_service import build
@@ -184,7 +184,7 @@ def test_propose_reply_queues_it_for_an_approver_and_sends_nothing(store, role):
 
 def test_a_released_consultation_goes_back_to_open(store, role):
     number = _open(role)
-    babel.record.consultations.release(store, number, "ville", "The customer will call back")
+    datum.record.consultations.release(store, number, "ville", "The customer will call back")
     assert store.get(number)["status"] == "open"
     assert role.call("search", {"status": "open"}).startswith("search status open: 1 ticket, shown")
     assert _code(role.call, "ask", {"consultation": number, "question": "Lead time"}) == "claim_required"
@@ -316,8 +316,8 @@ def test_a_close_without_a_reason_by_another_or_by_a_non_worker_is_refused_and_c
 
 #: the modules a tool runs: none may reach a model, the network, another process, a clock or chance
 #: (the store stamps its journal with the time; no tool's text carries it)
-TOOL_MODULES = [domains.spare_parts.customer_service, babel.record.consultations, babel.checks.answers,
-                babel.mcp.registry, tools]
+TOOL_MODULES = [domains.spare_parts.customer_service, datum.record.consultations, datum.checks.answers,
+                datum.mcp.registry, tools]
 FORBIDDEN_IMPORTS = {"urllib", "http", "socket", "ssl", "requests", "httpx", "subprocess", "multiprocessing",
                      "random", "secrets", "time", "datetime.datetime", "uuid", "ollama", "openai", "anthropic",
                      "mcp"}

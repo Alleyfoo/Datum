@@ -3,8 +3,8 @@ import sqlite3
 
 import pytest
 
-from babel.record import queue
-from babel.record.store import CLOSED, ENDS, FINISHED, TASK_STATUSES, RecordError, Store, agent_like
+from datum.record import queue
+from datum.record.store import CLOSED, ENDS, FINISHED, TASK_STATUSES, RecordError, Store, agent_like
 
 # the clock and store fixtures are in conftest.py
 

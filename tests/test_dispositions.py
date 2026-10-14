@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from babel.intake import accepted, dispositions, inbox
-from babel.record import queue
-from babel.record.store import CLOSED, ENDS, FINISHED, RecordError
+from datum.intake import accepted, dispositions, inbox
+from datum.record import queue
+from datum.record.store import CLOSED, ENDS, FINISHED, RecordError
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SUBJECT = {"company_id": "C-100", "source_id": "src_1"}

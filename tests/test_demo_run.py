@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from babel.record.store import RecordError, Store
+from datum.record.store import RecordError, Store
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "demo_run.py"
@@ -169,7 +169,7 @@ def test_demo_md_tells_each_step_with_its_calls_and_its_receipt(out, run):
         assert head + step["title"] in text
         assert step["receipt"] in text
         assert all(c["result"] in text for c in step["calls"])
-    assert "`python -m babel.record.sweep --store record.sqlite --today 2026-11-02`" in text
+    assert "`python -m datum.record.sweep --store record.sqlite --today 2026-11-02`" in text
 
 
 def test_a_directory_with_files_this_script_did_not_write_is_refused_and_left_as_it_is(tmp_path, capsys):

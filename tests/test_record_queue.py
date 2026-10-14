@@ -1,7 +1,7 @@
 import pytest
 
-from babel.record import queue
-from babel.record.store import ENDS, FINISHED, RecordError
+from datum.record import queue
+from datum.record.store import ENDS, FINISHED, RecordError
 
 
 def _code(call, *args, **kwargs):

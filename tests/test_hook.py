@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from babel.intake import accepted, dispositions, hook, inbox, staging
-from babel.intake.inbox import IntakeError
-from babel.record import queue
-from babel.record.store import REVIEW_QUEUE
-from babel.schema.headers import Column, HeaderSchema, Versioned
+from datum.intake import accepted, dispositions, hook, inbox, staging
+from datum.intake.inbox import IntakeError
+from datum.record import queue
+from datum.record.store import REVIEW_QUEUE
+from datum.schema.headers import Column, HeaderSchema, Versioned
 from domains.spare_parts.exports import stock_export
 
 FIXTURES = Path(__file__).parent / "fixtures"

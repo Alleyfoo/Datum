@@ -66,10 +66,10 @@ from typing import Dict, List, Optional
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / "tests")]  # the golden reply is kept with the tests
 
-from babel.intake import accepted, dispositions, hook, schemas, staging  # noqa: E402
-from babel.mcp import Registry  # noqa: E402
-from babel.record import consultations, queue, sweep  # noqa: E402
-from babel.record.store import CLOSED_RETENTION_DAYS, Store  # noqa: E402
+from datum.intake import accepted, dispositions, hook, schemas, staging  # noqa: E402
+from datum.mcp import Registry  # noqa: E402
+from datum.record import consultations, queue, sweep  # noqa: E402
+from datum.record.store import CLOSED_RETENTION_DAYS, Store  # noqa: E402
 from cs_briefs import REPLY  # noqa: E402
 from domains.spare_parts.customer_service import build as customer_service  # noqa: E402
 from domains.spare_parts.data import demo  # noqa: E402
@@ -311,7 +311,7 @@ class Run:
         if code != 0:
             raise RuntimeError(f"the sweep failed with exit code {code}")
         said = printed.getvalue().strip()
-        self.called("system", "command", "python -m babel.record.sweep", {"store": STORE, "today": on.isoformat()},
+        self.called("system", "command", "python -m datum.record.sweep", {"store": STORE, "today": on.isoformat()},
                     said, at=_utc(on, 0).isoformat())
         return said
 

@@ -1,6 +1,6 @@
 """The MCP protocol server: one role's registered tools, served to an MCP client over stdio.
 
-    python -m babel.mcp.server --store PATH [--role customer-service] [--actor NAME]
+    python -m datum.mcp.server --store PATH [--role customer-service] [--actor NAME]
 
 Wiring only. The tools are the role's registry (registry.py): each is listed with the name, the
 description and the input schema the registry reads from its function, and a call goes to the
@@ -43,7 +43,7 @@ import mcp_types as types
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
-from babel.record.store import RecordError, Store
+from datum.record.store import RecordError, Store
 
 from .registry import Registry, ToolError
 
@@ -137,7 +137,7 @@ async def serve(registry: Registry) -> None:
 def main(argv: Optional[List[str]] = None) -> int:
     """Serve the role the command line names; return the exit code."""
     parser = argparse.ArgumentParser(
-        prog="python -m babel.mcp.server",
+        prog="python -m datum.mcp.server",
         description="Serve one role's tools to an MCP client over stdio. Synthetic data only; no model is called.")
     parser.add_argument("--store", required=True, type=Path,
                         help="the ticket store, a SQLite file; a new one is created if there is none")

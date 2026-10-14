@@ -3,10 +3,10 @@ attributed; questions paged, with the open ones counted over all of them."""
 
 import pytest
 
-from babel.checks import Check
-from babel.record import consultations as cons
-from babel.record import queue
-from babel.record.store import CLOSED, ENDS, FINISHED, RecordError, notice
+from datum.checks import Check
+from datum.record import consultations as cons
+from datum.record import queue
+from datum.record.store import CLOSED, ENDS, FINISHED, RecordError, notice
 
 # the clock and store fixtures are in conftest.py
 

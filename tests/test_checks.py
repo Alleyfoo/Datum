@@ -8,7 +8,7 @@ except where the lab compared the pieces of dates (backlog C13), and those cases
 import re
 from pathlib import Path
 
-from babel.checks import Check, check_answer, customer_part, dates_in, describe, numbers_in
+from datum.checks import Check, check_answer, customer_part, dates_in, describe, numbers_in
 from cs_briefs import ANSWERS, GOLDEN, checks
 from domains.spare_parts import tools
 from domains.spare_parts.data import demo

@@ -25,9 +25,9 @@ import re
 from collections import Counter
 from typing import Callable, List, Optional, Tuple
 
-from babel.record import queue
-from babel.record.store import ROLES, Store, require, text
-from babel.schema.headers import Column, HeaderSchema, Versioned
+from datum.record import queue
+from datum.record.store import ROLES, Store, require, text
+from datum.schema.headers import Column, HeaderSchema, Versioned
 
 from . import cleaning, staging, trial
 from .staging import Dataset

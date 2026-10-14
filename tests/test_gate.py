@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from babel.intake import accepted, dispositions, hook, schemas, staging
-from babel.record import queue
-from babel.record.store import RecordError
-from babel.schema.headers import Column, HeaderSchema
+from datum.intake import accepted, dispositions, hook, schemas, staging
+from datum.record import queue
+from datum.record.store import RecordError
+from datum.schema.headers import Column, HeaderSchema
 from domains.spare_parts.exports import stock_export
 
 FIXTURES = Path(__file__).parent / "fixtures"

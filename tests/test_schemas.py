@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from babel.intake import hook, inbox, schemas, staging
-from babel.record import queue
-from babel.record.store import RecordError
-from babel.schema.headers import Column, HeaderSchema
+from datum.intake import hook, inbox, schemas, staging
+from datum.record import queue
+from datum.record.store import RecordError
+from datum.schema.headers import Column, HeaderSchema
 
 FIXTURES = Path(__file__).parent / "fixtures"
 EXPORT = FIXTURES / "stock_export_2026-08-21.xlsx"

@@ -4,7 +4,7 @@ The owner's decision: a schema is the set of a file's column headers (names, ord
 one file kind, per company. What a header means is the Map stage, not the schema. The declaration
 also says where its headers are: the sheet and the header row.
 
-The cleaning stage runs before the trial (babel/intake/cleaning.py). It first takes each formula
+The cleaning stage runs before the trial (datum/intake/cleaning.py). It first takes each formula
 cell as its calculated value, the value the file saved for it (F1, owner answer P20), then trims
 leading and trailing whitespace from every text cell and header (T1, the owner's default for all
 sources), and applies the transformations a field declares. The one declaration built is case,

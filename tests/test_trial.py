@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from babel.intake import cleaning, inbox, staging, trial
-from babel.schema.headers import Column, HeaderError, HeaderSchema
+from datum.intake import cleaning, inbox, staging, trial
+from datum.schema.headers import Column, HeaderError, HeaderSchema
 from domains.spare_parts.exports import stock_export
 
 FIXTURES = Path(__file__).parent / "fixtures"

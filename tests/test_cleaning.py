@@ -3,9 +3,9 @@ from datetime import datetime
 
 import pytest
 
-from babel.intake import cleaning, hook, inbox, schemas, staging, trial
-from babel.intake.cleaning import CleaningError
-from babel.schema.headers import Column, HeaderError, HeaderSchema, Versioned
+from datum.intake import cleaning, hook, inbox, schemas, staging, trial
+from datum.intake.cleaning import CleaningError
+from datum.schema.headers import Column, HeaderError, HeaderSchema, Versioned
 
 STOCK = HeaderSchema("Stock", 1, (
     Column("Item", "text"), Column("Description", "text"), Column("Warehouse", "text"),

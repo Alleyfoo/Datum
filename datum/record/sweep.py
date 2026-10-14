@@ -1,6 +1,6 @@
 """The daily sweep of closed tickets, as a command a scheduler runs once a day:
 
-    python -m babel.record.sweep --store PATH --today YYYY-MM-DD
+    python -m datum.record.sweep --store PATH --today YYYY-MM-DD
 
 It runs Store.sweep on the store at PATH for the date given, which deletes the closed tickets no person
 has reacted to for more than CLOSED_RETENTION_DAYS, each with its audit line, and prints their numbers.
@@ -41,7 +41,7 @@ def _day(value: str) -> date:
 def main(argv: Optional[List[str]] = None) -> int:
     """Run the sweep once, as the command line asks; return the exit code."""
     parser = argparse.ArgumentParser(
-        prog="python -m babel.record.sweep",
+        prog="python -m datum.record.sweep",
         description="Delete the closed tickets no person has reacted to for more than the retention period, "
                     "on the date given.")
     parser.add_argument("--store", required=True, type=Path, help="the ticket store, a SQLite file")

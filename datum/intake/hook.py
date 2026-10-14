@@ -28,8 +28,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, List, Optional, Sequence, Tuple
 
-from babel.record.store import REVIEW_QUEUE, RecordError, Store
-from babel.schema.headers import Versioned
+from datum.record.store import REVIEW_QUEUE, RecordError, Store
+from datum.schema.headers import Versioned
 
 from . import accepted, cleaning, dispositions, inbox, staging, trial
 from .inbox import IntakeError

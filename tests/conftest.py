@@ -8,7 +8,7 @@ from xml.sax.saxutils import escape
 import pytest
 from openpyxl import Workbook
 
-from babel.record.store import Store
+from datum.record.store import Store
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -42,7 +42,7 @@ def clock():
 @pytest.fixture
 def store(tmp_path, clock):
     """A record with an approver (anna), a worker (ville), one person holding both (pia) and the hook."""
-    s = Store(tmp_path / "state" / "babel.sqlite", clock=clock)
+    s = Store(tmp_path / "state" / "datum.sqlite", clock=clock)
     s.add_user("anna", ["approver"])
     s.add_user("ville", ["worker"])
     s.add_user("pia", ["approver", "worker"])

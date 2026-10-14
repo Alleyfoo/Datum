@@ -7,7 +7,7 @@ and are fulfilled or backordered; purchase orders are open until they arrive.
 
 from __future__ import annotations
 
-from babel.schema import Entity, Field, Registry
+from datum.schema import Entity, Field, Registry
 
 
 def _f(name, type, *, required=True, unit=None, ref=None):

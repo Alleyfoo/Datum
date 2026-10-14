@@ -192,6 +192,7 @@ def _line(value) -> bytes:
 
 def fingerprint(sheet: str, width: int, rows) -> str:
     digest = hashlib.sha256()
+    # "babel-staging" is the fingerprint salt from before the rename; kept so existing fingerprints stay valid
     digest.update(_line(["babel-staging", VERSION, sheet, width]))
     for row in rows:
         digest.update(_line([row.source_row, row.codes, list(row.texts),

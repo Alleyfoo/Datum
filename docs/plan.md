@@ -1,6 +1,12 @@
-# Plan: Datum (working name)
+# Plan: Datum
 
-The repository is named Datum (renamed from Babel-Tower on 2026-10-08). Datum is a reference point that every measurement is taken from.
+*A governed record for company data, from intake to decision.*
+
+**Why the name.** The project's working name was Babel Tower: many sources and many languages stacked into one
+tower, which pointed at the full stack of data work. The name was changed to Datum (repository on 2026-10-08, code
+package on 2026-10-14). In surveying, a datum is the reference point that every measurement is taken from. That is
+what the system is: one record that each role measures from, with its evidence and its unknowns stated. In some
+languages "datum" means a date, so the name is always shown with its tagline.
 
 Status: agreed direction, 2026-10-07. Phase 1 built on 2026-10-08. Everything else is
 planned, and the board below says which parts are read, coded or still to decide.

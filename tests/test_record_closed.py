@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 
-from babel.record import consultations as cons
-from babel.record import queue, sweep
-from babel.record.store import CLOSED, CLOSED_RETENTION_DAYS, FINISHED, REVIEW_QUEUE, RecordError, Store, notice
+from datum.record import consultations as cons
+from datum.record import queue, sweep
+from datum.record.store import CLOSED, CLOSED_RETENTION_DAYS, FINISHED, REVIEW_QUEUE, RecordError, Store, notice
 
 # the clock and store fixtures are in conftest.py
 
@@ -332,7 +332,7 @@ def test_the_sweep_takes_its_date_reads_no_clock_and_runs_only_when_called(store
 
 def _run_sweep(*args):
     """The daily sweep as a scheduler runs it: the command, in a process of its own."""
-    return subprocess.run([sys.executable, "-m", "babel.record.sweep", *args], cwd=ROOT, capture_output=True,
+    return subprocess.run([sys.executable, "-m", "datum.record.sweep", *args], cwd=ROOT, capture_output=True,
                           text=True, timeout=120)
 
 
@@ -356,7 +356,7 @@ def test_a_failing_sweep_exits_non_zero_and_says_why_on_stderr(tmp_path):
     assert (failed.returncode, failed.stdout) == (1, "")
     assert "Traceback" in failed.stderr
     assert "sweep failed on 2026-11-08: DatabaseError: file is not a database" in failed.stderr
-    missing = tmp_path / "nowhere" / "babel.sqlite"
+    missing = tmp_path / "nowhere" / "datum.sqlite"
     gone = _run_sweep("--store", str(missing), "--today", "2026-11-08")
     assert (gone.returncode, gone.stdout) == (1, "") and "there is no store at" in gone.stderr
     assert not missing.parent.exists()  # nothing is created

@@ -49,7 +49,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from babel.schema.headers import CALCULATION_RULE, DEFAULT_RULES, TRIM_RULE, Column, HeaderSchema
+from datum.schema.headers import CALCULATION_RULE, DEFAULT_RULES, TRIM_RULE, Column, HeaderSchema
 
 from .inbox import customer_dir
 from .staging import Dataset, Row, column_id, fingerprint

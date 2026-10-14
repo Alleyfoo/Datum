@@ -27,7 +27,7 @@ import copy
 import textwrap
 from typing import Iterable, List, Optional, Sequence, Tuple
 
-from babel.checks import Check, describe
+from datum.checks import Check, describe
 
 from . import queue
 from .store import CLOSED, FINISHED, Store, require, text

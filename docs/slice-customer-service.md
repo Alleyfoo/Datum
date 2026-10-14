@@ -18,8 +18,8 @@ ticket, and the answer carries its receipt: the tools run, the rule applied, the
 | Lab source | What is ported | Lands in |
 |---|---|---|
 | `desk/tools.py` `machine_context`, `stock_by_warehouse`, `incoming_orders`, `lead_time`, `substitutes`, `where_used`, `due_soon`, `fastest_supply`, `conflicts`, `recommended_plan`, `availability`, `lead_time_plan`, `lead_time_question`, `service_plan`, `service_demand`, `critical_spares` | the rules that decide the availability, lead-time and service answers | `domains/spare_parts/tools.py` |
-| `desk/expert.py` `numbers_in`, `customer_part`, `check_answer` | the answer checks: every number in the answer comes from the facts; no other customer is named | `babel/checks/` (core) and the spare-parts confidential names in the domain pack |
-| `desk/mcp_server.py` `list_countries`, `list_companies`, `show_plant`, `show_machine`, `ask_question`, `check_answer`, `propose_customer_reply` | the tool surface for this role | `babel/mcp/` (server) with the spare-parts tools registered |
+| `desk/expert.py` `numbers_in`, `customer_part`, `check_answer` | the answer checks: every number in the answer comes from the facts; no other customer is named | `datum/checks/` (core) and the spare-parts confidential names in the domain pack |
+| `desk/mcp_server.py` `list_countries`, `list_companies`, `show_plant`, `show_machine`, `ask_question`, `check_answer`, `propose_customer_reply` | the tool surface for this role | `datum/mcp/` (server) with the spare-parts tools registered |
 | `desk/analyst.py`, `desk/situation.py` | not in this slice (the manager and the feed belong to a later slice) | — |
 
 Defects fixed while porting (backlog C13): the date check compares whole dates, not number fragments; `get_case`

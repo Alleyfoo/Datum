@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from babel.intake import inbox
-from babel.intake.inbox import IntakeError
+from datum.intake import inbox
+from datum.intake.inbox import IntakeError
 
 FIXTURES = Path(__file__).parent / "fixtures"
 EXPORT = FIXTURES / "stock_export_2026-08-21.xlsx"

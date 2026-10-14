@@ -16,9 +16,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from babel.record import queue
-from babel.record.consultations import STATUSES, release
-from babel.record.store import Store
+from datum.record import queue
+from datum.record.consultations import STATUSES, release
+from datum.record.store import Store
 from cs_briefs import REPLY
 from domains.spare_parts.customer_service import build
 from domains.spare_parts.data import demo
@@ -54,7 +54,7 @@ def call_text(tool: str, arguments: dict) -> str:
 
 def scenario(root: Path) -> Dict[str, str]:
     """Every saved text: file name (without .txt) -> text. ``root`` must be a new, empty directory."""
-    store = Store(Path(root) / "babel.sqlite", clock=lambda: AT)
+    store = Store(Path(root) / "datum.sqlite", clock=lambda: AT)
     store.add_user(WORKER, ["worker"])
     store.add_user(APPROVER, ["approver"])
     store.add_user(SECOND, ["worker"])

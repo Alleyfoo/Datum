@@ -2,7 +2,7 @@
 
 The server is built in this process and reached with the MCP SDK's own client: in memory in both
 protocol eras (the initialize handshake of today's stdio clients, and the 2026-07-28 requests that
-carry their own envelope), and once over stdio as `python -m babel.mcp.server` in a child process.
+carry their own envelope), and once over stdio as `python -m datum.mcp.server` in a child process.
 No live assistant and no model take part.
 """
 
@@ -15,9 +15,9 @@ import anyio
 import pytest
 from mcp import Client, StdioServerParameters
 
-import babel.mcp.server
-from babel.mcp.server import ACTOR, main, open_role, server
-from babel.record.store import RecordError, Store
+import datum.mcp.server
+from datum.mcp.server import ACTOR, main, open_role, server
+from datum.record.store import RecordError, Store
 from cs_briefs import REPLY
 from domains.spare_parts.customer_service import INSTRUCTIONS, build
 from domains.spare_parts.data import demo
@@ -158,7 +158,7 @@ def test_without_an_actor_the_tools_act_as_an_agent_added_once_and_a_named_actor
 def test_python_m_babel_mcp_server_serves_the_role_over_stdio(tmp_path):
     path = tmp_path / "record.sqlite"
     process = StdioServerParameters(command=sys.executable, cwd=str(ROOT),
-                                    args=["-m", "babel.mcp.server", "--store", str(path)])
+                                    args=["-m", "datum.mcp.server", "--store", str(path)])
 
     async def go():
         async with Client(process, mode="legacy") as client:
@@ -179,7 +179,7 @@ FORBIDDEN = {"urllib", "http", "socket", "ssl", "requests", "httpx", "httpx2", "
 
 
 def test_the_server_reaches_no_model_no_network_and_no_transport_but_stdio(tmp_path):
-    tree = ast.parse(Path(babel.mcp.server.__file__).read_text(encoding="utf-8"))
+    tree = ast.parse(Path(datum.mcp.server.__file__).read_text(encoding="utf-8"))
     imported = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):

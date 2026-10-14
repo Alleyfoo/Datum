@@ -14,7 +14,7 @@ import random
 from datetime import date, timedelta
 from typing import Dict, Iterable, List, Sequence, Tuple
 
-from babel.schema import Refusal
+from datum.schema import Refusal
 
 from .schema import registry
 

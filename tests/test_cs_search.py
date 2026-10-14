@@ -2,10 +2,10 @@
 
 import pytest
 
-from babel.checks import Check
-from babel.mcp import ToolError
-from babel.record import consultations as cons
-from babel.record import queue
+from datum.checks import Check
+from datum.mcp import ToolError
+from datum.record import consultations as cons
+from datum.record import queue
 from domains.spare_parts.customer_service import build
 from domains.spare_parts.data import demo
 from domains.spare_parts.views import machine_card, plant_view
