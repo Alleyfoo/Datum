@@ -191,8 +191,9 @@ def test_a_released_consultation_goes_back_to_open(store, role):
 
 
 def test_the_role_also_has_release_and_resume(role):
-    # P26 (build-plan section 25): the consultant can hand a call back and take one up again
-    assert role.names() == SLICE_TOOLS + ["release", "resume"]
+    # P26 (build-plan section 25): the consultant can hand a call back and take one up again; which tools
+    # follow these two is the close tool's own test
+    assert role.names()[:8] == SLICE_TOOLS + ["release", "resume"]
     assert role["release"].writes and role["resume"].writes
     assert (role["release"].schema["required"], role["resume"].schema["required"]) == (
         ["consultation", "reason"], ["consultation"])
