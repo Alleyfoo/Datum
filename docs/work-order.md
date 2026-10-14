@@ -1,12 +1,13 @@
 # Work order: what is left to finish
 
-**As of 2026-10-12.** Done so far: the schema registry, the synthetic company, the intake chain (preserve, staging,
+**As of 2026-10-14.** Done so far: the schema registry, the synthetic company, the intake chain (preserve, staging,
 cleaning, trial, tickets, dispositions, schema versions and the create-schema gate), the desk's views with golden
 tests, the customer-service slice (rules, checks, six MCP tools, consultations as tickets), all bugs B1 to B6, and
-the formula rule. Round five (branch `build/round-five`, not merged) adds the owner's status name `closed`, the
-`release` and `resume` tools and the P25-b status mapping (B2 and B3 below); 351 tests pass there. The authoritative
-lists are [backlog.md](backlog.md) and [build-plan.md](build-plan.md). This page is the order of work and the
-decisions still needed.
+the formula rule. Round five (merged into `main`, `b72177e`) added the owner's status name `closed`, the `release`
+and `resume` tools and the P25-b status mapping (B2 and B3 below). Round six (branch `build/round-six`, not merged)
+builds the two end states, `closed` and `finished`, with closing, the creator's choices, finishing and the 30-day
+deletion (B4 below); 392 tests pass there. The authoritative lists are [backlog.md](backlog.md) and
+[build-plan.md](build-plan.md). This page is the order of work and the decisions still needed.
 
 ## A. Decisions needed from the owner (blocking, in order)
 
@@ -17,6 +18,7 @@ decisions still needed.
 | P11 | Publish the repository, or post recordings only, for the job posts? | the public demo and the posts |
 | P2 | Ticket grouping. Owner: later, one ticket per file for now. Confirm. | nothing now |
 | P5 | Anomaly threshold for the analysis ticket. Owner: tune later, the assistant proposes values. | the analyst scene (C15) |
+| R6-Q1 to R6-Q4 | Round six's four questions (build-plan section 30): does a closed blocker keep blocking; who reads the notice of an intake ticket, whose creator is the hook; should an approver's drop finish rather than close; should only `close`, with a reason, close a ticket. Each is built one way, as described there. | nothing now; each answer changes one rule and its test |
 
 ## B. Finish for the demo (in this order)
 
@@ -32,27 +34,37 @@ decisions still needed.
    journal, and an older store is migrated once when it opens (`6323e83`, `c679ee0`; tests that pinned `done`
    changed in `d15fe4e`). A ticket waiting for an approver is listed under `in_progress`, as recommended and still to
    confirm (P25-b, `36665be`; the test that pinned the old placement changed in `2549309`). Tests for each status.
-4. **Worklist (C16, reads R6).** Port the close-of-day worklist from Shop-flow onto tickets: one action sheet per role,
+4. **Done: the end states (round six; S-two to S-finish, build-plan sections 27 to 29).** Statuses `open`,
+   `in_progress`, `needs_input`, `closed`, `finished`; the filter lists `open`, `in_progress` (with `needs_input`),
+   `closed` and `finished`. A worker closes a ticket that cannot be finished, with the reason (`close`, also the
+   consultant's tool), and a notice tells its creator to amend and repost it, or delete it (`amend`, `repost`,
+   `delete`). Only an approver finishes a ticket, with a decision and a reason (`finish`); an approval finishes its
+   ticket. A closed ticket nobody reacts to for 30 days (`CLOSED_RETENTION_DAYS`) is deleted by `sweep(today)`,
+   leaving one audit line; a finished one never is. `release` is unchanged. Older stores open with every ticket
+   (store version 3). Commits `68823ec` to `96eafb2` on `build/round-six`; the choices are in build-plan section 30.
+   Next: the owner's answers to R6-Q1 to R6-Q4, and the merge.
+5. **Worklist (C16, reads R6).** Port the close-of-day worklist from Shop-flow onto tickets: one action sheet per role,
    each line with its evidence. Golden test on the synthetic company.
-5. **Analysis tools (C14).** Lead-time spread and the pre-order proposal on the schema. Golden test. The pre-order is
+6. **Analysis tools (C14).** Lead-time spread and the pre-order proposal on the schema. Golden test. The pre-order is
    a proposal for an approver, never an order.
-6. **Anomaly rule (C15, after P5).** The rule part only: an order above the threshold opens an analysis ticket. The
+7. **Anomaly rule (C15, after P5).** The rule part only: an order above the threshold opens an analysis ticket. The
    threshold stays a named placeholder.
-7. **Event history used by analytics (C17).** The lead-time and pre-order tools read the requests, deliveries and
+8. **Event history used by analytics (C17).** The lead-time and pre-order tools read the requests, deliveries and
    movements that exist since phase 1.
-8. **Traceability (C20).** Every value in an answer names its source cell (staging row and column). Test on the
+9. **Traceability (C20).** Every value in an answer names its source cell (staging row and column). Test on the
    stock export fixture.
-9. **Module registry and establishment (C10, C11, reads R8, R9, R14).** The module contract with its approver and
-   limitations, and the establishment ticket flow for a new company. Tests with two companies.
-10. **Per-call role check (C12).** Everyone is a manager for now, so the check allows all and logs the actor. The
+10. **Module registry and establishment (C10, C11, reads R8, R9, R14).** The module contract with its approver and
+    limitations, and the establishment ticket flow for a new company. Tests with two companies.
+11. **Per-call role check (C12).** Everyone is a manager for now, so the check allows all and logs the actor. The
     real check waits for P6 (environment). Test that every call is logged with its actor.
-11. **Demo surface (C18) and replay (C19).** A plant map, the conversation replay of the customer-service scene, the
+12. **Demo surface (C18) and replay (C19).** A plant map, the conversation replay of the customer-service scene, the
     ticket view and the approval queue. Replays are recorded tool runs, deterministic, hostable. No live model in the
-    replay. Demo steps 1 to 5 in [demo.md](demo.md) must run from a clean checkout.
-12. **Reads still open (Read rows).** R10 (evidence packet), R11 (case and worker separation), R12 (no model in
+    replay. Demo steps 1 to 5 in [demo.md](demo.md) must run from a clean checkout. The sweep of closed tickets is
+    run by a call with its date; who calls it, and when, belongs here or with the manager's schedule.
+13. **Reads still open (Read rows).** R10 (evidence packet), R11 (case and worker separation), R12 (no model in
     execution), R13 (tiers), R16 (workbook reading, mostly done in C2), R19 (forecast methods, needed for C14 only if
     a forecast is shown), R20 (coverage map for the plant view). Each read is recorded in provenance.md with its commit.
-13. **Manager, ticket checks.** Port the analyst's citation and number checks (`desk/analyst.py`, `check_ticket`) so a
+14. **Manager, ticket checks.** Port the analyst's citation and number checks (`desk/analyst.py`, `check_ticket`) so a
     manager ticket cites its evidence and is checked the same way. The schedule is not set up; the owner asks for it.
 
 ## C. Later (not part of the demo)
@@ -80,3 +92,5 @@ decisions still needed.
 - Real company data stays out (owner decision RD-5). Synthetic only until real data is approved.
 
 **Update (2026-10-12, sixth round):** P25-b is answered (`needs_input` under `in_progress`). P11 is answered as a static page built from the records (build-plan section 26). Both are recorded in [build-plan.md](build-plan.md) section 26.
+
+**Update (2026-10-14, round six):** the end states are built on `build/round-six`, not merged (B4): `closed` and `finished`, closing with a reason and the creator's notice, amend, repost and delete, finishing by an approver's decision, and the 30-day sweep. 392 tests pass. The choices and four questions for the owner (R6-Q1 to R6-Q4) are in [build-plan.md](build-plan.md) section 30.
