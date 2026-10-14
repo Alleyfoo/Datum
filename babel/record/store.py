@@ -26,8 +26,9 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   opens, renamed it;
 - the creator of a closed ticket (the item's `created_by`) may amend its title or body, each
   amendment a journal entry with the text before and after, and repost it: open again, with its
-  history (S-closed, section 27). A closed ticket nobody reacts to for CLOSED_RETENTION_DAYS is
-  deleted by the sweep, which runs only when called, on the date it is given (S-period, section 29).
+  history; or delete it (S-closed, section 27). A closed ticket nobody reacts to for
+  CLOSED_RETENTION_DAYS is deleted by the sweep, which runs only when called, on the date it is
+  given (S-period, section 29).
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -683,6 +684,20 @@ class Store:
         db.execute(f"DELETE FROM links WHERE source IN ({marks}) OR target IN ({marks})", gone + gone)
         db.execute(f"DELETE FROM items WHERE number IN ({marks})", gone)
         db.execute("DELETE FROM deleting")
+
+    def delete(self, number: int, actor: str) -> None:
+        """The creator deletes a closed ticket now, the other choice it has besides amending and
+        reposting it (owner answer S-closed, build-plan section 27): deleted as the sweep deletes one,
+        with the same one audit line, attributed to the creator and stamped now. Refused unless the
+        ticket is closed and the actor created it, and while a kept record still refers to it."""
+        try:
+            with self.transaction() as db:
+                self._created(db, number, actor)
+                self._delete(db, number, actor, self.acting_role(db, actor), self.now())
+        except sqlite3.IntegrityError as error:
+            if "FOREIGN KEY" not in str(error):
+                raise
+            raise RecordError("still_referred_to", f"#{number} stays: a kept record refers to it") from None
 
     def sweep(self, today) -> List[int]:
         """Delete every closed ticket nobody has reacted to for more than CLOSED_RETENTION_DAYS, and

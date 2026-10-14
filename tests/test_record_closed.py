@@ -209,6 +209,33 @@ def test_the_database_refuses_every_other_delete(store, clock):
     assert [line["details"]["ticket"] for line in _audit_lines(store)] == [closed]
 
 
+def test_the_creator_deletes_a_closed_ticket_now_with_the_same_one_audit_line(store, clock):
+    task = _closed(store)
+    closed_at = store.now()
+    store.add_document("ville", "finding", "Header differs", "Column c004 is renamed", about=task)
+    clock.advance(hours=2)
+    assert store.delete(task, "pia") is None
+    assert (_code(store.get, task), store.journal(task)) == ("unknown_item", [])
+    [line] = _audit_lines(store)
+    assert (line["item"], line["actor"], line["role"], line["at"]) == (None, "pia", "worker", store.now())
+    assert line["details"] == {"ticket": task, "closed_at": closed_at, "deleted_at": store.now()}
+    assert "Header differs" not in json.dumps(store.journal(), ensure_ascii=False)
+
+
+def test_only_the_creator_deletes_and_only_a_closed_ticket_nobody_refers_to(store):
+    task, kept = _closed(store), _closed(store)
+    assert _code(store.delete, task, "ville") == "not_the_creator"
+    store.repost(task, "pia")
+    assert _code(store.delete, task, "pia") == "not_closed"
+    finished = store.add_task("pia", "Week 33 export")
+    store.finish(finished, "anna", "Imported and checked")
+    assert _code(store.delete, finished, "pia") == "not_closed"
+    _referred_to(store, kept)
+    assert _code(store.delete, kept, "pia") == "still_referred_to"
+    assert [store.get(n)["status"] for n in (task, finished, kept)] == ["open", FINISHED, CLOSED]
+    assert _audit_lines(store) == []
+
+
 def _with_the_old_guards(store):
     """Leave the store as round five wrote it: delete guards that refused every delete, and version 1."""
     db = sqlite3.connect(store.path)
