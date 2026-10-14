@@ -190,6 +190,19 @@ store), `data/` (the company's folder: inbox, staging and cleaning records) and 
 arrived). Two runs with the same arguments write byte-identical `demo.json` and `demo.md`. The directory must be
 new, empty or an earlier output of the script, which is replaced; `output/` is ignored by git.
 
+## The demo page
+
+The demo run can be turned into one static page that shows the scenario visually: the run at a glance, each
+step with its ticket's status changes, the renamed column, the customer reply with its receipt, and the record
+after the run.
+
+```text
+python scripts/demo_run.py --out output/demo
+python scripts/build_site.py --demo output/demo/demo.json --out output/site/index.html
+```
+
+The page is a single HTML file with no scripts and no external requests. The same run gives the same page.
+
 ## Documentation
 
 - [docs/plan.md](docs/plan.md): purpose, principles, status and phases.
