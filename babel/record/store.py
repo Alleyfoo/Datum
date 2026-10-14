@@ -23,7 +23,8 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   `done` for `closed` before (P25, section 25); one migration step, run once when an older store
   opens, renamed it;
 - the creator of a closed ticket (the item's `created_by`) may amend its title or body, each
-  amendment a journal entry with the text before and after (S-closed, section 27).
+  amendment a journal entry with the text before and after, and repost it: open again, with its
+  history (S-closed, section 27).
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -599,6 +600,14 @@ class Store:
             require(any(item[k] != v for k, v in fields.items()), "nothing_changed",
                     f"#{number} says that already: the amendment changes nothing")
             return self.update(db, number, actor, action="amended", **fields)
+
+    def repost(self, number: int, actor: str) -> dict:
+        """The creator reposts a closed ticket: it is open again, for the next handler, with its whole
+        history kept, and the journal records the repost (owner answer S-closed). Refused unless the
+        ticket is closed."""
+        with self.transaction() as db:
+            self._created(db, number, actor)
+            return self.update(db, number, actor, action="reposted", status="open")
 
     def comment(self, number: int, actor: str, body: str, *, role: Optional[str] = None) -> int:
         """A comment records what happened. Anyone may comment, also on a finished item."""

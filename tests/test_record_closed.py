@@ -48,3 +48,31 @@ def test_only_the_creator_amends_and_only_a_closed_ticket_with_new_text(store):
     assert _code(store.amend, finding, "pia", title="Renamed") == "not_a_task"
     assert [e["action"] for e in store.journal(task)].count("amended") == 0
     assert store.get(working)["title"] == "Another export"
+
+
+def test_the_creator_reposts_a_closed_ticket_to_open_with_its_whole_history(store):
+    task = _closed(store)
+    store.amend(task, "pia", title="Stock export from C-100, week 35")
+    history = store.journal(task)
+    reposted = store.repost(task, "pia")
+    assert (reposted["status"], reposted["claimed_by"], reposted["title"]) == (
+        "open", None, "Stock export from C-100, week 35")
+    *kept, entry = store.journal(task)
+    assert kept == history  # nothing is rewritten or lost
+    assert (entry["actor"], entry["role"], entry["action"], entry["details"]) == (
+        "pia", "worker", "reposted", {"status": {"before": "closed", "after": "open"}})
+    assert [t["number"] for t in store.ready("ville")] == [task]
+    assert store.open_ticket(task, "ville")["status"] == "in_progress"  # the next handler takes it up
+
+
+def test_a_repost_is_refused_unless_the_ticket_is_closed_and_the_actor_created_it(store):
+    task = _closed(store)
+    assert _code(store.repost, task, "ville") == "not_the_creator"
+    store.repost(task, "pia")
+    assert _code(store.repost, task, "pia") == "not_closed"  # open
+    store.open_ticket(task, "ville")
+    assert _code(store.repost, task, "pia") == "not_closed"  # in progress
+    finished = store.add_task("pia", "Week 33 export")
+    store.finish(finished, "anna", "Imported and checked")
+    assert _code(store.repost, finished, "pia") == "not_closed"  # finished stays finished
+    assert [e["action"] for e in store.journal(task)].count("reposted") == 1
