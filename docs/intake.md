@@ -6,7 +6,7 @@ board of what is built and what is still open is in [plan.md](plan.md); the item
 
 ## The import definition
 
-The reference for how imports work is `mcp-messy-data` (`C:\Users\pertt\Desktop\cowork\mcp-messy-data`),
+The reference for how imports work is `mcp-messy-data` (`<local>\Desktop\cowork\mcp-messy-data`),
 built on the sequence `Preserve → Reveal → Define → Map → Validate → Publish`. Its
 `docs/DOCTRINE.md` and `docs/ARCHITECTURE.md` are the rules this plan inherits. (The
 `shopflow-furniture` repository covers the shop's own intake and is not the import definition.)

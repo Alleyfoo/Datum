@@ -9,8 +9,8 @@ Sources were read at these commits. They are frozen and were only read.
 
 | Short name | Repository | Commit |
 |---|---|---|
-| messy-data | `C:\Users\pertt\Desktop\cowork\mcp-messy-data` | `3e9a0925da4a445457ddaa2a2cb1a7c7cec3b766` |
-| lab | `C:\Users\pertt\Predictive-Spare-Parts-Lab` | `fa3836f68242fc2ce200f78e66374d1e673edb44` |
+| messy-data | `<local>\Desktop\cowork\mcp-messy-data` | `3e9a0925da4a445457ddaa2a2cb1a7c7cec3b766` |
+| lab | `<local>\Predictive-Spare-Parts-Lab` | `fa3836f68242fc2ce200f78e66374d1e673edb44` |
 | Subroutine | the `subroutine` plugin's skill, `~\.claude\plugins\cache\subroutine\subroutine\0.9.13\skills\subroutine\SKILL.md` | plugin version 0.9.13 |
 
 Subroutine is not a sibling repository. It is read only for question 5, because the owner chose
@@ -18,10 +18,9 @@ its ticket model (build-plan G10).
 
 ## 1. Which header drifts happen in real supplier files, and how often?
 
-**What the evidence contains.** One real supplier workbook: messy-data's `messy-data.xlsx`
-(Nomla furniture, three sheets). There is no second real delivery of the same file kind in
-either repository. The "second delivery" in messy-data (`showcase/nomla_delivery_s1.xlsx`) is a
-26-product package cut from the pilot file. Every drift variant in both repositories is a
+**What the evidence contains.** One real supplier workbook, held outside the repositories and not described here. There is no
+second real delivery of the same file kind. The "second delivery" in the sibling messy-data
+repository is a small package cut from that pilot file. Every drift variant in both repositories is a
 constructed fixture. All lab workbooks are synthetic and marked TEST ONLY.
 
 **Observed in the one real workbook:**

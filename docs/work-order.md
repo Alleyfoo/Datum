@@ -88,7 +88,7 @@ deletion (B4 below); 392 tests pass there. The authoritative lists are [backlog.
 
 ## E. Not in this repository
 
-- Job application material (CV, letters, posts) is outside this repository. The posts depend on P11.
+- Material outside this repository (for example publication notes) is not part of it.
 - Real company data stays out (owner decision RD-5). Synthetic only until real data is approved.
 
 **Update (2026-10-12, sixth round):** P25-b is answered (`needs_input` under `in_progress`). P11 is answered as a static page built from the records (build-plan section 26). Both are recorded in [build-plan.md](build-plan.md) section 26.

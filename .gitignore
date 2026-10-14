@@ -8,3 +8,5 @@ __pycache__/
 *.sqlite
 .handoff.md
 output/
+# local agent worktrees
+.claude/

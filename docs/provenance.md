@@ -39,7 +39,7 @@ Every ported file or value records its origin, so the lab's frozen evidence stay
 Lab revision used as the reference for this port: `fa3836f` (HEAD at the time of the port).
 
 The customer-service slice read Parts-Service-Desk at `46c859ae3cb5b0607c75fdeb02f50b340cbbd306`
-(`git -C C:\Users\pertt\Parts-Service-Desk rev-parse HEAD`). Its `desk/data.py`, `tools.py` and
+(`git -C <local>\Parts-Service-Desk rev-parse HEAD`). Its `desk/data.py`, `tools.py` and
 `expert.py` are the same blobs as Predictive-Spare-Parts-Lab at `fa3836f`; its `mcp_server.py` is a
 later file (blob `741fd34`, where `fa3836f` has `7857a8e`).
 

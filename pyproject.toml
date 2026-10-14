@@ -1,7 +1,7 @@
 [project]
-name = "babel-tower"
+name = "datum"
 version = "0.0.1"
-description = "A governed analysis system: many sources and roles, one shared record, reached through MCP."
+description = "Datum: a governed record of company data, with intake, tickets and role views over MCP."
 requires-python = ">=3.11"
 dependencies = [
     # Excel reader and writer, pinned (build-plan G7, owner answer Q3): staging reads in

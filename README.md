@@ -1,51 +1,80 @@
-# Babel Tower
+# Datum
 
-**Many sources, many roles, one shared understanding.**
+**Data is the map of the environment.** Datum keeps one record of what a company's data says, and lets each
+role draw its own view of it, with the evidence and the unknowns stated.
 
-Operational data arrives in many languages: Excel exports, ERP tables, supplier files,
-each with its own columns, units and habits. People ask about it in their own
-languages too. Customer service ask "can we deliver by Friday?", analysts ask "are
-lead times drifting?", data owners ask "does this new file mean the same as last
-month's?".
+Operational data arrives as spreadsheets with their own columns, units and habits. Datum does four things with it:
 
-Babel Tower translates all of it into one governed record and lets every role talk
-to that record through an AI assistant over MCP:
+1. **Preserves** each arriving file, unchanged, with a content hash and a ledger line.
+2. **Checks** it against the header declaration the company's schema requires. A file that does not fit is refused
+   with a verified reason; nothing is guessed into shape.
+3. **Routes** the result to a person. A ticket records what was found. A named person admits data to the record.
+4. **Answers** questions from the record through MCP tools, with a receipt: the tools run, the rule applied, the
+   checks passed, and what is not known.
+
+Code measures and applies rules. An assistant asks, explains and drafts, and cannot change data or send anything.
+People decide what enters the record and what is approved.
+
+## What works today
+
+- **Schema registry:** typed fields, keys and references; every row is accepted or refused with a code.
+- **Intake:** inbox preservation, staging of Excel cells with their types and row provenance, a cleaning stage
+  (trimming and declared case rules, every change recorded), the trial against a company's schema, schema
+  versions and a strict create-schema gate.
+- **Tickets:** one store for work, with claims, a journal, approvals, and the statuses `open`, `in_progress`,
+  `needs_input`, `closed` and `finished`. A closed ticket is deleted after 30 days without a person's reaction;
+  a finished ticket keeps its history.
+- **Customer-service slice:** search, consultations as tickets, availability and lead-time answers with a receipt,
+  answer checks, and proposals for an approver. Golden tests cover the reference scenario.
+- **Desk views:** the text screens of a spare-parts desk, ported with golden tests.
+- **Synthetic data:** a spare-parts company with a year of history, and a generator for a weekly stock export with
+  a renamed-column variant.
+
+## Data
+
+Synthetic data only. The repository contains no real company, supplier or customer data, and none is used by the
+tests. Real data is out of scope until it is approved for use.
+
+## Running the tests
 
 ```text
-SOURCES        Excel · CSV · ERP views · supplier files
-   ↓           recognise the format · map it to the schema · validate · refuse what doesn't fit
-ONE RECORD     typed entities and events, each value traceable to its source cell
-   ↓           rules, statistics and forecasts handle the ordinary
-EXCEPTIONS     the unusual becomes a case: evidence, findings, open questions
-   ↓
-ROLES          customer service · analyst · data owner · approver
-               each talks to the record through its own MCP tool list
-   ↓
-PEOPLE DECIDE  replies, purchases and data changes are proposed, then approved by a person
+pip install openpyxl pytest
+python -m pytest
 ```
 
-Code measures and applies rules. The assistant asks, explains and drafts. People
-establish meaning and approve anything consequential.
+Python 3.11 or newer. The tests build their fixtures from the synthetic company and do not call any model.
 
-## Domains
+## The daily sweep
 
-The core is not about any one business. A **domain pack** supplies the schema, the
-rules, the role tools and a synthetic world:
+Closed tickets are deleted after their retention period. The sweep runs only when it is called:
 
-- `spare_parts`: the first demo domain. Industrial spare parts for customer
-  machines: stock in two warehouses, lead times, service schedules.
+```text
+python -m babel.record.sweep --store PATH_TO_STORE.sqlite --today YYYY-MM-DD
+```
 
-A second domain is the test of that claim.
+It exits with a non-zero code and prints the error when it fails. Scheduling it is left to the operator.
+
+## Documentation
+
+- [docs/plan.md](docs/plan.md): purpose, principles, status and phases.
+- [docs/backlog.md](docs/backlog.md): every item, its status and its source.
+- [docs/build-plan.md](docs/build-plan.md): the decisions taken, in order.
+- [docs/intake.md](docs/intake.md): how a file becomes data.
+- [docs/slice-customer-service.md](docs/slice-customer-service.md): the customer-service slice.
+- [docs/provenance.md](docs/provenance.md): where each ported piece comes from.
+- [docs/work-order.md](docs/work-order.md): what is still to finish.
 
 ## Status
 
-Planning. See [docs/plan.md](docs/plan.md). Synthetic data only; no real company,
-customer or supplier data enters this repository.
+Pre-release. The core and the intake chain are built and tested. Not yet built: the demo interface and recorded
+replays, the analyst tools, and the scheduling of the manager run. There is no hosted demo yet.
 
 ## Lineage
 
-Built from research that remains authoritative in its own repositories:
-Predictive-Spare-Parts-Lab (desk tools, case store, Excel intake, forecasting evidence),
-Spare-Parts-Readiness (coverage map), Learning Lab (onboarding unfamiliar files),
-Governed Data Lab and Shop-flow (recognition, establishment, refusal and evidence rules).
-Code is ported deliberately, with its origin recorded; the labs are not merged.
+The rules and some code come from earlier research projects, kept in their own repositories. Each ported piece
+records its origin in [docs/provenance.md](docs/provenance.md). The projects are not merged, and their evidence is
+not edited.
+
+## Licence
+
+No licence has been chosen yet. Until one is added, all rights are reserved.
