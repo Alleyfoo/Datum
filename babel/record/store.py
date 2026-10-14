@@ -883,22 +883,19 @@ class Store:
     def _last_reaction(self, db, number: int) -> datetime:
         """When a closed ticket's CLOSED_RETENTION_DAYS last started (the owner's review of round six,
         build-plan section 30): when the person who answers for it was told it is closed (its last
-        notice, or its last close if it has none), or a person's later reaction, whichever is latest.
+        notice, written with its last close, or later by a migration step), or a person's later
+        reaction, whichever is latest.
         A reaction is what a person writes: on the ticket, a comment, an amendment or a repost
         (REACTIONS); about it, a decision or a finding, or a comment on one (DOCUMENT_REACTIONS).
         Nothing else restarts it: no entry by a service, an agent or `system`, and no refused attempt,
         so no automated write postpones a deletion."""
-        told = db.execute("SELECT MAX(at) FROM journal WHERE item = ? AND (action = 'notice'"
-                          " OR json_extract(details, '$.status.after') = ?)", (number, CLOSED)).fetchone()[0]
+        told = db.execute("SELECT MAX(at) FROM journal WHERE item = ? AND action = 'notice'", (number,)).fetchone()[0]
         reacted = db.execute(
             "SELECT MAX(j.at) FROM journal j JOIN users u ON u.name = j.actor WHERE u.kind = 'person' AND"
             f" ((j.item = ? AND j.action IN ({_marks(REACTIONS)})) OR (j.action IN ({_marks(DOCUMENT_REACTIONS)})"
             " AND j.item IN (SELECT source FROM links WHERE type = 'about' AND target = ?)))",
             (number, *REACTIONS, *DOCUMENT_REACTIONS, number)).fetchone()[0]
-        at = max((stamp for stamp in (told, reacted) if stamp), default=None)
-        if at is None:  # a close no entry records, as tests and older code may have left one
-            at = db.execute("SELECT updated_at FROM items WHERE number = ?", (number,)).fetchone()[0]
-        return datetime.fromisoformat(at)
+        return datetime.fromisoformat(max(stamp for stamp in (told, self._closed_at(db, number), reacted) if stamp))
 
     def _idle(self, db, number: int, cutoff: datetime) -> bool:
         """Whether a task is closed and its CLOSED_RETENTION_DAYS last started before `cutoff`."""
