@@ -4,8 +4,10 @@ A consultation is a task of type ``consultation`` in the ticket store, in its on
 Starting one opens it at once, which hands it to the agent working the call: claimed and
 ``in_progress`` (owner answer T-open). Released without a conclusion, it goes back to ``open``
 (T-release), with the reason why; resumed, it is handed to the agent who takes it up, as it was
-left (P26). Its card lists these handovers once it has changed hands. Every write needs the
-holder's claim and is an attributed journal entry:
+left (P26). Its card lists these handovers once it has changed hands. A call that cannot be finished
+at all is closed by its worker, with the reason, and whoever opened it is told what they may do
+(S-close, S-closed); an approver's decision finishes it (S-finish). Every write needs the holder's
+claim and is an attributed journal entry:
 
 - a fact only the person knows, recorded as the person's answer, never guessed;
 - each question asked: answered with its facts and receipt, or open while it waits for a fact only
@@ -187,6 +189,17 @@ def resume(store: Store, number: int, actor: str) -> dict:
         return store.resuming(db, number, actor)
 
 
+def close(store: Store, number: int, actor: str, reason: str) -> dict:
+    """A worker closes a consultation that cannot be finished (owner answers S-close and S-closed,
+    build-plan sections 27 and 29): for example, the call was about a machine the company does not
+    serve. Only its holder closes it, in the worker role, and the reason is required. Everything on it
+    is kept, and whoever opened it is told on the ticket that they may amend it and repost it, or
+    delete it. A call that may still be finished later is released instead (T-release)."""
+    with store.transaction() as db:
+        _consultation(store._item(db, number))
+        return store.closing(db, number, actor, reason)
+
+
 def finish(store: Store, number: int, approver: str, decision: str) -> dict:
     """An approver finishes a consultation: it is done and correct (owner answers S-finished and
     S-finish, build-plan sections 27 and 29). Only a named person with the approver role finishes it,
@@ -217,6 +230,17 @@ def handovers(store: Store, number: int) -> List[dict]:
     return out
 
 
+def closing(entries: Sequence[dict]) -> Optional[dict]:
+    """The last close in a journal: who closed the ticket, why, and the notice its creator was given
+    after it. None if it was never closed."""
+    for at in range(len(entries) - 1, -1, -1):
+        status = entries[at]["details"].get("status")
+        if isinstance(status, dict) and status.get("after") == CLOSED:
+            told = next((e["details"] for e in entries[at + 1:] if e["action"] == "notice"), None)
+            return {"by": entries[at]["actor"], "reason": entries[at]["details"].get("reason"), "notice": told}
+    return None
+
+
 def tickets(store: Store, status: str) -> List[dict]:
     """Every ticket with this status, as a person names it: open, in_progress, closed or finished.
     in_progress also lists the tickets waiting for an approver (STATUSES); finished is the finished list."""
@@ -240,7 +264,8 @@ def view(store: Store, number: int, offset: int = 0, limit: int = PAGE) -> dict:
             "open_questions": [q for q in questions if q["status"] == "open"],
             "answered_questions": [q for q in questions if q["status"] == "answered"],
             "decisions": [store.get(n) for n in item["data"].get("decisions", [])],
-            "handovers": handovers(store, number)}
+            "handovers": handovers(store, number),
+            "closed": closing(store.journal(number)) if item["status"] == CLOSED else None}
 
 
 # -- text --------------------------------------------------------------------------------
@@ -328,7 +353,8 @@ def handovers_text(moves: Sequence[dict]) -> List[Tuple[str, str]]:
 def view_text(page: dict) -> str:
     """A consultation as a card: who has it (and, once it has changed hands, who had it before and
     why it was released), the person's answers, a page of questions, the open questions of all,
-    the checks and the reply, or the approver's decision that finished it."""
+    the checks and the reply, or the approver's decision that finished it. A closed one also says
+    who closed it and why, and the notice its creator was given."""
     item = page["item"]
     data = item["data"]
     out = [f"#{item['number']} consultation · {SHOWN[item['status']]}{holder(item)}", item["title"]]
@@ -354,14 +380,20 @@ def view_text(page: dict) -> str:
     ran = data["checks"]
     out.append("Checks: " + (f"{len(ran)} run; the last " + ("passed" if ran[-1]["ok"] else "failed")
                              if ran else "none run"))
-    decided = page.get("decisions") or []
+    decided, closed = page.get("decisions") or [], page.get("closed")
     if decided and not data.get("proposal"):
         last = decided[-1]
         said = f"by {last['data']['approver']} (decision #{last['number']}): {last['data']['reason']}"
         out.append(f"Finished {said}" if last["data"]["decision"] == FINISHED
                    else f"Reply: {last['data']['decision']} {said}")
+    elif closed:
+        out.append("Reply: none: the consultation was closed")
     else:
         out.append("Reply: " + _approval(item))
+    if closed:
+        out.append(f"Closed by {closed['by']}" + (f": {closed['reason']}" if closed["reason"] else ""))
+        if closed["notice"]:
+            out.append(f"Notice to {closed['notice']['to']}: {closed['notice']['text']}")
     return "\n".join(out)
 
 

@@ -6,7 +6,7 @@ import pytest
 from babel.checks import Check
 from babel.record import consultations as cons
 from babel.record import queue
-from babel.record.store import CLOSED, ENDS, FINISHED, RecordError
+from babel.record.store import CLOSED, ENDS, FINISHED, RecordError, notice
 
 # the clock and store fixtures are in conftest.py
 
@@ -185,6 +185,38 @@ def test_an_approver_finishes_a_consultation_and_its_card_says_by_whom_and_why(s
     assert card[-1] == f"Finished by anna (decision #{decision['number']}): The customer has the answer"
     other = store.add_task("hook", "A file arrived")
     assert _code(cons.finish, store, other, "anna", "Fine") == "not_a_consultation"
+
+
+def test_a_worker_closes_a_consultation_that_cannot_be_finished_and_the_card_says_who_why_and_what_next(store):
+    # S-close and S-closed (build-plan sections 27 and 29)
+    number = _start(store)
+    item = cons.close(store, number, "ville", "The customer's machine is not one of ours")
+    assert (item["status"], item["claimed_by"]) == (CLOSED, None)
+    card = cons.view_text(cons.view(store, number)).splitlines()
+    assert card[0] == f"#{number} consultation · closed"
+    assert card[-3:] == ["Reply: none: the consultation was closed",
+                         "Closed by ville: The customer's machine is not one of ours",
+                         f"Notice to ville: {notice(number, 'ville')}"]
+    assert ([t["number"] for t in cons.tickets(store, "closed")], cons.tickets(store, "finished")) == ([number], [])
+    assert _code(cons.resume, store, number, "pia") == "item_closed"
+    other = store.add_task("hook", "A file arrived")
+    store.claim(other, "ville")
+    assert _code(cons.close, store, other, "ville", "Not a call") == "not_a_consultation"
+
+
+def test_a_closed_consultation_amended_and_reposted_by_its_creator_is_taken_up_again(store):
+    number = _start(store)
+    _answer(store, number)
+    cons.close(store, number, "ville", "The customer named the wrong part")
+    store.amend(number, "ville", title="Consultation: Customer one · M-1 · P-2")
+    store.repost(number, "ville")
+    resumed = cons.resume(store, number, "pia")
+    assert (resumed["status"], resumed["claimed_by"], resumed["title"]) == (
+        "in_progress", "pia", "Consultation: Customer one · M-1 · P-2")
+    assert [q["status"] for q in resumed["data"]["questions"]] == ["answered"]  # everything on it is kept
+    page = cons.view(store, number)
+    assert [(m["action"], m["by"]) for m in page["handovers"]] == [("opened", "ville"), ("resumed", "pia")]
+    assert page["closed"] is None and "Closed by" not in cons.view_text(page)
 
 
 def test_once_released_the_card_says_who_had_the_consultation_and_why(store):
