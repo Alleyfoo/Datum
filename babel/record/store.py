@@ -40,9 +40,10 @@ Modelled on Subroutine (github.com/simonholliday/subroutine), as the owner decid
   recipient, or an approver for a task addressed to the approval queue, may amend its title or
   body, each amendment a journal entry with the text before and after, and repost it: open again,
   with its history; or delete it (S-closed, section 27). Each acts as themselves: a service or an
-  agent never does, even on a task it created. A closed ticket nobody reacts to for
+  agent never does, even on a task it created. A closed ticket no person reacts to for
   CLOSED_RETENTION_DAYS is deleted by the sweep, which runs only when called, on the date it is
-  given (S-period, section 29).
+  given (S-period, section 29); an entry by a service, an agent or `system` is no reaction (the
+  owner's review of round six, section 30: REACTIONS).
 
 From the lab's case store (desk/cases.py) come the mechanics: SQLite with short connections,
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
@@ -84,6 +85,12 @@ LEASE = timedelta(days=1)  # from the holder's last write: the owner's answer to
 #: how many days a closed ticket is kept after its last reaction; then the sweep deletes it, with its history
 #: (owner answers S-del, S-keep and S-period, build-plan sections 28 and 29). A named setting
 CLOSED_RETENTION_DAYS = 30
+#: what a person writes that starts a closed ticket's CLOSED_RETENTION_DAYS again (the owner's review of round
+#: six, build-plan section 30): on the ticket, a comment, an amendment or a repost; on a document about it, the
+#: document itself (a decision or a finding) or a comment. Nothing a service, an agent or `system` writes counts,
+#: nor a person's refused attempt (approval_refused, rejection_refused) or a link
+REACTIONS = ("comment", "amended", "reposted")
+DOCUMENT_REACTIONS = ("created", "comment")
 SYSTEM = "system"
 #: the recipient of a task that no named person answers for: the approval queue, which named people with the
 #: approver role review (queue.py). An intake ticket goes there until real identities name the company's
@@ -873,15 +880,28 @@ class Store:
 
     # -- closed tickets are deleted in time ------------------------------------------------------
 
-    def _last_reaction(self, db, number: int) -> Optional[datetime]:
-        """When anyone last wrote on a ticket: its latest journal entry, or the latest on a document about
-        it (a comment, an amendment, a finding about it, the notice to its creator)."""
-        at = db.execute("SELECT MAX(at) FROM journal WHERE item = ? OR item IN"
-                        " (SELECT source FROM links WHERE type = 'about' AND target = ?)", (number, number)).fetchone()[0]
-        return datetime.fromisoformat(at) if at else None
+    def _last_reaction(self, db, number: int) -> datetime:
+        """When a closed ticket's CLOSED_RETENTION_DAYS last started (the owner's review of round six,
+        build-plan section 30): when the person who answers for it was told it is closed (its last
+        notice, or its last close if it has none), or a person's later reaction, whichever is latest.
+        A reaction is what a person writes: on the ticket, a comment, an amendment or a repost
+        (REACTIONS); about it, a decision or a finding, or a comment on one (DOCUMENT_REACTIONS).
+        Nothing else restarts it: no entry by a service, an agent or `system`, and no refused attempt,
+        so no automated write postpones a deletion."""
+        told = db.execute("SELECT MAX(at) FROM journal WHERE item = ? AND (action = 'notice'"
+                          " OR json_extract(details, '$.status.after') = ?)", (number, CLOSED)).fetchone()[0]
+        reacted = db.execute(
+            "SELECT MAX(j.at) FROM journal j JOIN users u ON u.name = j.actor WHERE u.kind = 'person' AND"
+            f" ((j.item = ? AND j.action IN ({_marks(REACTIONS)})) OR (j.action IN ({_marks(DOCUMENT_REACTIONS)})"
+            " AND j.item IN (SELECT source FROM links WHERE type = 'about' AND target = ?)))",
+            (number, *REACTIONS, *DOCUMENT_REACTIONS, number)).fetchone()[0]
+        at = max((stamp for stamp in (told, reacted) if stamp), default=None)
+        if at is None:  # a close no entry records, as tests and older code may have left one
+            at = db.execute("SELECT updated_at FROM items WHERE number = ?", (number,)).fetchone()[0]
+        return datetime.fromisoformat(at)
 
     def _idle(self, db, number: int, cutoff: datetime) -> bool:
-        """Whether a task is closed and nobody has written on it since `cutoff`."""
+        """Whether a task is closed and its CLOSED_RETENTION_DAYS last started before `cutoff`."""
         row = db.execute("SELECT status FROM items WHERE number = ? AND kind = 'task'", (number,)).fetchone()
         last = self._last_reaction(db, number) if row is not None and row[0] == CLOSED else None
         return last is not None and last < cutoff
@@ -954,10 +974,12 @@ class Store:
         return their numbers (owner answers S-del, S-keep and S-period, build-plan sections 28 and 29).
 
         ``today`` is the date the sweep runs on: a date (taken at midnight UTC) or a datetime with its
-        time zone. The sweep reads no clock, and nothing runs it but a call. A ticket's last reaction is
-        the latest journal entry on it, or on a document about it (a comment, an amendment, a finding
-        about it, the notice to its creator): the ticket is deleted once that is more than
-        CLOSED_RETENTION_DAYS before ``today``, and kept until then. Each deletion is its own
+        time zone. The sweep reads no clock, and nothing runs it but a call. A ticket's days start when
+        the person who answers for it is told it is closed, and again with each reaction by a person (a
+        comment, an amendment, a repost; a decision or a finding about it, or a comment on one); an
+        entry by a service, an agent or `system` is no reaction (`_last_reaction`). The ticket is deleted
+        once its days started more than CLOSED_RETENTION_DAYS before ``today``, and kept until then. Each
+        deletion is its own
         transaction, by `system`: one audit line (the ticket's number, when it was closed and when it
         was deleted, and no content), then the ticket, its journal and the documents only about it. A
         finished ticket is never deleted, however old. A closed ticket that an unfinished task still

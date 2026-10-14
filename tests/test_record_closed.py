@@ -354,6 +354,37 @@ def test_an_amendment_or_a_document_about_it_is_a_reaction_too(store, clock):
     assert store.sweep(closed_at + 56 * DAY) == [amended, noted]
 
 
+def test_an_automated_entry_does_not_start_the_30_days_again(store, clock):
+    # the owner's review of round six (build-plan section 30): no automated write postpones a deletion
+    store.add_user("drafting-assistant", ["worker"], kind="agent")
+    task = _closed(store)
+    closed_at = clock()
+    clock.advance(days=20)
+    store.comment(task, "hook", "The same file arrived again as week34.xlsx; nothing else was done.")  # a service
+    store.comment(task, "drafting-assistant", "This export may be needed later.")  # an agent
+    store.add_document("drafting-assistant", "finding", "Week 35 is alike", "The same header as week 34", about=task)
+    assert _code(queue.approve, store, task, "anna", "Fine") == "nothing_to_decide"  # refused, and journaled
+    assert [e["action"] for e in store.journal(task)][-3:] == ["comment", "comment", "approval_refused"]
+    assert store.sweep(closed_at + 30 * DAY + timedelta(seconds=1)) == [task]  # 30 days after it was closed
+
+
+def test_a_repost_or_a_decision_starts_the_30_days_again(store, clock):
+    # a person's comment and amendment do too (the two tests above)
+    reposted, decided = _closed(store), _closed(store)
+    closed_at = clock()
+    clock.advance(days=20)
+    store.repost(reposted, "pia")
+    store.add_document("anna", "decision", f"Kept: #{decided}", "Keep it: the supplier may send it again",
+                       data={"decision": "kept", "ticket": decided, "approver": "anna",
+                             "reason": "The supplier may send it again"}, about=decided)
+    clock.advance(days=5)
+    store.claim(reposted, "ville")
+    store.close(reposted, "ville", "The supplier confirmed that the export has stopped")
+    assert store.sweep(closed_at + 31 * DAY) == []
+    assert store.sweep(closed_at + 50 * DAY + timedelta(seconds=1)) == [decided]  # 30 days after the decision
+    assert store.sweep(closed_at + 55 * DAY + timedelta(seconds=1)) == [reposted]  # 30 days after its new close
+
+
 def test_one_audit_line_stays_with_the_number_and_the_times_and_no_content(store, clock):
     task = _closed(store)
     closed_at = store.now()
