@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "datum"
 version = "0.0.1"
@@ -11,6 +15,12 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+include = ["babel*", "domains*"]
+
+[tool.setuptools.package-data]
+"domains.spare_parts" = ["*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

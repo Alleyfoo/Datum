@@ -16,8 +16,8 @@
      time, demand forecast, findings into the case, and a pre-order proposal for a buyer.
 - **People decide:** approval queue and proposals.
 - **Conversation mode:** recorded replays of real tool runs by default (deterministic,
-  hostable). A toggle runs a local Ollama model when one is available. A section explains how
-  to connect the real server to Claude Desktop.
+  hostable). Live runs use Claude through MCP (build-plan section 17); no local model. A section explains
+  how to connect the server to an MCP client.
 - **Tools per role:** visible in the demo; each role sees only its own tools.
 
 ## Steps to a meaningful demo

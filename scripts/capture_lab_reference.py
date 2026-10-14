@@ -1,4 +1,6 @@
-"""Capture the lab's desk views as reference text. Run once; never by pytest, never by the port.
+"""Maintainer only: needs the private research repository named below; not runnable without it.
+
+Capture the lab's desk views as reference text. Run once; never by pytest, never by the port.
 
 The lab is frozen, so nothing is run inside it. The five files the views need are read from
 one lab commit with `git show`, written to a temporary directory and imported from there in a

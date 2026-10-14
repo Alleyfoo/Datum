@@ -43,7 +43,7 @@ are confirmed.
 ## 3. Execution rules for the build
 
 - One item per commit. Tests pass before each commit. Conventional commit messages, pushed to
-  `origin/main` after each milestone, as `CLAUDE.md` asks.
+  the branch after each milestone.
 - A builder never decides a **Plan** item. If an item depends on an open Proposal, it stops that
   item, records the question in `backlog.md`, and moves to the next unblocked item.
 - Sibling repositories are read-only. Nothing is written to `Predictive-Spare-Parts-Lab`,
@@ -151,7 +151,7 @@ drafting), the cleaning stage with its trim default, and demo step 3 as a test.
 | R3-2b | Subroutine is not the tool | Subroutine is built for software development, not daily product handling. Its concepts stay as the ticket model, but it is not the backend. Who defines the worker and approver roles now needs a decision (see below). |
 | R3-3 | Log everything | Every action is logged with the actor, the time, the action and the before and after values. Logs are append-only and kept. Refused work is kept too. Logs contain personal data (names), so access and retention rules are needed before real data arrives. |
 
-**Roles, decided:** for now, everyone has the manager role. The system does not enforce worker or approver
+**Roles, decided (superseded by section 29, which makes workers close and approvers finish):** for now, everyone has the manager role. The system does not enforce worker or approver
 restrictions yet; every action is still logged with the actor, so the record shows who did what. Real
 restrictions come when a real environment is known, from the Windows profile.
 
@@ -235,8 +235,8 @@ The earlier worry (a process watcher reading business data it does not need) is 
 | R-run | Timed run, no complex setup | The manager runs on a timer, twice a day, like the scheduled runs in Claude work. Same role and limits as before. No extra infrastructure. |
 | R-code | Take the code we need | The owner's code can be taken into this repository, with origin recorded in `docs/provenance.md`. |
 
-**Flag for the owner.** The model that passed the evaluation (`glm-5.3-flash:cloud`) is cloud-hosted: each run
-sends the day's data to a provider. Our `CLAUDE.md` asks for local, self-hosted tools where possible, and the
+**Note.** The model that passed the evaluation (`glm-5.3-flash:cloud`) is cloud-hosted: each run
+sends the day's data to a provider. The project prefers local, self-hosted tools where possible, and the
 data rules say customer data stays out of the repository. Synthetic data is fine now. Before any real company
 data is sent to a cloud model, that needs an explicit decision: which provider, what data leaves, and under
 what agreement.
@@ -287,10 +287,10 @@ that offers a signed data processing agreement with documented zero retention, a
 |---|---|---|
 | RD-1 | Real example exists | `messy-data.xlsx` in `mcp-messy-data` is real import data. It is kept for a later run. |
 | RD-2 | Finish everything first | No real-data run until the build and the demo are finished. |
-| RD-3 | Stays out of this repository | The file is not copied into Babel-Tower and is not read by the build. Any later run uses a copy kept outside the repositories, chosen by the owner. |
-| RD-4 | Flag: the sibling repo tracks it | `mcp-messy-data` tracks `messy-data.xlsx`, `answers.xlsx` and several fixtures in git, although its README says no real source data is committed. Whether that is a problem depends on what the file contains; the owner should check it. The sibling repo is not edited. |
+| RD-3 | Stays out of this repository | The file is not copied into this repository and is not read by the build. Any later run uses a copy kept outside the repositories, chosen by the owner. |
+| RD-4 | Real files elsewhere | Real workbooks held outside this repository are not described or used here. |
 
-| RD-5 | Not used | The real workbooks are not used. The project uses synthetic data only until real data is approved. The tracking question in RD-4 is left to the owner; the sibling repo is not edited. |
+| RD-5 | Not used | The real workbooks are not used. The project uses synthetic data only until real data is approved. |
 
 ## 20. Owner answers, fourth round
 
@@ -304,7 +304,7 @@ that offers a signed data processing agreement with documented zero retention, a
 | Q-group | Later | Grouping of tickets is left for later; one ticket per file for now. |
 | Q-bugs | Fix | B6 (a 27th part drops out of the menu), and the latent B2 and B3, are fixed. |
 | Q-rename | Now | Done: the GitHub repository is `Alleyfoo/Datum`, still private. The local folder keeps its name. |
-| Q-publish | No decision | Public repository or recordings for the job posts is still open. |
+| Q-publish | Decided later | The repository is opened to the public after a readiness review (see section 31). |
 | P20 | Calculate, then process | A formula cell's value is calculated first, and the value is then processed like any other value. Formula cells are no longer refused. |
 
 **Status:** built on branch `build/round-four`, not merged: the one-day lease (P22, `ca0d13b`), the ledger
@@ -468,3 +468,11 @@ Questions the build raised for the owner (nothing is blocked; each was built as 
 | R6-Q2 | An intake ticket's creator is the hook, a service account: its notice has no reader. Should it go to someone else, for example the worker who dropped the file? | The notice goes to the hook, as to any creator. |
 | R6-Q3 | A drop closes the file's ticket, so it is deleted after 30 days with the drop's decision. Should an approver's drop finish the ticket instead, keeping the record? | A drop closes, as before; the file stays in the inbox and its ledger. |
 | R6-Q4 | Should the store's `set_status` stop closing a ticket without a reason? | It still may; no tool uses it, and its close is notified. |
+
+## 31. Public readiness review (2026-10-14)
+
+Before the repository is opened to the public: the README describes only what exists (the MCP-shaped tools have no
+protocol server yet); the package builds and installs with `pip install -e .[test]`; internal working notes and
+references to private material are removed from the documents; stale statements are corrected; the lab capture
+scripts are marked maintainer-only; a CI workflow runs the tests on every push. Open owner decisions: the licence,
+and whether to rewrite the git history (author email and old local paths).

@@ -59,22 +59,10 @@ with origins recorded, rather than merging the labs.
 
 ## The board
 
-Each open item is one of: **Read** (defined elsewhere, port it), **Code** (defined here, build
-it), **Plan** (decide first). Full list with sources in [backlog.md](backlog.md).
-
-| Category | Count | What it means |
-|---|---|---|
-| Done | 28 | schema registry (D1); synthetic company and ledger (D2); the desk's data (D3) and its text views with golden files (D4); staging, assumption, versioning, mapping and reference rules read (R1–R5); the intake chain C1–C9, the synthetic stock export (C25) and the cleaning stage (C26, C27); round four: the one-day lease (P22) and formula cells taken as their saved values (P20); the customer-service slice: the service rules (D5), the answer checks (R17), the lab's defects (C13), consultations as tickets (D6) and the role's tools with golden files (D7) |
-| Read | 14 | sibling-repo rules and code to read and port (R6–R20 without R17; R15 and R18 partly read) |
-| Code | 15 | defined here, to build (C10–C24 without C13, and the folder watcher C3b) |
-| Plan | 26 | decisions (P1–P26): P1, P12, P13 and P20–P23 answered (P20 and P22 built in round four), P7 answered for schemas; P20–P23 raised by the intake build, P24 (saved formula values a workbook marks as not current) by the P20 build, P25 (where a ticket waiting for approval belongs among the three statuses) and P26 (tools to release and resume a consultation) by the customer-service slice |
-| Bugs | 6 | all fixed: B1, B4, B5 (with its regression test), and in round four B2 and B3 (the ledger carries request and delivery ids) and B6 (menu letters go on past z) |
-| Research | 1 | the import research pass: done, see [research/import.md](research/import.md) |
-
-**Built, not merged: the customer-service slice** (branch `build/cs-slice`, build-plan section 23). One call, "CH-02 has
-stopped; the customer needs SP-1601", runs through the role's tools as a ticket: search, the person asked whether the
-machine stopped, the lab's rules and facts, the checks, and a reply that waits for an approver with its receipt. The
-owner decides the merge and answers P25 and P26.
+Current status, item by item, is in [backlog.md](backlog.md); the order of the remaining work is in
+[work-order.md](work-order.md). Summary: the schema registry, the synthetic company, the intake chain, the ticket
+store with its end states, the desk views and the customer-service slice are built and tested. The demo surface,
+the analyst tools, the worklist and the MCP protocol server are not built yet.
 
 **Next up.** The intake chain runs end to end on synthetic data: a file is preserved, staged,
 cleaned, tried against its company's schema and routed to a ticket; a new schema version, also an
@@ -137,8 +125,8 @@ Decided by the owner, 2026-10-08:
 - **The old repositories stay frozen.** Their data is imported with provenance; their code is not extended.
 - **Round three:** the schema-defect check uses the same version only; one file kind per company for now,
   with the model open to more; folder access comes from the host system; every action is logged with its
-  actor and kept. Subroutine is not the ticket backend (its concepts stay), and its role model is removed: for now
-  everyone is a manager; the log records who did what, and real restrictions wait for a real environment. See build-plan.md section 9.
+  actor and kept. Subroutine is not the ticket backend (its concepts stay), and its role model is removed. Roles are now enforced as decided in build-plan section 29: workers close, approvers
+  finish and admit; the log records who did what.
 - **Tickets are modelled on Subroutine** (`github.com/simonholliday/subroutine`): one numbering
   scheme, decisions as documents, `blocks`, leases on claims, attributed journal. Whether to use
   it as the backend is open (build-plan G10).
@@ -146,7 +134,7 @@ Decided by the owner, 2026-10-08:
 - **The system is modular.** It is both a demo that tells the story and the start of real work, so
   each part is replaceable as the real environment becomes known.
 - **The manager** is the main analyst from Parts-Service-Desk: twice a day, tickets only, every ticket cites
-  its evidence and is checked. Model: cloud-hosted glm-5.3-flash, the only model that passed the evaluation.
+  its evidence and is checked. Model: Claude (build-plan section 17), which met the evaluation bar in 5 of 5 runs on the synthetic feed.
   No local models in the design; they were for tests. Runs on a timer, no extra infrastructure. See build-plan.md section 15.
 - **Ticket model is copied from Subroutine** (yes, decided), into our own SQLite store.
 - **Storage:** SQLite for state; files for raw, staging and extracts. Excel is the only supported

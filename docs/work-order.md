@@ -9,16 +9,18 @@ builds the two end states, `closed` and `finished`, with closing, the creator's 
 deletion (B4 below); 392 tests pass there. The authoritative lists are [backlog.md](backlog.md) and
 [build-plan.md](build-plan.md). This page is the order of work and the decisions still needed.
 
-## A. Decisions needed from the owner (blocking, in order)
+## A. Decisions still open
 
 | ID | Question | Blocks |
 |---|---|---|
-| P25-b | Where does a ticket waiting for an approver (`needs_input`) show in the status filter? Built as recommended, to confirm: it keeps its own status in the approval queue and is listed under `in_progress` (`36665be`). The rest of P25 (`closed` replaces `done`) and P26 (`release` and `resume`) are answered in build-plan section 25 and built (B2, B3). | nothing now; a different answer changes one mapping and its test |
-| P24 | A placeholder 0 that a program saved for a formula passes the null check. Decided as a working assumption (A-1): clean first. Revisit when real data arrives. | nothing now; real data only |
-| P11 | Publish the repository, or post recordings only, for the job posts? | the public demo and the posts |
-| P2 | Ticket grouping. Owner: later, one ticket per file for now. Confirm. | nothing now |
-| P5 | Anomaly threshold for the analysis ticket. Owner: tune later, the assistant proposes values. | the analyst scene (C15) |
-| R6-Q1 to R6-Q4 | Round six's four questions (build-plan section 30): does a closed blocker keep blocking; who reads the notice of an intake ticket, whose creator is the hook; should an approver's drop finish rather than close; should only `close`, with a reason, close a ticket. Each is built one way, as described there. | nothing now; each answer changes one rule and its test |
+| Licence | Which licence, if any, before the repository is public? | publication |
+| History | Rewrite the git history to remove the author email and old local paths, or accept it? | publication |
+| P24 | A placeholder 0 saved for a formula passes the null check. Working assumption A-1: clean first; revisit with real data. | real data only |
+| P2 | Ticket grouping: one ticket per file for now. | nothing now |
+| P5 | Anomaly threshold for the analysis ticket: tuned later from data. | the analyst scene (C15) |
+
+Answered since the first version of this page: P25 and P25-b (statuses), P26 (release and resume), P11 (publication),
+and round six's four questions (build-plan sections 25 to 31).
 
 ## B. Finish for the demo (in this order)
 
@@ -81,9 +83,8 @@ deletion (B4 below); 392 tests pass there. The authoritative lists are [backlog.
 
 - Refresh the board counts in [plan.md](plan.md) after each merge.
 - Record the customer-service slice's origins in [provenance.md](provenance.md) (done by the build run; check it).
-- `.handoff.md` is git-ignored and should be updated at the end of each session (CLAUDE.md).
-- The untracked `.claude/` folder (worktrees) should not be committed. Add it to `.gitignore` only with the owner's
-  yes, since it changes the repository.
+- `.handoff.md` is git-ignored and kept as a local session note.
+- The `.claude/` folder (local agent worktrees) is ignored by git.
 - The local folder is still named `Babel-Tower`; the GitHub repository is `Datum`. Renaming the folder is optional.
 
 ## E. Not in this repository

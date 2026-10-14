@@ -1,4 +1,6 @@
-"""Capture the lab's question briefs and answer checks as reference text. Run once; never by pytest.
+"""Maintainer only: needs the private research repository named below; not runnable without it.
+
+Capture the lab's question briefs and answer checks as reference text. Run once; never by pytest.
 
 The lab (Parts-Service-Desk) is frozen, so nothing is run inside it. The four files the rules and
 the checks need are read from one lab commit with `git show`, written to a temporary directory and
