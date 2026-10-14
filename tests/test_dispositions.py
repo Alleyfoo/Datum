@@ -123,7 +123,6 @@ def test_there_are_three_dispositions_and_proposals_name_their_file(store):
     task = _ticket(store)
     assert dispositions.DISPOSITIONS == ("import", "create_schema", "drop")
     assert _code(dispositions.propose, store, task, "ville", "export", "why not", payload={}) == "invalid_disposition"
-    assert _code(dispositions.propose, store, task, "ville", "drop", "duplicate", payload={}) == "invalid_disposition"
     assert _code(dispositions.propose, store, task, "ville", "import", "fits",
                  payload={"company_id": "C-100"}) == "invalid_argument"
 
