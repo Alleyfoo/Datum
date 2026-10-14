@@ -10,3 +10,5 @@ __pycache__/
 output/
 # local agent worktrees
 .claude/
+# what pip install -e . writes beside the package
+*.egg-info/
