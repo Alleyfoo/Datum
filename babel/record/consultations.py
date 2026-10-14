@@ -183,7 +183,7 @@ def resume(store: Store, number: int, actor: str) -> dict:
     """Take a consultation up again (owner answer P26): an open one, released or sent back by the
     approver, or one whose consultant's lease ran out. It is handed to the actor, ``in_progress``,
     as it was left, and the journal records who resumed it. One waiting for an approver is not
-    resumed, and a closed one never is: its work has stopped."""
+    resumed, and a closed or finished one never is: its work has ended."""
     with store.transaction() as db:
         _consultation(store._item(db, number))
         return store.resuming(db, number, actor)
@@ -233,11 +233,11 @@ def handovers(store: Store, number: int) -> List[dict]:
 def closing(entries: Sequence[dict]) -> Optional[dict]:
     """The last close in a journal: who closed the ticket, why, and the notice its creator was given
     after it. None if it was never closed."""
-    for at in range(len(entries) - 1, -1, -1):
-        status = entries[at]["details"].get("status")
+    for n, entry in reversed(list(enumerate(entries))):
+        status = entry["details"].get("status")
         if isinstance(status, dict) and status.get("after") == CLOSED:
-            told = next((e["details"] for e in entries[at + 1:] if e["action"] == "notice"), None)
-            return {"by": entries[at]["actor"], "reason": entries[at]["details"].get("reason"), "notice": told}
+            told = next((e["details"] for e in entries[n + 1:] if e["action"] == "notice"), None)
+            return {"by": entry["actor"], "reason": entry["details"].get("reason"), "notice": told}
     return None
 
 

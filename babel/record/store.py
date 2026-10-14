@@ -770,12 +770,12 @@ class Store:
         time zone. The sweep reads no clock, and nothing runs it but a call. A ticket's last reaction is
         the latest journal entry on it, or on a document about it (a comment, an amendment, a finding
         about it, the notice to its creator): the ticket is deleted once that is more than
-        CLOSED_RETENTION_DAYS before
-        ``today``, and kept until then. Each deletion is its own transaction, by `system`: one audit line
-        (the ticket's number, when it was closed and when it was deleted, and no content), then the
-        ticket, its journal and the documents only about it. A finished ticket is never deleted, however
-        old. A closed ticket that a kept record still refers to (a schema version drafted on it) stays:
-        the database refuses to delete it, and the sweep leaves it closed.
+        CLOSED_RETENTION_DAYS before ``today``, and kept until then. Each deletion is its own
+        transaction, by `system`: one audit line (the ticket's number, when it was closed and when it
+        was deleted, and no content), then the ticket, its journal and the documents only about it. A
+        finished ticket is never deleted, however old. A closed ticket that a kept record still refers
+        to (a schema version drafted on it) stays: the database refuses to delete it, and the sweep
+        leaves it closed.
         """
         moment = _moment(today)
         stamp, cutoff = moment.isoformat(timespec="seconds"), moment - timedelta(days=CLOSED_RETENTION_DAYS)
