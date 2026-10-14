@@ -14,7 +14,9 @@
     release(consultation, reason)  hand the call back without a decision: open again, everything
                                    on it kept, and the reason required
     resume(consultation)           take up an open call (or one whose lease ran out) as it was
-                                   left; a closed one is not resumed
+                                   left; a closed or finished one is not resumed
+    close(consultation, reason)    close a call that cannot be finished at all, with the reason;
+                                   whoever opened it is told how to amend and repost it, or delete it
 
 Ported from Parts-Service-Desk desk/mcp_server.py at 46c859a (origin in docs/provenance.md) and
 rewritten on this repository's company data, ticket store and approval queue. The lab's menu tools
@@ -22,7 +24,9 @@ rewritten on this repository's company data, ticket store and approval queue. Th
 of docs/interaction.md: the plant view and the machine card are what a match opens. ask_question
 becomes ask and stopped, check_answer becomes check, and propose_customer_reply becomes
 propose_reply, which uses the approval queue instead of the lab's proposals file. release and
-resume are new: the owner's answer to P26 (build-plan section 25).
+resume are new: the owner's answer to P26 (build-plan section 25). close is new too: the owner's
+answer S-close (build-plan section 29). The role has no tool to finish a call: finishing is an
+approver's decision, like an approval, made outside the chat (S-finish).
 
 Every tool is a plain function with a typed signature that returns text, and acts as the one named
 user the role is built for (there is no authentication, build-plan G4). No tool calls a model, reads
@@ -61,7 +65,9 @@ Run check on your draft and fix what it flags, then propose_reply.
 
 If the call cannot be finished now, release it with the reason (for example, the customer will call
 back); nothing on it is lost. When the call is taken up again, resume it by its number: it comes
-back as it was left, with who released it and why. A closed consultation is not resumed.
+back as it was left, with who released it and why. If the call cannot be finished at all (for
+example, it is about a machine the company does not serve), close it with the reason: whoever opened
+it is told how to amend it and repost it, or delete it. A closed consultation is not resumed.
 
 You cannot send anything to a customer and cannot approve anything: a named approver decides on the
 reply outside this chat.
@@ -421,7 +427,7 @@ def build(store: Store, data: Optional[ServiceData] = None, *, actor: str) -> Re
         back) or whose consultant's lease ran out. It becomes in_progress, with you, as it was left:
         the person's answers, the questions and their answers and the checks are all on it, and its
         handovers say who released it and why. A consultation waiting for an approver is not
-        resumed, and a closed one never is: its work has stopped, and a new call is a new
+        resumed, and a closed or finished one never is: its work has ended, and a new call is a new
         consultation."""
         before = consultations.get(store, consultation)
         held = before["status"] == "in_progress" and before["claimed_by"] == actor and before["lease_active"]
@@ -434,5 +440,19 @@ def build(store: Store, data: Optional[ServiceData] = None, *, actor: str) -> Re
                       "have changed since, ask the person again before relying on them. Then go on with ask, check "
                       "and propose_reply.")
         return "\n".join([head, "", consultations.view_text(consultations.view(store, consultation)), "", advice])
+
+    @role.register(writes=True)
+    def close(consultation: int, reason: str) -> str:
+        """Close a consultation that cannot be finished at all: for example, the call is about a
+        machine or a part the company does not serve, or the customer has withdrawn it. The reason is
+        required and stays with it. A closed consultation is neither resumed nor finished; whoever
+        opened it is told on the ticket that they may amend it and repost it, or delete it, and one
+        nobody reacts to is deleted after a set time, which the notice states. If the call can still be
+        finished later, release it instead. Only the consultant who has the call can close it."""
+        consultations.close(store, consultation, actor, reason)
+        return "\n".join([
+            f"Consultation #{consultation} closed: it could not be finished, and nothing was sent.",
+            "", consultations.view_text(consultations.view(store, consultation)),
+        ])
 
     return role

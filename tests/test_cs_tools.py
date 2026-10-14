@@ -12,7 +12,7 @@ import babel.record.consultations
 import domains.spare_parts.customer_service
 from babel.mcp import ToolError
 from babel.record import queue
-from babel.record.store import ENDS, RecordError
+from babel.record.store import ENDS, RecordError, notice
 from cs_briefs import ANSWERS, REPLY
 from domains.spare_parts import tools
 from domains.spare_parts.customer_service import build
@@ -275,6 +275,43 @@ def test_a_consultation_waiting_for_an_approver_or_decided_is_not_resumed(store,
     assert _code(role.call, "release", {"consultation": number, "reason": "Too late"}) == "release_forbidden"
     item = store.get(number)
     assert (item["status"], item["claimed_by"]) == (ended, None)
+
+
+def test_the_role_also_has_close_and_no_tool_to_finish(role):
+    # S-close (build-plan section 29): the consultant, a worker, closes a call that cannot be finished;
+    # finishing is an approver's decision (S-finish), made outside the chat like an approval
+    assert role.names() == SLICE_TOOLS + ["release", "resume", "close"]
+    assert role["close"].writes and role["close"].schema["required"] == ["consultation", "reason"]
+    assert not any("finish" in name for name in role.names())
+
+
+def test_close_ends_a_call_that_cannot_be_finished_with_its_reason_and_tells_its_creator(store, role):
+    number = _open(role)
+    out = role.call("close", {"consultation": number, "reason": "The customer's screw is not one of ours"})
+    assert out.startswith(f"Consultation #{number} closed: it could not be finished, and nothing was sent.\n\n"
+                          f"#{number} consultation · closed\n")
+    assert out.endswith(f"\nClosed by ville: The customer's screw is not one of ours\n"
+                        f"Notice to ville: {notice(number, 'ville')}")
+    item = store.get(number)
+    assert (item["status"], item["claimed_by"]) == ("closed", None)
+    assert role.call("search", {"status": "closed"}).startswith(
+        f"search status closed: 1 ticket, shown; viewing it changes nothing.\n\n#{number} consultation · closed\n")
+    assert role.call("search", {"status": "finished"}) == "search status finished: no ticket."
+    assert _code(role.call, "resume", {"consultation": number}) == "item_closed"
+
+
+def test_a_close_without_a_reason_by_another_or_by_a_non_worker_is_refused_and_changes_nothing(store, role):
+    number = _open(role)
+    with pytest.raises(ToolError, match="missing argument reason"):
+        role.call("close", {"consultation": number})
+    assert _code(role.call, "close", {"consultation": number, "reason": "  "}) == "invalid_argument"
+    other = build(store, DATA, actor="pia")
+    assert _code(other.call, "close", {"consultation": number, "reason": "Not ours"}) == "claim_required"
+    approver = build(store, DATA, actor="anna")  # anna holds only the approver role
+    approver.call("open_consultation", {"customer": "C-300", "machine": "CH-02"})
+    assert _code(approver.call, "close", {"consultation": 2, "reason": "Not ours"}) == "role_missing"
+    assert [e["action"] for e in store.journal(number)] == ["created", "claimed", "opened"]
+    assert [store.get(n)["status"] for n in (number, 2)] == ["in_progress", "in_progress"]
 
 
 #: the modules a tool runs: none may reach a model, the network, another process, a clock or chance
