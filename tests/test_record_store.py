@@ -126,9 +126,9 @@ def test_a_change_needs_the_claim(store):
 def test_finishing_hands_the_claim_back(store):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
-    closed = store.set_status(task, "ville", CLOSED)
+    closed = store.close(task, "ville", "The file is not one this company sends")
     assert (closed["status"], closed["claimed_by"], closed["lease_until"]) == (CLOSED, None, None)
-    [entry] = [e for e in store.journal(task) if e["action"] == "status_changed"]  # the entry that closed it
+    [entry] = [e for e in store.journal(task) if e["action"] == "closed"]  # the entry that closed it
     assert entry["details"]["released"] == "ville"
     assert _code(store.claim, task, "pia") == f"item_{CLOSED}"
 
@@ -139,7 +139,7 @@ def test_blocked_tasks_are_not_ready_until_the_blocker_is_closed(store):
     store.link("ville", first, "blocks", second)
     assert [t["number"] for t in store.ready()] == [first]
     store.claim(first, "ville")
-    store.set_status(first, "ville", CLOSED)
+    store.close(first, "ville", "No schema is needed after all")
     assert [t["number"] for t in store.ready()] == [second]
 
 
@@ -221,7 +221,7 @@ def test_a_ticket_waiting_on_a_decision_or_closed_is_not_opened(store):
     store.release(parked, "ville")
     closed = store.add_task("hook", "Finished")
     store.claim(closed, "ville")
-    store.set_status(closed, "ville", CLOSED)
+    store.close(closed, "ville", "The file cannot be processed")
     assert _code(store.open_ticket, parked, "pia") == "not_open"
     assert _code(store.open_ticket, closed, "pia") == "not_open"
     assert store.get(parked)["status"] == "needs_input"
@@ -294,7 +294,7 @@ def test_resuming_a_held_ticket_changes_nothing_and_a_waiting_or_closed_one_is_n
     store.set_status(parked, "ville", "needs_input")
     store.release(parked, "ville")
     assert _code(store.resume, parked, "pia") == "not_open"
-    store.set_status(task, "ville", CLOSED)
+    store.close(task, "ville", "The customer withdrew the call")
     with pytest.raises(RecordError, match=f"#{task} is closed: its work has stopped, so it is not resumed") as refused:
         store.resume(task, "pia")
     assert refused.value.code == "item_closed"
@@ -318,8 +318,8 @@ def test_done_is_called_closed_among_a_tasks_statuses(store):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
     assert _code(store.set_status, task, "ville", "done") == "invalid_status"
-    closed = store.set_status(task, "ville", "closed")
-    [entry] = [e for e in store.journal(task) if e["action"] == "status_changed"]  # the entry that closed it
+    closed = store.close(task, "ville", "The file cannot be processed")
+    [entry] = [e for e in store.journal(task) if e["action"] == "closed"]  # the entry that closed it
     assert entry["details"]["status"] == {"before": "open", "after": "closed"}
     with pytest.raises(RecordError, match=f"#{task} is closed") as refused:
         store.claim(task, "pia")
@@ -367,7 +367,7 @@ def test_a_store_written_with_done_opens_with_closed(store, clock):
 def test_anyone_may_comment_even_on_a_finished_task(store):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
-    store.set_status(task, "ville", CLOSED)
+    store.close(task, "ville", "The file cannot be processed")
     store.comment(task, "anna", "Checked after the fact.")
     assert store.journal(task)[-1]["details"] == {"body": "Checked after the fact."}
     assert store.journal(task)[-1]["role"] == "approver"
@@ -458,7 +458,7 @@ def test_an_approver_finishes_a_task_once_another_holders_lease_is_over(store, c
 def test_a_closed_task_does_not_reach_the_finished_list(store):
     task = store.add_task("hook", "A file arrived")
     store.claim(task, "ville")
-    store.set_status(task, "ville", CLOSED)
+    store.close(task, "ville", "The file cannot be processed")
     assert _code(store.finish, task, "anna", "Done after all") == "item_closed"
     decision = store.add_document("anna", "decision", f"Finished: #{task}", "Done after all", about=task,
                                   data={"decision": "finished", "approver": "anna", "reason": "Done after all"})

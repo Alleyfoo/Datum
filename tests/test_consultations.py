@@ -291,7 +291,7 @@ def test_a_ticket_waiting_for_an_approver_is_listed_under_in_progress(store):
 def test_the_status_filter_lists_open_in_progress_and_closed_tickets(store):
     open_one, working, closed = _start(store), _start(store), _start(store)
     cons.release(store, open_one, "ville", "The customer will call back")
-    store.set_status(closed, "ville", CLOSED)
+    cons.close(store, closed, "ville", "The customer's machine is not one of ours")
     assert [t["number"] for t in cons.tickets(store, "open")] == [open_one]
     assert [t["number"] for t in cons.tickets(store, "in_progress")] == [working]
     assert [t["number"] for t in cons.tickets(store, "closed")] == [closed]
@@ -303,7 +303,7 @@ def test_the_status_filter_has_the_owners_four_values_and_finished_is_the_finish
     assert cons.STATUSES == {"open": ("open",), "in_progress": ("in_progress", "needs_input"),
                              "closed": ("closed",), "finished": ("finished",)}
     closed, finished = _start(store), _start(store)
-    store.set_status(closed, "ville", CLOSED)
+    cons.close(store, closed, "ville", "The customer's machine is not one of ours")
     cons.release(store, finished, "ville", "Answered on the phone; for the approver")
     store.finish(finished, "anna", "The customer has the answer")
     assert [t["number"] for t in cons.tickets(store, "finished")] == [finished]

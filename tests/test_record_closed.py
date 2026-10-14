@@ -8,8 +8,9 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
+from babel.record import consultations as cons
 from babel.record import queue
-from babel.record.store import CLOSED, CLOSED_RETENTION_DAYS, FINISHED, RecordError, Store
+from babel.record.store import CLOSED, CLOSED_RETENTION_DAYS, FINISHED, RecordError, Store, notice
 
 # the clock and store fixtures are in conftest.py
 
@@ -26,10 +27,10 @@ def _code(call, *args, **kwargs):
 
 
 def _closed(store, creator="pia", worker="ville"):
-    """A task the creator wrote, which a worker took up and closed."""
+    """A task the creator wrote, which a worker took up and closed, with the reason."""
     task = store.add_task(creator, "Stock export from C-100", body="Check the week 34 export.")
     store.claim(task, worker)
-    store.set_status(task, worker, CLOSED)
+    store.close(task, worker, "The supplier no longer sends this export")
     return task
 
 
@@ -80,11 +81,14 @@ def test_a_ticket_waiting_on_a_proposal_or_already_ended_is_not_closed(store):
 
 
 def test_whatever_closes_a_ticket_its_creator_is_notified(store):
-    # S-closed: the store's set_status closes with no reason, and the notice follows all the same
+    # S-closed: a task's close and a consultation's close are each followed by the notice to its creator
     task = _closed(store)
-    closing, told = store.journal(task)[-2:]
-    assert (closing["action"], closing["details"]["status"]["after"]) == ("status_changed", CLOSED)
-    assert (told["action"], told["details"]) == ("notice", {"to": "pia", "text": NOTICE.format(n=task)})
+    call = cons.start(store, "ville", "Consultation: Customer one", subject={})["number"]
+    cons.close(store, call, "ville", "The customer's machine is not one of ours")
+    for number, creator in ((task, "pia"), (call, "ville")):
+        closing, told = store.journal(number)[-2:]
+        assert (closing["action"], closing["details"]["status"]["after"]) == ("closed", CLOSED)
+        assert (told["action"], told["details"]) == ("notice", {"to": creator, "text": notice(number, creator)})
 
 
 def test_the_creator_amends_a_closed_ticket_and_each_amendment_keeps_the_text_before_and_after(store):
@@ -295,13 +299,17 @@ def test_only_the_creator_deletes_and_only_a_closed_ticket_nobody_refers_to(stor
 
 
 def _with_the_old_guards(store):
-    """Leave the store as round five wrote it: delete guards that refused every delete, and version 1."""
+    """Leave the store as round five wrote it: delete guards that refused every delete, no guard on how a
+    ticket is created or closed, and version 1."""
     db = sqlite3.connect(store.path)
     try:
         db.executescript("""
             DROP TRIGGER items_no_delete_but_closed;
             DROP TRIGGER journal_no_delete_but_closed;
             DROP TABLE deleting;
+            DROP TRIGGER IF EXISTS items_closed_with_a_reason;
+            DROP TRIGGER IF EXISTS items_created_open;
+            DROP TABLE IF EXISTS closing;
             CREATE TRIGGER journal_no_delete BEFORE DELETE ON journal
             BEGIN SELECT RAISE(ABORT, 'the journal is append-only'); END;
             CREATE TRIGGER items_no_delete BEFORE DELETE ON items
