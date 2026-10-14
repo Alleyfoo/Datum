@@ -9,9 +9,8 @@ Operational data arrives as spreadsheets with their own columns, units and habit
 2. **Checks** it against the header declaration the company's schema requires. A file that does not fit is refused
    with a verified reason; nothing is guessed into shape.
 3. **Routes** the result to a person. A ticket records what was found. A named person admits data to the record.
-4. **Answers** questions from the record through role tools shaped for MCP, with a receipt: the tools run, the
-   rule applied, the checks passed, and what is not known. The MCP protocol server that exposes them to a client is
-   not built yet; today the tools are plain Python functions in a registry.
+4. **Answers** questions from the record through role tools, served to an MCP client over stdio, with a receipt:
+   the tools run, the rule applied, the checks passed, and what is not known.
 
 Code measures and applies rules. An assistant asks, explains and drafts, and cannot change data or send anything.
 People decide what enters the record and what is approved.
@@ -27,6 +26,9 @@ People decide what enters the record and what is approved.
   a finished ticket keeps its history.
 - **Customer-service slice:** search, consultations as tickets, availability and lead-time answers with a receipt,
   answer checks, and proposals for an approver. Golden tests cover the reference scenario.
+- **MCP server:** `python -m babel.mcp.server` serves a role's tools (the customer-service role first) to any MCP
+  client over stdio. Each tool is a plain Python function in the role's registry; the server only passes calls
+  and text through.
 - **Desk views:** the text screens of a spare-parts desk, ported with golden tests.
 - **Synthetic data:** a spare-parts company with a year of history, and a generator for a weekly stock export with
   a renamed-column variant.
@@ -55,6 +57,29 @@ python -m babel.record.sweep --store PATH_TO_STORE.sqlite --today YYYY-MM-DD
 
 It exits with a non-zero code and prints the error when it fails. Scheduling it is left to the operator.
 
+## Connecting an MCP client
+
+The server speaks MCP over stdio: the client starts it as a command and talks to it through its standard input and
+output. In the client's configuration (for example `claude_desktop_config.json`):
+
+```json
+{ "mcpServers": { "datum": { "command": "python", "args": ["-m", "babel.mcp.server", "--store", "<path>"] } } }
+```
+
+- `command` is the Python that has Datum installed (`pip install -e .`); give its full path if it is a virtual
+  environment's.
+- `<path>` is the ticket store, a SQLite file. A new one is created if there is none.
+- The client gets the customer-service tools (`search`, `open_consultation`, `stopped`, `ask`, `check`,
+  `propose_reply`, `release`, `resume`, `close`) and the role's instructions. `search` is marked read-only; the
+  others write to the record (a ticket, a journal entry, a check, a proposal) and are marked so.
+- The tools act as one user of the record: `mcp-consultant`, an agent with the worker role, added to the store the
+  first time. `--actor NAME` acts as an existing user instead. `--role` names the role; `customer-service` is the
+  only one so far.
+
+The server calls no model and sends nothing outside the process: it reads requests from its standard input and
+writes replies to its standard output. The assistant on the other side explains and drafts; it cannot approve a
+reply or send anything, because no tool does. A named approver decides in the approval queue.
+
 ## Documentation
 
 - [docs/plan.md](docs/plan.md): purpose, principles, status and phases.
@@ -67,14 +92,14 @@ It exits with a non-zero code and prints the error when it fails. Scheduling it 
 
 ## Status
 
-Pre-release. The core and the intake chain are built and tested. Not yet built: the MCP protocol server, the demo
+Pre-release. The core, the intake chain and the MCP server are built and tested. Not yet built: the demo
 interface and recorded replays, the analyst tools, the worklist, and the scheduling of the manager run. There is no
 hosted demo yet.
 
 ## Code layout
 
-- `babel/`: the domain-free core (schema, intake, record, checks, the tool registry). The folder keeps the project's
-  earlier working name.
+- `babel/`: the domain-free core (schema, intake, record, checks, the tool registry and the MCP server). The folder
+  keeps the project's earlier working name.
 - `domains/spare_parts/`: the first domain pack (schema, synthetic company, rules, views, customer-service tools).
 - `tests/`: the test suite, golden files and synthetic fixtures.
 - `scripts/`: golden-file regeneration. The `capture_lab_*` scripts are for the maintainer only: they read the
