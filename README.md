@@ -29,6 +29,8 @@ People decide what enters the record and what is approved.
 - **MCP server:** `python -m babel.mcp.server` serves a role's tools (the customer-service role first) to any MCP
   client over stdio. Each tool is a plain Python function in the role's registry; the server only passes calls
   and text through.
+- **Demo run:** `scripts/demo_run.py` runs one synthetic scenario end to end and writes it as plain files, for the
+  static demo page to read.
 - **Desk views:** the text screens of a spare-parts desk, ported with golden tests.
 - **Synthetic data:** a spare-parts company with a year of history, and a generator for a weekly stock export with
   a renamed-column variant.
@@ -68,7 +70,8 @@ output. In the client's configuration (for example `claude_desktop_config.json`)
 
 - `command` is the Python that has Datum installed (`pip install -e .`); give its full path if it is a virtual
   environment's.
-- `<path>` is the ticket store, a SQLite file. A new one is created if there is none.
+- `<path>` is the ticket store, a SQLite file. A new one is created if there is none; the demo run below writes
+  one (`output/demo/record.sqlite`), with its tickets.
 - The client gets the customer-service tools (`search`, `open_consultation`, `stopped`, `ask`, `check`,
   `propose_reply`, `release`, `resume`, `close`) and the role's instructions. `search` is marked read-only; the
   others write to the record (a ticket, a journal entry, a check, a proposal) and are marked so.
@@ -79,6 +82,31 @@ output. In the client's configuration (for example `claude_desktop_config.json`)
 The server calls no model and sends nothing outside the process: it reads requests from its standard input and
 writes replies to its standard output. The assistant on the other side explains and drafts; it cannot approve a
 reply or send anything, because no tool does. A named approver decides in the approval queue.
+
+## Running the demo
+
+```text
+python scripts/demo_run.py --out output/demo
+```
+
+One synthetic scenario, end to end, with fixed dates, no model and no scheduler, on a fresh record:
+
+1. The company's stock-export schema, version 1: the first weekly export arrives before there is a schema; a
+   worker drafts version 1 from it, and an approver confirms it at the create-schema gate and admits the file.
+2. The weekly stock export arrives, passes the trial against version 1, and an approver admits it.
+3. The next export arrives with a renamed column. It is refused with a verified reason; a worker drafts the
+   amendment, version 2, an approver confirms it, and the file loads under version 2.
+4. A customer call: CH-02 has stopped and needs SP-1601. The consultant's tools ask the person whether the machine
+   has stopped, answer with a receipt, check the reply and propose it; an approver's approval finishes the call.
+   The reply is a fixed text: no model runs.
+5. A call that cannot be finished is closed by the worker, with the reason and the notice to the person who answers
+   for it. The sweep, run once 31 days later, deletes it and keeps the finished tickets.
+
+The directory then holds plain files: `demo.json` and `demo.md` (each step, its ticket, the ticket's status changes,
+every call and what came back, and the receipt; then the record after the run), `record.sqlite` (the ticket
+store), `data/` (the company's folder: inbox, staging and cleaning records) and `arrivals/` (the files as they
+arrived). Two runs with the same arguments write byte-identical `demo.json` and `demo.md`. The directory must be
+new, empty or an earlier output of the script, which is replaced; `output/` is ignored by git.
 
 ## Documentation
 
@@ -92,9 +120,9 @@ reply or send anything, because no tool does. A named approver decides in the ap
 
 ## Status
 
-Pre-release. The core, the intake chain and the MCP server are built and tested. Not yet built: the demo
-interface and recorded replays, the analyst tools, the worklist, and the scheduling of the manager run. There is no
-hosted demo yet.
+Pre-release. The core, the intake chain, the MCP server and the demo run are built and tested. Not yet built: the
+demo interface (the static page that will read the demo run's files) and recorded replays, the analyst tools, the
+worklist, and the scheduling of the manager run. There is no hosted demo yet.
 
 ## Code layout
 
@@ -102,8 +130,9 @@ hosted demo yet.
   keeps the project's earlier working name.
 - `domains/spare_parts/`: the first domain pack (schema, synthetic company, rules, views, customer-service tools).
 - `tests/`: the test suite, golden files and synthetic fixtures.
-- `scripts/`: golden-file regeneration. The `capture_lab_*` scripts are for the maintainer only: they read the
-  private research repositories the reference text was captured from, and cannot run without them.
+- `scripts/`: the demo run (`demo_run.py`) and golden-file regeneration. The `capture_lab_*` scripts are for the
+  maintainer only: they read the private research repositories the reference text was captured from, and cannot
+  run without them.
 
 ## Lineage
 
