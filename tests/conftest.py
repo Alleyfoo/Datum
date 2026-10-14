@@ -61,7 +61,8 @@ def write_workbook(path, sheets, cached=None):
 
     `cached` maps (sheet name, cell) to a number or a text stored as that formula cell's cached
     value, the way Excel saves a calculated workbook (a text result is marked t="str"); openpyxl
-    itself never writes one.
+    itself never writes one. openpyxl writes the empty value as <v></v> with lxml installed, as <v/>
+    without it, or leaves it out, so all three are accepted.
     """
     book = Workbook()
     book.remove(book.active)
@@ -79,7 +80,7 @@ def write_workbook(path, sheets, cached=None):
         for (name, cell), value in cached.items():
             part = f"xl/worksheets/sheet{names.index(name) + 1}.xml"
             kind = ' t="str"' if isinstance(value, str) else ""
-            xml, count = re.subn(rf'(<c r="{cell}"[^>]*)(><f>[^<]*</f>)<v></v>',
+            xml, count = re.subn(rf'(<c r="{cell}"[^>]*)(><f>[^<]*</f>)(?:<v></v>|<v\s*/>)?(?=</c>)',
                                  lambda found: f"{found[1]}{kind}{found[2]}<v>{escape(str(value))}</v>",
                                  parts[part].decode("utf-8"))
             assert count == 1, f"no empty formula value at {name}!{cell}"
