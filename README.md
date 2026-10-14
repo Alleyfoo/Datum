@@ -17,6 +17,86 @@ Operational data arrives as spreadsheets with their own columns, units and habit
 Code measures and applies rules. An assistant asks, explains and drafts, and cannot change data or send anything.
 People decide what enters the record and what is approved.
 
+## How it works
+
+### 1. A file arrives
+
+Every file takes the same path, whether a person dropped it in the folder or a collector fetched it.
+Nothing reaches the record until a person decides.
+
+```mermaid
+flowchart TD
+    A["Supplier file<br/>arrives"] --> B["Preserve<br/>hash, read-only copy"]
+    B --> C["Stage<br/>every cell as text + type"]
+    C --> D["Clean<br/>trim, declared rules"]
+    D --> E{"Fits the company's<br/>schema?"}
+    E -- "yes" --> F["Ticket:<br/>ready to import"]
+    E -- "no" --> G["Ticket:<br/>verified reason"]
+    F --> H(("A person<br/>decides"))
+    G --> H
+    H -- "admit" --> I[("Record")]
+    H -- "amend the schema" --> J["New schema<br/>version"]
+    J --> E
+    H -- "drop" --> K["Kept as dropped,<br/>with the reason"]
+```
+
+### 2. A customer calls
+
+The assistant runs Datum's tools through MCP. It asks the person what only the person knows, and
+explains what the tools found. It cannot send a reply: an approver does.
+
+```mermaid
+sequenceDiagram
+    participant P as Service person
+    participant A as Assistant (any MCP client)
+    participant D as Datum tools
+    participant Q as Approver
+    P->>A: "CH-02 has stopped. The customer needs SP-1601."
+    A->>D: search("reclaim screw")
+    D-->>A: one match: CH-02
+    A->>P: Has CH-02 stopped?
+    P-->>A: Yes, it is waiting for the part
+    A->>D: stopped, then ask("Availability")
+    D-->>A: facts, the rule applied, and a receipt
+    A->>D: check the draft, then propose the reply
+    D->>Q: reply waits for approval
+    Q-->>D: approved, with a reason
+```
+
+### 3. Every piece of work is a ticket
+
+```mermaid
+stateDiagram-v2
+    [*] --> open
+    open --> in_progress: handed to an agent
+    in_progress --> open: released, no decision
+    in_progress --> needs_input: reply proposed
+    needs_input --> finished: approver decides
+    in_progress --> closed: cannot be finished (reason required)
+    closed --> open: creator amends and reposts
+    closed --> [*]: deleted after 30 days without a reaction
+    finished --> [*]: kept, with its full history
+```
+
+### What an answer looks like
+
+Every answer ends with a receipt: what was asked of the person, which tools ran, which rule decided,
+what was checked, and what the system does not know.
+
+```text
+RECEIPT  #1 question 2: Availability of SP-1601 for CH-02
+  asked of the person   machine stopped: yes (breakdown)
+  tools run             machine_context · stock_by_warehouse · fastest_supply · incoming_orders ·
+                        lead_time · substitutes · conflicts · where_used · due_soon · recommended_plan
+  rule applied          breakdown → fastest option
+  not known             competing claims on PO-4718 are not modelled: SC-01 is overdue for 3 pcs,
+                        also served from FI
+  needs approval        the reply waits for a named approver. Nothing is sent
+```
+
+All of this runs on a synthetic spare-parts company. Run `python scripts/demo_run.py --out output/demo`
+to replay the whole scenario.
+
 ## What works today
 
 - **Schema registry:** typed fields, keys and references; every row is accepted or refused with a code.
