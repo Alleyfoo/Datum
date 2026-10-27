@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Datum rendering probe</title>
+<style>
+:root{color-scheme:dark;font:15px system-ui,sans-serif;background:#0d181a;color:#eaf6f2}*{box-sizing:border-box}body{margin:0;padding:20px}.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}h1{font-size:24px;margin:4px 0}h2{font-size:16px;margin:0 0 12px}.tag{color:#7be5bd;font-weight:600}p{color:#afc7c1}button{background:#174638;color:#e9fff5;border:1px solid #58b996;border-radius:6px;padding:8px 12px;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}.card{background:#152729;border:1px solid #2a4946;border-radius:9px;padding:14px;min-width:0}svg,canvas{display:block;width:100%;height:180px;background:#0b1819}.table-scroll{height:210px;overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:5px;border-bottom:1px solid #2e4542}thead{position:sticky;top:0;background:#223c38}.metrics{white-space:pre-wrap;font:12px ui-monospace,monospace;color:#b4d2c6}#glProbe{width:64px;height:64px}@media(max-width:650px){.cards{grid-template-columns:1fr}body{padding:10px}}
+</style></head><body>
+<div class="bar"><span class="tag">DATUM / CAPABILITY PROBE</span><span id="status">Waiting for host result</span></div><h1>Rendering inside an MCP host</h1><p>Synthetic data only. This tests browser rendering and host controls; it does not perform business operations.</p>
+<div class="bar"><button id="fullscreen" disabled>Request fullscreen</button><button id="inline" disabled>Request inline</button><button id="resize" disabled>Request 700 px height</button><span id="mode">Mode: unknown</span></div>
+<div class="cards"><section class="card"><h2>SVG · server series</h2><svg id="svg" viewBox="0 0 480 180" role="img" aria-label="Synthetic SVG bar chart"></svg></section><section class="card"><h2>Canvas 2D · same server series</h2><canvas id="canvas" width="480" height="180" aria-label="Synthetic canvas bar chart"></canvas></section><section class="card"><h2>Table · 2,000 structured rows</h2><div class="table-scroll"><table><thead><tr><th>ID</th><th>Label</th><th>Value</th></tr></thead><tbody id="rows"></tbody></table></div></section><section class="card"><h2>Measurements and feature probe</h2><div id="metrics" class="metrics">Waiting for data…</div><canvas id="glProbe" width="32" height="32" aria-label="WebGL feature probe"></canvas><p>Times describe this one run, not a benchmark or a host guarantee.</p></section></div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),send=msg=>window.parent.postMessage(msg,'*');
+let initialized=false, context={}, pending={}, next=10;
+window.probeMetrics={};
+function updateControls(){let modes=context.availableDisplayModes||[];$('fullscreen').disabled=!initialized||!modes.includes('fullscreen');$('inline').disabled=!initialized||!modes.includes('inline');$('resize').disabled=!initialized;$('mode').textContent='Mode: '+(context.displayMode||'unknown')+'; available: '+modes.join(', ')}
+function requestMode(mode){const id=next++;pending[id]=mode;send({jsonrpc:'2.0',id,method:'ui/request-display-mode',params:{mode}})}
+$('fullscreen').onclick=()=>requestMode('fullscreen');$('inline').onclick=()=>requestMode('inline');$('resize').onclick=()=>send({jsonrpc:'2.0',method:'ui/notifications/size-changed',params:{height:700}});
+function render(d){if(!Array.isArray(d?.series)||!Array.isArray(d?.rows)){ $('status').textContent='Invalid structured result';return }
+ const start=performance.now(), max=Math.max(...d.series), svg=$('svg'), ns='http://www.w3.org/2000/svg';svg.replaceChildren();
+ d.series.forEach((v,i)=>{const rect=document.createElementNS(ns,'rect');rect.setAttribute('x',String(16+i*58));rect.setAttribute('y',String(165-v/max*140));rect.setAttribute('width','36');rect.setAttribute('height',String(v/max*140));rect.setAttribute('fill','#71ddb1');svg.append(rect)});
+ const canvas=$('canvas'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,480,180);ctx.fillStyle='#79aef2';d.series.forEach((v,i)=>ctx.fillRect(16+i*58,165-v/max*140,36,v/max*140));
+ const f=document.createDocumentFragment();for(const row of d.rows){const tr=document.createElement('tr');for(const val of [row.id,row.label,row.value]){const td=document.createElement('td');td.textContent=String(val);tr.append(td)}f.append(tr)}$('rows').replaceChildren(f);
+ let glStatus='unavailable',glPixel=null;try{const gl=$('glProbe').getContext('webgl');if(gl){gl.clearColor(0.2,0.7,0.4,1);gl.clear(gl.COLOR_BUFFER_BIT);const pixel=new Uint8Array(4);gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);glPixel=Array.from(pixel);glStatus='context and pixel read succeeded'}}catch(e){glStatus='error: '+e.message}
+ const elapsed=performance.now()-start;window.probeMetrics={rowCount:d.rows.length,renderMs:elapsed,webgl:glStatus,glPixel,innerWidth:window.innerWidth,canvasPixel:Array.from(ctx.getImageData(20,160,1,1).data),svgBars:svg.children.length,jsHeapBytes:performance.memory?.usedJSHeapSize??null};$('status').textContent='Received structured MCP result';showMetrics();}
+function showMetrics(){const m=window.probeMetrics;$('metrics').textContent=`Rows: ${m.rowCount}\nDOM creation and draw: ${m.renderMs?.toFixed(1)} ms\nSVG bars: ${m.svgBars}\nWebGL: ${m.webgl}\nViewport width: ${window.innerWidth} px\nJS heap (nonstandard): ${m.jsHeapBytes??'unavailable'} bytes`}
+window.addEventListener('resize',()=>{if(window.probeMetrics.rowCount)showMetrics()});
+window.addEventListener('message',event=>{if(event.source!==window.parent||event.data?.jsonrpc!=='2.0')return;const msg=event.data;
+ if(msg.id===1){if(!msg.result?.protocolVersion){$('status').textContent='Host initialization failed';return}initialized=true;context=msg.result.hostContext||{};send({jsonrpc:'2.0',method:'ui/notifications/initialized'});updateControls();return}
+ if(!initialized)return;
+ if(msg.method==='ui/notifications/host-context-changed'){context={...context,...msg.params};updateControls()}
+ else if(msg.method==='ui/notifications/tool-result')render(msg.params?.structuredContent);
+ else if(msg.method==='ui/resource-teardown'&&msg.id!==undefined)send({jsonrpc:'2.0',id:msg.id,result:{}});
+ else if(pending[msg.id]){if(msg.error)$('status').textContent='Display request failed: '+msg.error.message;else if(msg.result?.mode){context.displayMode=msg.result.mode;updateControls()}delete pending[msg.id]}
+});
+send({jsonrpc:'2.0',id:1,method:'ui/initialize',params:{appInfo:{name:'Datum Rendering Probe',version:'0.1.0'},appCapabilities:{availableDisplayModes:["inline","fullscreen"]},protocolVersion:'2026-01-26'}});
+})();
+</script></body></html>
+

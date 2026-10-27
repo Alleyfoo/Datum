@@ -16,6 +16,8 @@ from mcp.server.mcpserver import MCPServer
 from mcp.types import CallToolResult, TextContent
 
 from datum_engine import evaluate, summarize
+import graphics_experiment
+import interaction_lab
 
 APP_URI = "ui://datum/visual-lab"
 HTML_PATH = Path(__file__).with_name("app.template.html")
@@ -47,6 +49,9 @@ apps.add_html_resource(
     title="DATUM — Visual Lab",
     prefers_border=True,
 )
+
+interaction_lab.register(apps)
+graphics_experiment.register(apps)
 
 mcp = MCPServer("datum-visual-lab", extensions=[apps])
 

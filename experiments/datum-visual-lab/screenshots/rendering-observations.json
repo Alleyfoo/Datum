@@ -1,0 +1,53 @@
+{
+  "status": "pass",
+  "referenceHost": "http://localhost:8080/",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "measurements": {
+    "probe": {
+      "rowCount": 2000,
+      "renderMs": 10,
+      "webgl": "context and pixel read succeeded",
+      "glPixel": [
+        51,
+        178,
+        102,
+        255
+      ],
+      "innerWidth": 1400,
+      "canvasPixel": [
+        121,
+        174,
+        242,
+        255
+      ],
+      "svgBars": 8,
+      "jsHeapBytes": 26890723
+    },
+    "mode": "Mode: inline; available: inline, fullscreen",
+    "grid": "674px 674px",
+    "viewportWidth": 1400
+  },
+  "resize": {
+    "before": 400,
+    "requested": 700,
+    "after": 706
+  },
+  "fullscreen": "Mode: fullscreen; available: inline, fullscreen",
+  "narrow": {
+    "width": 480,
+    "grid": "460px",
+    "tableScrollWidth": 430,
+    "tableClientWidth": 430
+  },
+  "pageErrors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "hostMessages": [
+    "[HOST] Display mode request from MCP App: {mode: fullscreen}",
+    "[HOST] Display mode request from MCP App: {mode: inline}"
+  ]
+}

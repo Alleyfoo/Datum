@@ -15,10 +15,10 @@ Open `datum_visual_lab.html` in a browser. To regenerate its snapshots after edi
 
 ```powershell
 python build.py
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -p test_engine.py -v
 ```
 
-The standalone build and engine use Python's standard library. The page is an offline demonstration, not a live connection to the CSV files.
+The standalone build and engine use Python's standard library. Full test discovery also includes the interaction-lab tests and requires the MCP SDK. The page is an offline demonstration, not a live connection to the CSV files.
 
 ## Local MCP Apps reference host
 
@@ -45,6 +45,8 @@ npm run start
 ```
 
 Open `http://localhost:8080`. Select `datum_visualize`, supply a `scenario` of `baseline`, `delivery`, or `quarantine`, and call it. The reference host serves its own page on port 8080 and its sandbox proxy on port 8081. Consult [TEST_REPORT.md](TEST_REPORT.md) for observed results and limitations; merely loading the standalone HTML does not establish host compatibility.
+
+For the interaction experiment, select `datum_open_interaction_lab`. The server reads `interaction_menu.json` on each menu or action request. Its enabled actions are rendered as buttons; refresh reloads the configuration without rebuilding the HTML. The action and refresh tools have app-only visibility, and the server validates disabled or unknown actions. Select `datum_rendering_probe` to test browser rendering and host display controls. These experiments use synthetic data and do not change an ERP. See [MCP_CAPABILITIES.md](MCP_CAPABILITIES.md) for the protocol map, measured results and limitations.
 
 ## Checks
 
@@ -78,7 +80,9 @@ $env:NODE_PATH = 'C:\path\to\ext-apps\node_modules'
 $env:DATUM_BROWSER = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 $env:DATUM_PYTHON = (Resolve-Path '.\.venv\Scripts\python.exe').Path
 node tests/test_reference_host.cjs
+node tests/test_interaction_host.cjs
+node tests/test_rendering_host.cjs
 ```
 
-The test temporarily edits `fixtures/machines.csv` and restores its original bytes. Run it only in a disposable copy without other processes editing the fixtures. It captures screenshots in `screenshots/`. Set `DATUM_HOST` to override the default host URL. If your environment denies writes to the normal temporary directory, set `TEMP` and `TMP` to an existing writable local directory before running the Python tests.
+The baseline and interaction tests temporarily edit `fixtures/machines.csv` and `interaction_menu.json`, respectively, and restore their original bytes in `finally`. Run them only in a disposable copy with no concurrent edits; abrupt process termination can prevent restoration. They capture screenshots in `screenshots/`. Set `DATUM_HOST` to override the default host URL. If your environment denies writes to the normal temporary directory, set `TEMP` and `TMP` to an existing writable local directory before running the Python tests.
 

@@ -1,0 +1,9 @@
+{
+  "title": "Server-defined inspection menu",
+  "description": "Synthetic examples. These controls retrieve read-only information.",
+  "actions": [
+    {"id": "overview", "label": "Inspect a summary", "enabled": true, "result": {"heading": "Summary", "details": ["Synthetic record set: 3 items", "Status: available for inspection"]}},
+    {"id": "sources", "label": "Inspect sources", "enabled": true, "result": {"heading": "Sources", "details": ["Source A: synthetic record", "Source B: synthetic record"]}},
+    {"id": "locked", "label": "Unavailable example", "enabled": false, "result": {"heading": "Not available", "details": []}}
+  ]
+}

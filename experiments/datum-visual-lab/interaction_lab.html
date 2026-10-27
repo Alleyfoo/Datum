@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Datum interaction lab</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#172c39;background:#eef3f2}body{margin:0;padding:24px}main{max-width:860px;margin:auto;background:white;border:1px solid #c9dad5;border-radius:14px;padding:24px}h1{margin:4px 0 8px;font-size:clamp(1.5rem,4vw,2.2rem)}h2{font-size:1.1rem}.eyebrow{color:#246b59;text-transform:uppercase;font-size:.75rem;font-weight:700;letter-spacing:.1em}.info{line-height:1.5;color:#445962}#status{padding:10px 12px;background:#edf6f3;border-radius:6px;min-height:1.5em}#menu{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}button{border:1px solid #196b58;background:#196b58;color:white;padding:10px 14px;border-radius:7px;font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #e7a840;outline-offset:2px}button:disabled{background:#e6ebea;color:#667b77;border-color:#c5d2ce;cursor:not-allowed}#refresh{background:white;color:#145a49}#refresh:disabled{color:#667b77}.result{border:1px solid #d5e3df;border-radius:8px;padding:16px;background:#f8fbfa}.result ul{padding-left:1.25rem}footer{font-size:.8rem;color:#60736f;margin-top:20px}
+</style></head><body><main><div class="eyebrow">MCP Apps · Read-only experiment</div><h1 id="title">Waiting for server menu</h1><p id="description" class="info">The host must deliver a structured tool result.</p><p id="status" role="status" aria-live="polite">Connecting to the host…</p><div id="menu" aria-label="Server-defined actions"></div><button id="refresh" disabled>Refresh server menu</button><section class="result" aria-live="polite"><h2 id="resultHeading">Result</h2><ul id="resultDetails"><li>Choose an enabled action.</li></ul></section><footer>No write-back or approval. Menu and example data are supplied by the local server.</footer></main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id), status=$('status');
+let initialized=false,canCall=false,hasMenu=false,nextId=1001,pending=null;
+function message(method,params,id){const payload={jsonrpc:'2.0',method,params};if(id!==undefined)payload.id=id;window.parent.postMessage(payload,'*')}
+function showMenu(data){
+ if(data?.kind!=='menu'||typeof data.title!=='string'||typeof data.description!=='string'||!Array.isArray(data.actions))throw new Error('Invalid menu result');
+ $('title').textContent=data.title;$('description').textContent=data.description;const menu=$('menu');menu.replaceChildren();
+ for(const action of data.actions){if(typeof action.id!=='string'||typeof action.label!=='string'||typeof action.enabled!=='boolean')throw new Error('Invalid action');const button=document.createElement('button');button.textContent=action.label;button.dataset.action=action.id;button.disabled=!canCall||!action.enabled;button.addEventListener('click',()=>call('datum_menu_action',{action_id:action.id}));menu.appendChild(button)}
+ hasMenu=true;$('refresh').disabled=!canCall;status.textContent=canCall?'Menu received from the server. Choose an enabled action.':'Menu received, but the host did not advertise server tool calls.';
+}
+function showAction(data){if(data?.kind!=='action_result'||typeof data.heading!=='string'||!Array.isArray(data.details)||!data.details.every(x=>typeof x==='string'))throw new Error('Invalid action result');$('resultHeading').textContent=data.heading;const details=$('resultDetails');details.replaceChildren();for(const text of data.details){const li=document.createElement('li');li.textContent=text;details.appendChild(li)}status.textContent=`Received server result for ${data.label}.`}
+function consume(result){if(result?.isError)throw new Error(result.content?.find(c=>c.type==='text')?.text||'Server rejected the request');const data=result?.structuredContent;if(data?.kind==='menu')showMenu(data);else if(data?.kind==='action_result')showAction(data);else throw new Error('Missing structured data')}
+function call(name,args){if(!initialized||!canCall||pending)return;const id=nextId++;pending=id;status.textContent='Waiting for server response…';message('tools/call',{name,arguments:args},id)}
+$('refresh').addEventListener('click',()=>call('datum_menu_refresh',{}));
+window.addEventListener('message',event=>{if(event.source!==window.parent||event.data?.jsonrpc!=='2.0')return;const msg=event.data;
+ if(msg.id===1000){if(!msg.result?.protocolVersion){status.textContent='Host initialization failed.';return}initialized=true;canCall=!!msg.result.hostCapabilities&&Object.hasOwn(msg.result.hostCapabilities,'serverTools');message('ui/notifications/initialized',{});return}
+ if(msg.method==='ui/resource-teardown'&&msg.id!==undefined){window.parent.postMessage({jsonrpc:'2.0',id:msg.id,result:{}},'*');return}
+ if(!initialized)return;
+ if(msg.method==='ui/notifications/tool-result'&&!pending){try{consume(msg.params)}catch(e){status.textContent=e.message}return}
+ if(msg.id===pending){pending=null;try{if(msg.error)throw new Error(msg.error.message||'Host rejected tool request');consume(msg.result)}catch(e){status.textContent=`Request failed: ${e.message}`;if(hasMenu)$('refresh').disabled=!canCall}}
+});
+if(window.parent===window){status.textContent='Open this resource through an MCP Apps host.';return}
+message('ui/initialize',{appInfo:{name:'Datum Interaction Lab',version:'0.1.0'},appCapabilities:{},protocolVersion:'2026-01-26'},1000);
+})();
+</script></body></html>
