@@ -1,0 +1,3 @@
+id,part,about,source,claim,accepted
+CLAIM-01,CP-09-ALT,Fit for CF-01 / CP-09,Vendor Alpha / catalog row 144,Compatible,False
+CLAIM-02,CP-09-ALT,Fit for CF-01 / CP-09,OEM bulletin / row 08,Not compatible,False

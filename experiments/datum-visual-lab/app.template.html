@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="color-scheme" content="dark"/>
+<title>DATUM / Visual Lab</title>
+<style>
+:root{--bg:#0b1014;--nav:#0d171a;--card:#121c22;--card2:#172329;--line:#2a393d;--text:#edf5f3;--muted:#9eb2b5;--dim:#6e8488;--green:#74e3bc;--green2:#1b493d;--red:#ff927f;--orange:#f7cb79;--blue:#94c7fb;--shadow:0 14px 48px #0003;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,"Segoe UI",system-ui,sans-serif;letter-spacing:.005em}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--green);outline-offset:2px}a{color:var(--green)}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.micro{color:var(--dim);text-transform:uppercase;letter-spacing:.17em;font-size:10px;font-weight:800}.sub{color:var(--muted)}.small{font-size:12px}.wrap{min-height:100vh;display:grid;grid-template-columns:224px minmax(0,1fr)}
+nav{border-right:1px solid var(--line);background:linear-gradient(170deg,#0c1a1b,#0b1014);padding:29px 17px;display:flex;flex-direction:column;gap:22px;min-height:100vh}.brand{padding:0 12px;display:flex;align-items:center;gap:10px}.mark{width:27px;height:27px;border:2px solid var(--green);display:grid;place-items:center;border-radius:6px;color:var(--green);font-size:15px;font-weight:900}.brand strong{font-size:19px;letter-spacing:.15em}.navlist{display:grid;gap:5px}.nav-btn{display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;color:var(--muted);text-align:left;border:0;background:transparent;border-radius:9px}.nav-btn:hover{background:#ffffff08}.nav-btn.active{background:#19342e;color:var(--green);font-weight:700}.nav-btn span:first-child{font-size:17px}.navfooter{margin-top:auto;border-top:1px solid var(--line);padding:18px 12px 0;display:grid;gap:8px}
+main{min-width:0;padding:28px clamp(18px,3.2vw,52px) 52px;max-width:1680px;width:100%;margin:0 auto}.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:26px}.live{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--green);letter-spacing:.07em;font-weight:700}.dot{height:7px;width:7px;background:var(--green);border-radius:50%;box-shadow:0 0 12px #74e3bc6c}.topactions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.chip{border:1px solid var(--line);padding:7px 11px;border-radius:20px;color:var(--muted);font-size:11px}.outline{border:1px solid #426158;background:transparent;color:var(--green);padding:9px 13px;border-radius:8px;font-weight:700}.outline:hover{background:#142c26}.kicker{font-size:11px;color:var(--green);font-weight:800;letter-spacing:.16em;text-transform:uppercase}.heading{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:22px}h1{font-size:clamp(26px,3.2vw,44px);line-height:1.16;letter-spacing:-.04em;margin:9px 0}h2{font-size:18px;margin:0 0 3px;letter-spacing:-.02em}h3{font-size:14px;margin:0 0 9px}.intro{color:var(--muted);margin:0;max-width:750px}.select{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:11px 13px;min-width:220px;color:var(--text)}.context{background:#102820;border:1px solid #235a49;border-radius:10px;padding:12px 15px;color:#c6f2df;font-size:12px;margin-bottom:22px}.context b{color:var(--green)}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}.metric{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:18px 19px;min-height:133px;position:relative;overflow:hidden}.metric:before{position:absolute;content:"";height:3px;top:0;left:0;width:34%;background:var(--line)}.metric.ready:before{background:var(--green)}.metric.blocked:before{background:var(--red)}.metric.review:before{background:var(--orange)}.big{font-size:37px;font-weight:800;letter-spacing:-.06em;line-height:1.35}.metric small{color:var(--muted)}.metric .hint{color:var(--dim);font-size:11px;margin-top:6px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}.pad{padding:20px}.row{display:flex;align-items:center;justify-content:space-between;gap:15px}.flow{display:grid;gap:16px}.overview-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(245px,.8fr);gap:17px}.board{overflow:auto}.board-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.filter{padding:6px 11px;border:1px solid var(--line);color:var(--muted);border-radius:7px;background:transparent;font-size:12px}.filter.active{background:#294238;color:var(--green);border-color:#386c5b}.search{min-width:120px;max-width:200px;background:#0f1b20;color:var(--text);border:1px solid var(--line);padding:7px 10px;border-radius:7px;font-size:12px}.tbl{border-collapse:collapse;width:100%;min-width:535px}.tbl th{text-align:left;color:var(--dim);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:13px 18px;font-weight:700}.tbl td{border-top:1px solid #25343a;padding:14px 18px}.tbl tbody tr{cursor:pointer}.tbl tbody tr:hover,.tbl tbody tr.sel{background:#1d3031}.tag{display:inline-flex;align-items:center;gap:6px;border-radius:30px;padding:5px 9px;font-size:11px;font-weight:800}.tag:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.tag.ready{background:#133c30;color:var(--green)}.tag.blocked{background:#492925;color:var(--red)}.tag.review{background:#443721;color:var(--orange)}.priority{color:var(--dim);font-size:12px}.machine-id{color:var(--text);font-weight:800}.selection{border-color:#36534e}.selectedHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}.divide{border:0;border-top:1px solid var(--line);margin:17px 0}.point{display:flex;gap:9px;margin:12px 0;color:var(--muted);font-size:12px}.point:before{content:"•";color:var(--green)}.kvs{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:12px}.kvs dt{color:var(--dim)}.kvs dd{margin:0;color:var(--text);text-align:right}.bar{height:11px;border-radius:10px;display:flex;overflow:hidden;background:#27353c;margin-top:16px}.bar span{height:100%}.bar .a{background:var(--green)}.bar .b{background:var(--red)}.bar .c{background:var(--orange)}.legend{display:flex;align-items:center;gap:16px;margin-top:15px;flex-wrap:wrap}.legend span{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.waiting .wrap{display:none}.connection-status{padding:12px 18px;background:#102820;color:#c6f2df}.view{display:none}.view.active{display:block}.graph-wrap{overflow:hidden;min-height:480px}.graph-stage{height:500px;position:relative;background:radial-gradient(ellipse at 50% 50%,#17262b,#111a21 68%);overflow:hidden;border-radius:0 0 12px 12px}.graph-stage:before{pointer-events:none;content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff06 1px,transparent 1px),linear-gradient(90deg,#ffffff06 1px,transparent 1px);background-size:31px 31px}.graph-stage svg{position:relative;width:100%;height:100%;touch-action:none}.graph-controls{display:flex;gap:7px}.btn-sm{font-size:12px;border:1px solid var(--line);border-radius:7px;background:#202f35;color:var(--text);padding:6px 9px}.btn-sm:hover{background:#2d4149}.graph-node{cursor:pointer}.graph-node:hover rect{stroke:#fff}.graph-label{fill:#ecf2ef;font-size:12px;font-family:system-ui,sans-serif;font-weight:750;pointer-events:none}.graph-sub{fill:#a5b7bc;font-size:10px;font-family:system-ui,sans-serif;pointer-events:none}.graph-edge{stroke:#547276;stroke-width:1.9;fill:none;opacity:.68}.graph-edge.alert{stroke:#f4ba78;stroke-dasharray:5 4}.graphfoot{padding:14px 18px;background:#111b20;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px;flex-wrap:wrap}.graph-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,.30fr);gap:16px}.node-details{min-height:340px}
+.claim-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.claim-card{padding:24px;border:1px solid var(--line);border-radius:12px;background:#142126}.claim-title{font-size:19px;font-weight:800;margin:18px 0 4px}.claim-yes{color:var(--green)}.claim-no{color:var(--red)}.facts{display:grid;gap:10px}.fact{border-left:3px solid var(--line);padding:8px 13px;background:#1a292d;border-radius:0 7px 7px 0;font-size:12px;color:var(--muted)}.receipt{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px}.rstep{padding:15px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:26px 1fr;gap:10px}.index{width:23px;height:23px;border:1px solid var(--line);display:grid;place-items:center;border-radius:6px;color:var(--green);font-size:11px}.codebox{background:#090f12;border:1px solid #314145;border-radius:9px;padding:13px;overflow-x:auto;color:#a8d3c3;font-size:11px;word-break:break-word;white-space:pre-wrap}.labgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.scenarioCard{border:1px solid var(--line);border-radius:11px;background:#122026;padding:18px;cursor:pointer;text-align:left;color:var(--text);width:100%;min-height:124px}.scenarioCard:hover,.scenarioCard.active{border-color:#55aa8d;background:#17352d}.delta{font-size:23px;font-weight:800}.footer{margin-top:26px;color:var(--dim);font-size:11px}.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.notice{padding:13px 16px;border:1px solid #5b492b;background:#342d20;border-radius:9px;color:#f5dcb1;font-size:12px}.muted-field{font-size:11px;color:var(--dim)}.topsp{margin-top:12px}.progress{height:7px;border-radius:15px;background:#26373b;overflow:hidden;margin-top:6px}.progress >div{height:100%;background:var(--green)}
+@media(max-width:1200px){.overview-grid{grid-template-columns:1fr}.graph-layout{grid-template-columns:1fr}.receipt{grid-template-columns:1fr}}
+@media(max-width:850px){.wrap{grid-template-columns:1fr}nav{min-height:auto;display:block;padding:13px 18px}.brand{display:inline-flex}.navlist{display:flex;overflow-x:auto;margin-top:9px}.nav-btn{white-space:nowrap;width:auto;padding:8px 11px;font-size:12px}.nav-btn span:first-child{display:none}.navfooter{display:none}main{padding:22px 16px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.heading{align-items:start}}
+@media(max-width:520px){.cards{gap:8px}.metric{padding:12px;min-height:109px}.big{font-size:30px}.metric .hint{display:none}.claim-grid,.labgrid{grid-template-columns:1fr}.graph-stage{height:370px;min-height:370px}.heading h1{font-size:27px}.top{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<script id="datum-seed" type="application/json">__DATA_JSON__</script>
+<div id="connectionStatus" class="connection-status" role="status" aria-live="polite">Loading…</div>
+<div class="wrap">
+<nav aria-label="Datum views">
+  <div class="brand"><div class="mark">D</div><strong>DATUM</strong></div>
+  <div class="micro" style="padding:4px 12px">Visual laboratory / v0.2</div>
+  <div class="navlist" id="navigation">
+    <button class="nav-btn active" data-view="overview"><span>▦</span>Overview</button>
+    <button class="nav-btn" data-view="graph"><span>◎</span>Evidence graph</button>
+    <button class="nav-btn" data-view="claims"><span>⇄</span>Source comparison</button>
+    <button class="nav-btn" data-view="receipt"><span>▤</span>Decision receipt</button>
+    <button class="nav-btn" data-view="lab"><span>◈</span>Scenario laboratory</button>
+  </div>
+  <div class="navfooter"><div class="live"><span class="dot"></span> LOCAL • READ ONLY</div><div class="small sub">Synthetic spare-parts company.<br/>No live ERP. No AI decisions.</div><div class="mono muted-field" id="navHash"></div></div>
+</nav>
+<main>
+ <div class="top"><div class="live"><span class="dot"></span> DETERMINISTIC ENGINE <span class="sub">/ PYTHON RULES</span></div><div class="topactions"><span class="chip" id="modeLabel">Loading</span><button class="outline" id="exportJSON">↓ Export receipt</button></div></div>
+ <header class="heading"><div><span class="kicker">Business decisions · visible evidence</span><h1 id="question">Which machines could we repair today?</h1><p class="intro">One question. Five visualisations. Every status has a source, a rule and a reason.</p></div><div><label for="scenarioPicker" class="micro">Simulation mode</label><div><select class="select" id="scenarioPicker"></select></div></div></header>
+ <div class="context"><b>TEST DATA, NOT COMPANY DATA.</b> Results assume parts availability is the only repair constraint. Machine condition, technicians and safety permits are outside this demo. No ERP modifications.</div>
+ <section id="overview" class="view active">
+  <div class="cards" id="metrics"></div>
+  <div class="overview-grid">
+   <div class="flow">
+    <section class="panel board"><div class="board-head"><div><h2>Repairability inventory</h2><div class="sub small">Click a machine to inspect the evidence</div></div><div class="filters" id="filters"><button class="filter active" data-filter="all">All</button><button class="filter" data-filter="ready">Ready</button><button class="filter" data-filter="blocked">Blocked</button><button class="filter" data-filter="review">Review</button></div><input id="machineSearch" class="search" placeholder="Find a machine..." aria-label="Search machines"/></div><table class="tbl"><thead><tr><th>Machine</th><th>Location</th><th>Priority</th><th>Assessment</th></tr></thead><tbody id="machineRows"></tbody></table></section>
+    <section class="panel pad"><div class="row"><div><h2>Outcomes</h2><div class="sub small">Validated against one shared stock pool</div></div><span class="micro">Exclusive allocations</span></div><div class="bar" id="outcomeBar"></div><div class="legend"><span><i style="background:var(--green)"></i>Ready</span><span><i style="background:var(--red)"></i>Blocked</span><span><i style="background:var(--orange)"></i>Requires judgement</span></div></section>
+   </div>
+   <aside class="panel pad selection" id="inspector"></aside>
+  </div>
+ </section>
+ <section id="graph" class="view"><div class="graph-layout"><section class="panel graph-wrap"><div class="board-head"><div><h2>Dependency & provenance map</h2><div class="sub small">Explore machine → requirements → stock → source → outcome</div></div><div class="graph-controls"><button class="btn-sm" id="zoomOut" aria-label="Zoom out">−</button><button class="btn-sm" id="resetGraph">Reset</button><button class="btn-sm" id="zoomIn" aria-label="Zoom in">+</button><button class="btn-sm" id="exportSVG">↓ SVG</button></div></div><div class="graph-stage"><svg id="evidenceGraph" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive evidence relationship graph" viewBox="0 0 900 500"></svg></div><div class="graphfoot"><span>Wheel to zoom · drag canvas to pan · click nodes to inspect</span><span id="graphInfo">Graph is generated from source-linked records</span></div></section><aside class="panel pad node-details" id="nodeDetails"></aside></div></section>
+ <section id="claims" class="view"><div class="panel pad"><div class="row"><div><h2>Conflicting supplier claims</h2><p class="intro small">The model doesn't select whichever claim looks more plausible. Both remain visible.</p></div><span class="tag review">Needs judgement</span></div><hr class="divide"/><div id="claimCards" class="claim-grid"></div></div><div class="panel pad topsp"><h2>Intake exception viewer</h2><p class="intro small">Try the “Unverified stock row” scenario to see a rejected quantity without altering validated stock.</p><div id="quarantinePanel" class="topsp"></div></div></section>
+ <section id="receipt" class="view"><div class="receipt"><section class="panel pad"><div class="row"><div><h2>Decision receipt</h2><p class="intro small">A reconstructable explanation rather than a model confidence score.</p></div><span class="tag ready">Auditable rule path</span></div><div id="receiptSteps"></div></section><aside class="panel pad"><h3>Execution identity</h3><div id="receiptMetadata" class="facts"></div><h3 class="topsp">Unknown / not modelled</h3><div id="unknownItems"></div><button class="outline topsp" id="copyReceipt">Copy JSON</button></aside></div></section>
+ <section id="lab" class="view"><div class="panel pad"><h2>What changes the decision?</h2><p class="intro small">Compare synthetic scenarios. No browser-generated business decisions or backend writes.</p><div id="scenarioCards" class="labgrid topsp"></div></div><div class="panel pad topsp"><div class="row"><div><h2>Allocation pressure</h2><div class="sub small">Inspect stock remaining after priority allocation.</div></div><span class="micro">No double booking</span></div><div id="allocationPanel" class="topsp"></div></div></section>
+ <footer class="footer">DATUM · Python engine / native SVG / offline HTML / MCP Apps resource · fictional demonstration · no LLM inference, external calls or persistent writes.</footer>
+</main></div>
+<script>
+(()=>{
+'use strict';
+const FIXTURES=JSON.parse(document.getElementById('datum-seed').textContent);
+// A live resource contains no embedded results. An offline build contains snapshots.
+const liveMode=Object.keys(FIXTURES).length===0;
+document.body.classList.toggle('waiting',liveMode);
+const connectionStatus=document.getElementById('connectionStatus');
+connectionStatus.textContent=liveMode?'MCP Apps: waiting for the host tool result.':'Offline snapshot: precomputed Python results; changes to CSV files are not live.';
+document.getElementById('modeLabel').textContent=liveMode?'MCP tool data':'Offline snapshot';
+let scenario='baseline',selected='BC-01',view='overview',filter='all',search='',focusNode=null;
+const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Number(n).toLocaleString('en-US');
+const data=()=>FIXTURES[scenario];
+const machine=()=>data().machines.find(x=>x.id===selected)||data().machines[0];
+const title=s=>s[0].toUpperCase()+s.slice(1);
+const tag=s=>`<span class="tag ${esc(s)}">${s==='review'?'Review':title(s)}</span>`;
+const button=(text,onClick)=>{}; // UI remains native, no synthetic authorization.
+
+function draw(){
+ const d=data(),count=d.counts, sum=d.machines.length;
+ $('question').textContent=d.question;
+ $('scenarioPicker').value=scenario;
+ $('navHash').textContent=`RECEIPT ${d.receipt.run_id}`;
+ $('metrics').innerHTML=[
+  ['ready',count.ready,'Repairable now','Reserved parts, no conflicts'],
+  ['blocked',count.blocked,'Blocked','Parts unavailable or allocated'],
+  ['review',count.review,'Needs judgement','Missing BOM or disputed fit'],
+  ['',sum,'Machines examined',`Rule ${d.receipt.ruleset}`]
+ ].map(([klass,n,label,detail])=>`<article class="metric ${klass}"><div class="micro">${esc(label)}</div><div class="big">${fmt(n)}</div><small>${esc(detail)}</small></article>`).join('');
+ $('outcomeBar').innerHTML=['ready','blocked','review'].map((s,i)=>`<span class="${['a','b','c'][i]}" style="width:${100*count[s]/sum}%" title="${s}: ${count[s]}"></span>`).join('');
+ drawRows();drawInspector();drawClaims();drawReceipt();drawScenarios();drawGraph();
+}
+function drawRows(){
+ const d=data();$('machineRows').innerHTML=d.machines.filter(m=>(filter==='all'||filter===m.status)&&(`${m.id} ${m.name} ${m.site}`.toLowerCase().includes(search))).map(m=>`<tr data-mid="${esc(m.id)}" class="${m.id===selected?'sel':''}" tabindex="0" role="button" aria-label="Inspect ${esc(m.id)}"><td><div class="machine-id mono">${esc(m.id)}</div><div class="sub small">${esc(m.name)}</div></td><td class="sub">${esc(m.site)}</td><td class="priority">P${m.priority}</td><td>${tag(m.status)}</td></tr>`).join('')||'<tr><td colspan="4" class="sub">No matching machines.</td></tr>';
+ document.querySelectorAll('[data-mid]').forEach(el=>{let fn=()=>{selected=el.dataset.mid;drawRows();drawInspector();drawGraph();drawReceipt()};el.onclick=fn;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn()}}});
+}
+function drawInspector(){
+ const m=machine(),d=data();
+ $('inspector').innerHTML=`<div class="selectedHead"><span class="micro">Inspecting ${esc(m.id)}</span>${tag(m.status)}</div><h2>${esc(m.name)}</h2><div class="sub small">${esc(m.site)} · Priority ${m.priority}</div><hr class="divide"/><h3>Rule-based explanation</h3>${m.reasons.map(r=>`<div class="point">${esc(r)}</div>`).join('')}<hr class="divide"/><h3>Required items</h3>${m.requirements.length?m.requirements.map(p=>`<div class="kvs" style="margin-bottom:12px"><dt>${esc(p.part_name)} <span class="mono muted-field">${esc(p.part)}</span></dt><dd>${p.available_before} / ${p.required} available</dd><dt>Lead time (synthetic)</dt><dd>${p.eta_days==null?'Not provided':`${p.eta_days} days`}</dd></div>`).join(''):'<p class="notice">Approved BOM missing. The requirement set is unknown.</p>'}<hr class="divide"/><div class="kvs"><dt>Evaluation rule</dt><dd class="mono">${esc(m.rule)}</dd><dt>Source</dt><dd class="mono">${esc(m.bom_source||'NOT AVAILABLE')}</dd><dt>Receipt ID</dt><dd class="mono">${esc(d.receipt.run_id.slice(0,8))}</dd></div><button class="outline topsp" id="inspectGraph">Inspect evidence graph</button>`;
+ $('inspectGraph').onclick=()=>setView('graph');
+}
+function drawClaims(){const d=data();$('claimCards').innerHTML=d.claims.map(c=>`<article class="claim-card"><div class="row"><span class="micro mono">${esc(c.id)}</span><span class="chip">${c.accepted?'Accepted':'Not accepted'}</span></div><div class="claim-title ${c.claim==='Compatible'?'claim-yes':'claim-no'}">${esc(c.claim)}</div><div class="sub small">${esc(c.about)}</div><hr class="divide"/><div class="micro">Evidence source</div><div class="topsp">${esc(c.source)}</div></article>`).join('');
+ $('quarantinePanel').innerHTML=d.quarantined.length?d.quarantined.map(q=>`<div class="notice"><div class="mono"><b>${esc(q.source)}</b> / ${esc(q.part)}</div><div>Supplied quantity: <b>${esc(q.raw_quantity)}</b></div><div>Rejection: ${esc(q.reason)}</div></div>`).join(''):'<p class="sub">No quarantined records in this scenario. The validation gate is still active.</p>';
+}
+function drawReceipt(){const d=data(),m=machine();
+ const steps=[['Original data registered',`Source dataset ${d.receipt.dataset}; SHA-256 ${d.receipt.input_sha256.slice(0,24)}…`],
+ ['Rules evaluated',`Rule ${d.receipt.ruleset}. Shared stock reserved by operational priority, then machine ID.`],
+ ['Machine assessed',`${m.id}: ${m.status.toUpperCase()} — ${m.reasons.join(' ')}`],
+ ['Evidence retained',m.requirements.map(p=>`${p.source} · ${p.supplier_source}`).join(' | ')||'Approved BOM not found; no fabricated parts list.'],
+ ['Human authority preserved','No live ERP modification, approval, supplier contact, or reservation commit.']];
+ $('receiptSteps').innerHTML=steps.map((a,i)=>`<div class="rstep"><span class="index">${i+1}</span><div><b>${esc(a[0])}</b><div class="sub small">${esc(a[1])}</div></div></div>`).join('');
+ $('receiptMetadata').innerHTML=[['Run',d.receipt.run_id],['Scenario',d.scenario_label],['Ruleset',d.receipt.ruleset],['Dataset',d.receipt.dataset],['Actions',d.receipt.actions_taken]].map(a=>`<div class="fact"><span class="micro">${esc(a[0])}</span><div class="mono">${esc(a[1])}</div></div>`).join('');
+ $('unknownItems').innerHTML=d.receipt.unknowns.map(s=>`<div class="point">${esc(s)}</div>`).join('');
+}
+function drawScenarios(){const d=data();
+ $('scenarioCards').innerHTML=Object.entries(d.scenario_labels).map(([key,label])=>{
+  const v=FIXTURES[key];
+  return `<button class="scenarioCard ${key===scenario?'active':''}" data-scenario="${esc(key)}"><div class="micro">${esc(label)}</div><div class="delta">${v?`${v.counts.ready} <span class="sub small">ready / ${v.counts.review} review</span>`:'Request evaluation'}</div></button>`;
+ }).join('');
+ document.querySelectorAll('[data-scenario]').forEach(btn=>btn.onclick=()=>changeScenario(btn.dataset.scenario));
+ $('allocationPanel').innerHTML=d.stock.map(p=>`<div class="fact"><b>${esc(p.id)} — ${esc(p.name)}</b>: ${esc(p.remaining)} remaining of ${esc(p.stock)}; source ${esc(p.source)}</div>`).join('');
+}
+let camera={x:0,y:0,w:900,h:500},drag=null,nodeMap={};
+function node(kind,id,label,detail,x,y,status){return {kind,id,label,detail,x,y,status}}
+function graphData(){const d=data(),m=machine(),nodes=[],edges=[];
+ const mn=node('machine',m.id,m.id,m.name,110,250,m.status);nodes.push(mn);
+ let requirementNodes=m.requirements;
+ if(!requirementNodes.length)requirementNodes=[{part:'UNKNOWN',part_name:'Missing BOM',required:'?',available_before:'?',source:'UNKNOWN',eta_days:null}];
+ requirementNodes.forEach((p,i)=>{
+  const y=requirementNodes.length===1?250:135+i*(235/Math.max(1,requirementNodes.length-1));
+  const pid='part:'+p.part,sid='stock:'+p.part,src='src:'+p.part;
+  nodes.push(node('part',pid,p.part,p.part_name,330,y,p.part==='UNKNOWN'?'review':(typeof p.available_before==='number'&&p.available_before>=p.required?'ready':'blocked')));
+  nodes.push(node('stock',sid,typeof p.available_before==='number'?`${p.available_before} / ${p.required}`:'Unavailable','Stock / needed',545,y,'neutral'));
+  nodes.push(node('source',src,p.part==='UNKNOWN'?'NO RECORD':p.source,'Provenance row',760,y,'neutral'));
+  edges.push({a:mn.id,b:pid,label:'requires'},{a:pid,b:sid,label:'inventory'},{a:sid,b:src,label:'from source'});
+ });
+ nodes.push(node('decision','decision',title(m.status),m.rule,540,435,m.status));
+ edges.push({a:m.id,b:'decision',label:'governed outcome',alert:m.status!=='ready'});
+ return {nodes,edges,m};
+}
+function drawGraph(){const {nodes,edges,m}=graphData();nodeMap=Object.fromEntries(nodes.map(n=>[n.id,n]));
+ const svg=$('evidenceGraph');
+ const lines=edges.map(e=>{let a=nodeMap[e.a],b=nodeMap[e.b],x1=a.x+75,y1=a.y,x2=b.x-75,y2=b.y; if(e.b==='decision'){x1=a.x+35;y1=a.y+26;x2=b.x-20;y2=b.y-21};return `<path class="graph-edge ${e.alert?'alert':''}" d="M${x1},${y1} C${x1+48},${y1} ${x2-48},${y2} ${x2},${y2}" marker-end="url(#arrow)"/>`}).join('');
+ const drawNode=n=>{let color=n.status==='ready'?'#74e3bc':n.status==='blocked'?'#ff927f':n.status==='review'?'#f7cb79':'#94c7fb';let isSelected=(focusNode||m.id)===n.id;
+ return `<g class="graph-node" data-node="${esc(n.id)}" transform="translate(${n.x},${n.y})" role="button" tabindex="0" aria-label="Inspect ${esc(n.label)}"><rect x="-74" y="-29" width="148" height="58" rx="9" fill="${isSelected?'#29463f':'#1b2b30'}" stroke="${isSelected?'#a3f4d8':color}" stroke-width="${isSelected?2.5:1.1}"/><rect x="-74" y="-29" width="4" height="58" rx="2" fill="${color}"/><text class="graph-label" text-anchor="middle" y="-3">${esc(n.label.slice(0,19))}</text><text class="graph-sub" text-anchor="middle" y="16">${esc(n.detail.slice(0,23))}</text></g>`};
+ svg.innerHTML=`<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#668789"/></marker></defs><g id="graphContent">${lines}${nodes.map(drawNode).join('')}</g>`;
+ svg.setAttribute('viewBox',`${camera.x} ${camera.y} ${camera.w} ${camera.h}`);
+ svg.querySelectorAll('[data-node]').forEach(el=>{const select=()=>{focusNode=el.dataset.node;drawGraph();drawNodeDetails()};el.addEventListener('click',select);el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();select()}})});
+ $('graphInfo').textContent=`${nodes.length} evidence nodes · ${edges.length} relationships`;
+ drawNodeDetails();
+}
+function drawNodeDetails(){const n=nodeMap[focusNode]||nodeMap[machine().id];if(!n)return;
+ $('nodeDetails').innerHTML=`<div class="micro">Selected node / ${esc(n.kind)}</div><h2 style="margin-top:12px">${esc(n.label)}</h2><p class="intro small">${esc(n.detail)}</p><hr class="divide"/><div class="facts"><div class="fact"><div class="micro">Node key</div><div class="mono">${esc(n.id)}</div></div><div class="fact"><div class="micro">Related machine</div>${esc(machine().id)} / ${esc(machine().status)}</div><div class="fact"><div class="micro">Evidence link</div>Derived from the same record payload as the table and receipt.</div></div><hr class="divide"/><button class="outline" id="nodeReceipt">See decision receipt</button>`;
+ $('nodeReceipt').onclick=()=>setView('receipt');
+}
+function setView(v){view=v;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id===v));document.querySelectorAll('[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===v));if(v==='graph')drawGraph();}
+function changeScenario(s){
+ if(liveMode){requestScenario(s);return}
+ if(!FIXTURES[s])return;scenario=s;focusNode=null;draw();
+}
+function download(filename,text,type){const blob=new Blob([text],{type}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}
+function receiptJSON(){const d=data();return JSON.stringify({receipt:d.receipt,scenario:d.scenario,counts:d.counts,machine:machine(),claims:machine().has_conflict?d.claims:[],quarantined:d.quarantined},null,2)}
+$('exportJSON').onclick=()=>download(`datum-${data().receipt.run_id}-${selected}.json`,receiptJSON(),'application/json');
+$('copyReceipt').onclick=()=>{let value=receiptJSON();if(navigator.clipboard?.writeText)navigator.clipboard.writeText(value).catch(()=>download('datum-receipt.json',value,'application/json'));else download('datum-receipt.json',value,'application/json')};
+$('exportSVG').onclick=()=>{let source=new XMLSerializer().serializeToString($('evidenceGraph'));download(`datum-evidence-${selected}.svg`,source,'image/svg+xml')};
+$('scenarioPicker').onchange=e=>changeScenario(e.target.value);
+$('machineSearch').oninput=e=>{search=e.target.value.toLowerCase().trim();drawRows()};
+document.querySelectorAll('[data-filter]').forEach(btn=>btn.onclick=()=>{filter=btn.dataset.filter;document.querySelectorAll('[data-filter]').forEach(el=>el.classList.toggle('active',el===btn));drawRows()});
+document.querySelectorAll('[data-view]').forEach(btn=>btn.onclick=()=>setView(btn.dataset.view));
+function zoom(mult){let nx=camera.x+(camera.w-camera.w*mult)/2,ny=camera.y+(camera.h-camera.h*mult)/2;camera={x:nx,y:ny,w:camera.w*mult,h:camera.h*mult};$('evidenceGraph').setAttribute('viewBox',`${camera.x} ${camera.y} ${camera.w} ${camera.h}`)}
+$('zoomIn').onclick=()=>zoom(.82);$('zoomOut').onclick=()=>zoom(1.22);$('resetGraph').onclick=()=>{camera={x:0,y:0,w:900,h:500};drawGraph()};
+$('evidenceGraph').addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.13:.88)},{passive:false});
+$('evidenceGraph').addEventListener('pointerdown',e=>{if(e.target.closest('.graph-node'))return;drag={x:e.clientX,y:e.clientY,startX:camera.x,startY:camera.y};e.currentTarget.setPointerCapture(e.pointerId)});
+$('evidenceGraph').addEventListener('pointermove',e=>{if(!drag)return;const box=e.currentTarget.getBoundingClientRect();camera.x=drag.startX-(e.clientX-drag.x)*camera.w/box.width;camera.y=drag.startY-(e.clientY-drag.y)*camera.h/box.height;e.currentTarget.setAttribute('viewBox',`${camera.x} ${camera.y} ${camera.w} ${camera.h}`)});
+$('evidenceGraph').addEventListener('pointerup',()=>drag=null);$('evidenceGraph').addEventListener('pointercancel',()=>drag=null);
+function refreshOptions(d){
+ const picker=$('scenarioPicker'); picker.replaceChildren();
+ for(const [key,label] of Object.entries(d.scenario_labels))picker.add(new Option(label,key));
+ picker.value=scenario;
+}
+function acceptResult(result){
+ const d=result?.structuredContent;
+ if(result?.isError||!d||!Array.isArray(d.machines)||!d.scenario||!d.scenario_labels){
+  document.body.classList.add('waiting');
+  connectionStatus.textContent='MCP Apps: tool result missing valid structured data. No result displayed.';
+  return false;
+ }
+ if(liveMode)for(const key of Object.keys(FIXTURES))delete FIXTURES[key];
+ FIXTURES[d.scenario]=d;scenario=d.scenario;focusNode=null;
+ if(!d.machines.some(m=>m.id===selected))selected=d.machines[0]?.id;
+ if(!selected){document.body.classList.add('waiting');connectionStatus.textContent='MCP Apps: result contains no machines; no visualization displayed.';return false}
+ refreshOptions(d);document.body.classList.remove('waiting');
+ connectionStatus.textContent=`MCP tool result: ${d.scenario_label} · receipt ${d.receipt.run_id}`;
+ draw();return true;
+}
+let initialized=false,nextRequest=832,pending=null;
+function requestScenario(s){
+ if(!initialized||pending)return;
+ pending=nextRequest++;$('scenarioPicker').disabled=true;
+ connectionStatus.textContent=`MCP Apps: requesting ${s} from the server…`;
+ window.parent.postMessage({jsonrpc:'2.0',id:pending,method:'tools/call',params:{name:'datum_visualize',arguments:{scenario:s}}},'*');
+}
+if(liveMode){
+ window.addEventListener('message',event=>{
+  if(event.source!==window.parent||event.data?.jsonrpc!=='2.0')return;
+  const msg=event.data;
+  if(msg.id===831){
+   if(!msg.result?.protocolVersion){connectionStatus.textContent='MCP Apps: host initialization failed.';return}
+   initialized=true;window.parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/initialized'},'*');return;
+  }
+  if(msg.method==='ui/resource-teardown'&&msg.id!==undefined){window.parent.postMessage({jsonrpc:'2.0',id:msg.id,result:{}},'*');return}
+  if(!initialized)return;
+  if(msg.method==='ui/notifications/tool-result'&&!pending){acceptResult(msg.params);return}
+  if(msg.method==='ui/notifications/tool-cancelled'){connectionStatus.textContent='MCP Apps: tool call cancelled.';return}
+  if(msg.id===pending){
+   pending=null;$('scenarioPicker').disabled=false;
+   if(msg.error){connectionStatus.textContent=`MCP Apps: tool request failed: ${msg.error.message||'unknown error'}`;$('scenarioPicker').value=scenario;return}
+   if(!acceptResult(msg.result))$('scenarioPicker').value=scenario;
+  }
+ });
+ window.parent.postMessage({jsonrpc:'2.0',id:831,method:'ui/initialize',params:{appInfo:{name:'Datum Visual Lab',version:'0.2.0'},appCapabilities:{},protocolVersion:'2026-01-26'}},'*');
+}else{
+ refreshOptions(data());draw();
+}
+})();
+</script>
+</body>
+</html>

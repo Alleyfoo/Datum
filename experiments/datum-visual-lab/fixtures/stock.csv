@@ -1,0 +1,12 @@
+part_id,name,quantity,eta_days
+PL-40,Drive pulley,0,70
+GBX-200,Gearbox,0,98
+BRG-6208,Bearing 6208,0,7
+CP-09,Primary coupling,0,21
+CP-09-ALT,Alternative coupling,3,
+CP-07,Coupling,4,
+SEAL-07,Seal kit,8,
+FU-10,Fuse,20,
+BELT-30,Timing belt,7,
+MTR-2,Motor module,1,
+SEN-10,Sensor,3,

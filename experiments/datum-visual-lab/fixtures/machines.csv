@@ -1,0 +1,10 @@
+id,name,site,priority
+BC-01,Belt conveyor,North line,2
+CR-01,Crusher,Primary processing,1
+PK-01,Palletiser,Dispatch,3
+BE-01,Bucket elevator,North line,2
+SC-01,Screw conveyor,North line,2
+CF-01,Centrifuge,Separation,2
+MX-01,Industrial mixer,Blending,2
+PM-01,Packaging machine,Dispatch,3
+EV-01,Lift module,Storage,2
