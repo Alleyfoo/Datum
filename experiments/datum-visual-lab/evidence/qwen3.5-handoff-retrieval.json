@@ -1,0 +1,921 @@
+{
+  "model": "qwen3.5:9b",
+  "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+  "status": "model_stopped",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Use the supplied MCP tool to retrieve the requested synthetic task. State only evidence contained in the tool result. Human labels are unverified, a synthetic review is not authorization, and stock readiness does not prove real-world repairability."
+    },
+    {
+      "role": "user",
+      "content": "Retrieve task task-505c37db5e974f53a60a0003871bac6c and report its current parameters, evaluations, and latest human-labelled review."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_dw3pvwzq",
+          "function": {
+            "index": 0,
+            "name": "datum_task_get",
+            "arguments": {
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_name": "datum_task_get",
+      "content": "{\"content\": [{\"type\": \"text\", \"text\": \"Local synthetic task state\"}], \"structuredContent\": {\"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"task_type\": \"repair_investigation\", \"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"delivery\"}, \"recommendation\": null, \"next_steps\": [], \"outstanding_questions\": [\"Machine condition and labour availability are not modelled.\", \"Supplier lead times are synthetic planning data, not delivery promises.\", \"Conflicting compatibility claims are not reconciled automatically.\", \"No verified substitute mapping is modelled; enabling substitutions does not apply one.\", \"No matching alternative claim does not establish that alternatives do not exist.\", \"The inherited CP-09/CF-01 conflict rule is fixture-specific and is not a general compatibility rule.\"], \"created_at\": \"2026-10-28T05:40:15.217254+00:00\", \"updated_at\": \"2026-10-28T05:51:20.379296+00:00\", \"created_by\": \"agent\", \"current_result\": {\"alternatives\": [{\"claim_records\": [], \"explanation\": \"Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.\", \"finding\": \"unknown\", \"part_id\": \"PL-40\"}, {\"claim_records\": [], \"explanation\": \"Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.\", \"finding\": \"unknown\", \"part_id\": \"GBX-200\"}], \"conclusion\": {\"reasons\": [\"All required parts can be reserved from validated stock.\"], \"scope\": \"Synthetic stock readiness under the selected scenario, not operational repair approval.\", \"status\": \"ready\", \"substitution_applied\": false}, \"evidence\": {\"adjustments\": [{\"delta\": 1, \"note\": \"Hypothetical receipt, not an ERP transaction\", \"part\": \"PL-40\", \"source\": \"SIM-DELIVERY-01\"}, {\"delta\": 1, \"note\": \"Hypothetical receipt, not an ERP transaction\", \"part\": \"GBX-200\", \"source\": \"SIM-DELIVERY-01\"}, {\"delta\": 1, \"note\": \"Hypothetical receipt, not an ERP transaction\", \"part\": \"BRG-6208\", \"source\": \"SIM-DELIVERY-01\"}], \"evaluation_machine\": {\"allocated\": [{\"machine\": \"BC-01\", \"part\": \"PL-40\", \"quantity\": 1}, {\"machine\": \"BC-01\", \"part\": \"GBX-200\", \"quantity\": 1}], \"bom_source\": \"bom.csv / machine=BC-01\", \"has_conflict\": false, \"id\": \"BC-01\", \"missing_bom\": false, \"name\": \"Belt conveyor\", \"priority\": 2, \"reasons\": [\"All required parts can be reserved from validated stock.\"], \"requirements\": [{\"available_before\": 1, \"eta_days\": 70, \"part\": \"PL-40\", \"part_name\": \"Drive pulley\", \"required\": 1, \"source\": \"stock.csv:2\", \"supplier_source\": \"Synthetic ETA from stock.csv\", \"total_stock\": 1}, {\"available_before\": 1, \"eta_days\": 98, \"part\": \"GBX-200\", \"part_name\": \"Gearbox\", \"required\": 1, \"source\": \"stock.csv:3\", \"supplier_source\": \"Synthetic ETA from stock.csv\", \"total_stock\": 1}], \"rule\": \"PRIORITY_ALLOCATE\", \"site\": \"North line\", \"status\": \"ready\"}, \"machine\": {\"id\": \"BC-01\", \"name\": \"Belt conveyor\", \"priority\": 2, \"site\": \"North line\", \"source\": \"machines.csv:2\"}, \"requirements\": {\"known\": true, \"machine_id\": \"BC-01\", \"requirements\": [{\"name\": \"Drive pulley\", \"part_id\": \"PL-40\", \"required\": 1}, {\"name\": \"Gearbox\", \"part_id\": \"GBX-200\", \"required\": 1}], \"source\": \"bom.csv / machine=BC-01\"}, \"stock\": [{\"eta\": 70, \"id\": \"PL-40\", \"name\": \"Drive pulley\", \"remaining\": 0, \"source\": \"stock.csv:2\", \"stock\": 1}, {\"eta\": 98, \"id\": \"GBX-200\", \"name\": \"Gearbox\", \"remaining\": 0, \"source\": \"stock.csv:3\", \"stock\": 1}]}, \"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"delivery\"}, \"receipt\": {\"actions_taken\": \"None. Read-only demonstration; no ERP write-back or real approvals.\", \"allocation_method\": \"Priority ascending, machine ID ascending. No double-booking of shared stock.\", \"dataset\": \"synthetic-spares-2026-10\", \"input_sha256\": \"e77f706a5c0288e6065623c13cb1ec8f7cbf85ccd052e350935d571cd35266d4\", \"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"delivery\"}, \"ruleset\": \"datum-repair-v0.2.0\", \"run_id\": \"8497132CA5D8335C\", \"source_hashes\": {\"bom.csv\": \"e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04\", \"claims.csv\": \"9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb\", \"machines.csv\": \"aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a\", \"stock.csv\": \"7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593\"}, \"task_rule_version\": \"datum-task-investigation-v0.1\", \"unknowns\": [\"Machine condition and labour availability are not modelled.\", \"Supplier lead times are synthetic planning data, not delivery promises.\", \"Conflicting compatibility claims are not reconciled automatically.\"]}, \"task_type\": \"repair_investigation\", \"unresolved\": [\"Machine condition and labour availability are not modelled.\", \"Supplier lead times are synthetic planning data, not delivery promises.\", \"Conflicting compatibility claims are not reconciled automatically.\", \"No verified substitute mapping is modelled; enabling substitutions does not apply one.\", \"No matching alternative claim does not establish that alternatives do not exist.\", \"The inherited CP-09/CF-01 conflict rule is fixture-specific and is not a general compatibility rule.\"]}, \"evaluations\": [{\"evaluation_id\": \"eval-aaa3a76388a444d5b481a04848a19b3d\", \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"baseline\"}, \"result\": {\"alternatives\": [{\"claim_records\": [], \"explanation\": \"Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.\", \"finding\": \"unknown\", \"part_id\": \"PL-40\"}, {\"claim_records\": [], \"explanation\": \"Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.\", \"finding\": \"unknown\", \"part_id\": \"GBX-200\"}], \"conclusion\": {\"reasons\": [\"Drive pulley: need 1, available 0.\", \"Gearbox: need 1, available 0.\"], \"scope\": \"Synthetic stock readiness under the selected scenario, not operational repair approval.\", \"status\": \"blocked\", \"substitution_applied\": false}, \"evidence\": {\"adjustments\": [], \"evaluation_machine\": {\"allocated\": [], \"bom_source\": \"bom.csv / machine=BC-01\", \"has_conflict\": false, \"id\": \"BC-01\", \"missing_bom\": false, \"name\": \"Belt conveyor\", \"priority\": 2, \"reasons\": [\"Drive pulley: need 1, available 0.\", \"Gearbox: need 1, available 0.\"], \"requirements\": [{\"available_before\": 0, \"eta_days\": 70, \"part\": \"PL-40\", \"part_name\": \"Drive pulley\", \"required\": 1, \"source\": \"stock.csv:2\", \"supplier_source\": \"Synthetic ETA from stock.csv\", \"total_stock\": 0}, {\"available_before\": 0, \"eta_days\": 98, \"part\": \"GBX-200\", \"part_name\": \"Gearbox\", \"required\": 1, \"source\": \"stock.csv:3\", \"supplier_source\": \"Synthetic ETA from stock.csv\", \"total_stock\": 0}], \"rule\": \"PRIORITY_ALLOCATE\", \"site\": \"North line\", \"status\": \"blocked\"}, \"machine\": {\"id\": \"BC-01\", \"name\": \"Belt conveyor\", \"priority\": 2, \"site\": \"North line\", \"source\": \"machines.csv:2\"}, \"requirements\": {\"known\": true, \"machine_id\": \"BC-01\", \"requirements\": [{\"name\": \"Drive pulley\", \"part_id\": \"PL-40\", \"required\": 1}, {\"name\": \"Gearbox\", \"part_id\": \"GBX-200\", \"required\": 1}], \"source\": \"bom.csv / machine=BC-01\"}, \"stock\": [{\"eta\": 70, \"id\": \"PL-40\", \"name\": \"Drive pulley\", \"remaining\": 0, \"source\": \"stock.csv:2\", \"stock\": 0}, {\"eta\": 98, \"id\": \"GBX-200\", \"name\": \"Gearbox\", \"remaining\": 0, \"source\": \"stock.csv:3\", \"stock\": 0}]}, \"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"baseline\"}, \"receipt\": {\"actions_taken\": \"None. Read-only demonstration; no ERP write-back or real approvals.\", \"allocation_method\": \"Priority ascending, machine ID ascending. No double-booking of shared stock.\", \"dataset\": \"synthetic-spares-2026-10\", \"input_sha256\": \"87077a6e6c25c1ab93b3f5309a391783d18bcac549d83bdaf7c989705fd25e8d\", \"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"baseline\"}, \"ruleset\": \"datum-repair-v0.2.0\", \"run_id\": \"3F1E688E4C515BC9\", \"source_hashes\": {\"bom.csv\": \"e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04\", \"claims.csv\": \"9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb\", \"machines.csv\": \"aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a\", \"stock.csv\": \"7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593\"}, \"task_rule_version\": \"datum-task-investigation-v0.1\", \"unknowns\": [\"Machine condition and labour availability are not modelled.\", \"Supplier lead times are synthetic planning data, not delivery promises.\", \"Conflicting compatibility claims are not reconciled automatically.\"]}, \"task_type\": \"repair_investigation\", \"unresolved\": [\"Machine condition and labour availability are not modelled.\", \"Supplier lead times are synthetic planning data, not delivery promises.\", \"Conflicting compatibility claims are not reconciled automatically.\", \"No verified substitute mapping is modelled; enabling substitutions does not apply one.\", \"No matching alternative claim does not establish that alternatives do not exist.\", \"The inherited CP-09/CF-01 conflict rule is fixture-specific and is not a general compatibility rule.\"]}, \"created_at\": \"2026-10-28T05:40:18.149296+00:00\", \"initiator\": \"agent\"}, {\"evaluation_id\": \"eval-1c1b3c8cce6a428ea75bf3c03495b7f3\", \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"delivery\"}, \"result\": {\"alternatives\": [{\"claim_records\": [], \"explanation\": \"Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.\", \"finding\": \"unknown\", \"part_id\": \"PL-40\"}, {\"claim_records\": [], \"explanation\": \"Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.\", \"finding\": \"unknown\", \"part_id\": \"GBX-200\"}], \"conclusion\": {\"reasons\": [\"All required parts can be reserved from validated stock.\"], \"scope\": \"Synthetic stock readiness under the selected scenario, not operational repair approval.\", \"status\": \"ready\", \"substitution_applied\": false}, \"evidence\": {\"adjustments\": [{\"delta\": 1, \"note\": \"Hypothetical receipt, not an ERP transaction\", \"part\": \"PL-40\", \"source\": \"SIM-DELIVERY-01\"}, {\"delta\": 1, \"note\": \"Hypothetical receipt, not an ERP transaction\", \"part\": \"GBX-200\", \"source\": \"SIM-DELIVERY-01\"}, {\"delta\": 1, \"note\": \"Hypothetical receipt, not an ERP transaction\", \"part\": \"BRG-6208\", \"source\": \"SIM-DELIVERY-01\"}], \"evaluation_machine\": {\"allocated\": [{\"machine\": \"BC-01\", \"part\": \"PL-40\", \"quantity\": 1}, {\"machine\": \"BC-01\", \"part\": \"GBX-200\", \"quantity\": 1}], \"bom_source\": \"bom.csv / machine=BC-01\", \"has_conflict\": false, \"id\": \"BC-01\", \"missing_bom\": false, \"name\": \"Belt conveyor\", \"priority\": 2, \"reasons\": [\"All required parts can be reserved from validated stock.\"], \"requirements\": [{\"available_before\": 1, \"eta_days\": 70, \"part\": \"PL-40\", \"part_name\": \"Drive pulley\", \"required\": 1, \"source\": \"stock.csv:2\", \"supplier_source\": \"Synthetic ETA from stock.csv\", \"total_stock\": 1}, {\"available_before\": 1, \"eta_days\": 98, \"part\": \"GBX-200\", \"part_name\": \"Gearbox\", \"required\": 1, \"source\": \"stock.csv:3\", \"supplier_source\": \"Synthetic ETA from stock.csv\", \"total_stock\": 1}], \"rule\": \"PRIORITY_ALLOCATE\", \"site\": \"North line\", \"status\": \"ready\"}, \"machine\": {\"id\": \"BC-01\", \"name\": \"Belt conveyor\", \"priority\": 2, \"site\": \"North line\", \"source\": \"machines.csv:2\"}, \"requirements\": {\"known\": true, \"machine_id\": \"BC-01\", \"requirements\": [{\"name\": \"Drive pulley\", \"part_id\": \"PL-40\", \"required\": 1}, {\"name\": \"Gearbox\", \"part_id\": \"GBX-200\", \"required\": 1}], \"source\": \"bom.csv / machine=BC-01\"}, \"stock\": [{\"eta\": 70, \"id\": \"PL-40\", \"name\": \"Drive pulley\", \"remaining\": 0, \"source\": \"stock.csv:2\", \"stock\": 1}, {\"eta\": 98, \"id\": \"GBX-200\", \"name\": \"Gearbox\", \"remaining\": 0, \"source\": \"stock.csv:3\", \"stock\": 1}]}, \"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"delivery\"}, \"receipt\": {\"actions_taken\": \"None. Read-only demonstration; no ERP write-back or real approvals.\", \"allocation_method\": \"Priority ascending, machine ID ascending. No double-booking of shared stock.\", \"dataset\": \"synthetic-spares-2026-10\", \"input_sha256\": \"e77f706a5c0288e6065623c13cb1ec8f7cbf85ccd052e350935d571cd35266d4\", \"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"delivery\"}, \"ruleset\": \"datum-repair-v0.2.0\", \"run_id\": \"8497132CA5D8335C\", \"source_hashes\": {\"bom.csv\": \"e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04\", \"claims.csv\": \"9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb\", \"machines.csv\": \"aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a\", \"stock.csv\": \"7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593\"}, \"task_rule_version\": \"datum-task-investigation-v0.1\", \"unknowns\": [\"Machine condition and labour availability are not modelled.\", \"Supplier lead times are synthetic planning data, not delivery promises.\", \"Conflicting compatibility claims are not reconciled automatically.\"]}, \"task_type\": \"repair_investigation\", \"unresolved\": [\"Machine condition and labour availability are not modelled.\", \"Supplier lead times are synthetic planning data, not delivery promises.\", \"Conflicting compatibility claims are not reconciled automatically.\", \"No verified substitute mapping is modelled; enabling substitutions does not apply one.\", \"No matching alternative claim does not establish that alternatives do not exist.\", \"The inherited CP-09/CF-01 conflict rule is fixture-specific and is not a general compatibility rule.\"]}, \"created_at\": \"2026-10-28T05:51:19.082996+00:00\", \"initiator\": \"human\"}], \"reviews\": [{\"review_id\": \"review-b39bc1a2dae44cdca34046c182335f7c\", \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"evaluation_id\": \"eval-1c1b3c8cce6a428ea75bf3c03495b7f3\", \"decision\": \"needs_more_information\", \"note\": \"Automated UI test: verify supporting evidence before an operational decision.\", \"created_at\": \"2026-10-28T05:51:20.379296+00:00\", \"initiator\": \"human\"}], \"events\": [{\"event_id\": 148, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"task_created\", \"details\": {\"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"baseline\"}, \"task_type\": \"repair_investigation\"}, \"created_at\": \"2026-10-28T05:40:15.217254+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 149, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_create\"}, \"created_at\": \"2026-10-28T05:40:15.230988+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 150, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_evaluate\"}, \"created_at\": \"2026-10-28T05:40:18.135594+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 151, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"parameters_validated\", \"details\": {\"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"baseline\"}}, \"created_at\": \"2026-10-28T05:40:18.149296+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 152, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"data_sources_accessed\", \"details\": {\"input_sha256\": \"87077a6e6c25c1ab93b3f5309a391783d18bcac549d83bdaf7c989705fd25e8d\", \"source_hashes\": {\"bom.csv\": \"e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04\", \"claims.csv\": \"9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb\", \"machines.csv\": \"aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a\", \"stock.csv\": \"7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593\"}}, \"created_at\": \"2026-10-28T05:40:18.149296+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 153, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"rule_applied\", \"details\": {\"ruleset\": \"datum-repair-v0.2.0\"}, \"created_at\": \"2026-10-28T05:40:18.149296+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 154, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"evaluation_completed\", \"details\": {\"evaluation_id\": \"eval-aaa3a76388a444d5b481a04848a19b3d\", \"run_id\": \"3F1E688E4C515BC9\"}, \"created_at\": \"2026-10-28T05:40:18.149296+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 155, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_open\"}, \"created_at\": \"2026-10-28T05:40:20.567996+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 156, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"task_reopened\", \"details\": {}, \"created_at\": \"2026-10-28T05:40:20.579687+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 228, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_get\"}, \"created_at\": \"2026-10-28T05:41:13.784178+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 353, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_get\"}, \"created_at\": \"2026-10-28T05:51:17.594680+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 354, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_open\"}, \"created_at\": \"2026-10-28T05:51:18.679915+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 355, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"task_reopened\", \"details\": {}, \"created_at\": \"2026-10-28T05:51:18.692912+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 356, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_ui_evaluate\"}, \"created_at\": \"2026-10-28T05:51:19.068995+00:00\", \"initiator\": \"human\"}, {\"event_id\": 357, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"parameters_validated\", \"details\": {\"parameters\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"delivery\"}}, \"created_at\": \"2026-10-28T05:51:19.082996+00:00\", \"initiator\": \"human\"}, {\"event_id\": 358, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"parameter_changed\", \"details\": {\"after\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"delivery\"}, \"before\": {\"allow_substitutes\": false, \"machine_id\": \"BC-01\", \"strategy\": \"baseline\"}}, \"created_at\": \"2026-10-28T05:51:19.082996+00:00\", \"initiator\": \"human\"}, {\"event_id\": 359, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"data_sources_accessed\", \"details\": {\"input_sha256\": \"e77f706a5c0288e6065623c13cb1ec8f7cbf85ccd052e350935d571cd35266d4\", \"source_hashes\": {\"bom.csv\": \"e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04\", \"claims.csv\": \"9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb\", \"machines.csv\": \"aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a\", \"stock.csv\": \"7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593\"}}, \"created_at\": \"2026-10-28T05:51:19.082996+00:00\", \"initiator\": \"human\"}, {\"event_id\": 360, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"rule_applied\", \"details\": {\"ruleset\": \"datum-repair-v0.2.0\"}, \"created_at\": \"2026-10-28T05:51:19.082996+00:00\", \"initiator\": \"human\"}, {\"event_id\": 361, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"evaluation_completed\", \"details\": {\"evaluation_id\": \"eval-1c1b3c8cce6a428ea75bf3c03495b7f3\", \"run_id\": \"8497132CA5D8335C\"}, \"created_at\": \"2026-10-28T05:51:19.082996+00:00\", \"initiator\": \"human\"}, {\"event_id\": 362, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_get\"}, \"created_at\": \"2026-10-28T05:51:20.147264+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 363, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_ui_review\"}, \"created_at\": \"2026-10-28T05:51:20.368296+00:00\", \"initiator\": \"human\"}, {\"event_id\": 364, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"human_review_recorded\", \"details\": {\"authorization\": false, \"decision\": \"needs_more_information\", \"evaluation_id\": \"eval-1c1b3c8cce6a428ea75bf3c03495b7f3\", \"note\": \"Automated UI test: verify supporting evidence before an operational decision.\", \"review_id\": \"review-b39bc1a2dae44cdca34046c182335f7c\"}, \"created_at\": \"2026-10-28T05:51:20.379296+00:00\", \"initiator\": \"human\"}, {\"event_id\": 365, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_get\"}, \"created_at\": \"2026-10-28T05:51:21.505436+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 366, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_open\"}, \"created_at\": \"2026-10-28T05:51:21.937576+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 367, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"task_reopened\", \"details\": {}, \"created_at\": \"2026-10-28T05:51:21.950002+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 368, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_get\"}, \"created_at\": \"2026-10-28T05:51:23.069802+00:00\", \"initiator\": \"agent\"}, {\"event_id\": 369, \"task_id\": \"task-505c37db5e974f53a60a0003871bac6c\", \"event_type\": \"tool_invoked\", \"details\": {\"tool\": \"datum_task_get\"}, \"created_at\": \"2026-10-28T05:52:07.665707+00:00\", \"initiator\": \"agent\"}], \"identity_note\": \"Initiators are unverified labels; no business authorization is recorded.\"}, \"isError\": false, \"resultType\": \"complete\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "**Current Parameters:**\n- `allow_substitutes`: false\n- `machine_id`: BC-01\n- `strategy`: delivery\n\n**Evaluations:**\n1.  **eval-aaa3a76388a444d5b481a04848a19b3d** (initiated by agent):\n    -   Status: blocked\n    -   Reasons: Drive pulley: need 1, available 0; Gearbox: need 1, available 0.\n2.  **eval-1c1b3c8cce6a428ea75bf3c03495b7f3** (initiated by human):\n    -   Status: ready\n    -   Reasons: All required parts can be reserved from validated stock.\n\n**Latest Human-Labelled Review:**\n-   **review_id**: review-b39bc1a2dae44cdca34046c182335f7c\n-   **Decision**: needs_more_information\n-   **Note**: Automated UI test: verify supporting evidence before an operational decision."
+    }
+  ],
+  "calls": [
+    {
+      "name": "datum_task_get",
+      "arguments": {
+        "task_id": "task-505c37db5e974f53a60a0003871bac6c"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Local synthetic task state"
+          }
+        ],
+        "structuredContent": {
+          "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+          "task_type": "repair_investigation",
+          "parameters": {
+            "allow_substitutes": false,
+            "machine_id": "BC-01",
+            "strategy": "delivery"
+          },
+          "recommendation": null,
+          "next_steps": [],
+          "outstanding_questions": [
+            "Machine condition and labour availability are not modelled.",
+            "Supplier lead times are synthetic planning data, not delivery promises.",
+            "Conflicting compatibility claims are not reconciled automatically.",
+            "No verified substitute mapping is modelled; enabling substitutions does not apply one.",
+            "No matching alternative claim does not establish that alternatives do not exist.",
+            "The inherited CP-09/CF-01 conflict rule is fixture-specific and is not a general compatibility rule."
+          ],
+          "created_at": "2026-10-28T05:40:15.217254+00:00",
+          "updated_at": "2026-10-28T05:51:20.379296+00:00",
+          "created_by": "agent",
+          "current_result": {
+            "alternatives": [
+              {
+                "claim_records": [],
+                "explanation": "Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.",
+                "finding": "unknown",
+                "part_id": "PL-40"
+              },
+              {
+                "claim_records": [],
+                "explanation": "Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.",
+                "finding": "unknown",
+                "part_id": "GBX-200"
+              }
+            ],
+            "conclusion": {
+              "reasons": [
+                "All required parts can be reserved from validated stock."
+              ],
+              "scope": "Synthetic stock readiness under the selected scenario, not operational repair approval.",
+              "status": "ready",
+              "substitution_applied": false
+            },
+            "evidence": {
+              "adjustments": [
+                {
+                  "delta": 1,
+                  "note": "Hypothetical receipt, not an ERP transaction",
+                  "part": "PL-40",
+                  "source": "SIM-DELIVERY-01"
+                },
+                {
+                  "delta": 1,
+                  "note": "Hypothetical receipt, not an ERP transaction",
+                  "part": "GBX-200",
+                  "source": "SIM-DELIVERY-01"
+                },
+                {
+                  "delta": 1,
+                  "note": "Hypothetical receipt, not an ERP transaction",
+                  "part": "BRG-6208",
+                  "source": "SIM-DELIVERY-01"
+                }
+              ],
+              "evaluation_machine": {
+                "allocated": [
+                  {
+                    "machine": "BC-01",
+                    "part": "PL-40",
+                    "quantity": 1
+                  },
+                  {
+                    "machine": "BC-01",
+                    "part": "GBX-200",
+                    "quantity": 1
+                  }
+                ],
+                "bom_source": "bom.csv / machine=BC-01",
+                "has_conflict": false,
+                "id": "BC-01",
+                "missing_bom": false,
+                "name": "Belt conveyor",
+                "priority": 2,
+                "reasons": [
+                  "All required parts can be reserved from validated stock."
+                ],
+                "requirements": [
+                  {
+                    "available_before": 1,
+                    "eta_days": 70,
+                    "part": "PL-40",
+                    "part_name": "Drive pulley",
+                    "required": 1,
+                    "source": "stock.csv:2",
+                    "supplier_source": "Synthetic ETA from stock.csv",
+                    "total_stock": 1
+                  },
+                  {
+                    "available_before": 1,
+                    "eta_days": 98,
+                    "part": "GBX-200",
+                    "part_name": "Gearbox",
+                    "required": 1,
+                    "source": "stock.csv:3",
+                    "supplier_source": "Synthetic ETA from stock.csv",
+                    "total_stock": 1
+                  }
+                ],
+                "rule": "PRIORITY_ALLOCATE",
+                "site": "North line",
+                "status": "ready"
+              },
+              "machine": {
+                "id": "BC-01",
+                "name": "Belt conveyor",
+                "priority": 2,
+                "site": "North line",
+                "source": "machines.csv:2"
+              },
+              "requirements": {
+                "known": true,
+                "machine_id": "BC-01",
+                "requirements": [
+                  {
+                    "name": "Drive pulley",
+                    "part_id": "PL-40",
+                    "required": 1
+                  },
+                  {
+                    "name": "Gearbox",
+                    "part_id": "GBX-200",
+                    "required": 1
+                  }
+                ],
+                "source": "bom.csv / machine=BC-01"
+              },
+              "stock": [
+                {
+                  "eta": 70,
+                  "id": "PL-40",
+                  "name": "Drive pulley",
+                  "remaining": 0,
+                  "source": "stock.csv:2",
+                  "stock": 1
+                },
+                {
+                  "eta": 98,
+                  "id": "GBX-200",
+                  "name": "Gearbox",
+                  "remaining": 0,
+                  "source": "stock.csv:3",
+                  "stock": 1
+                }
+              ]
+            },
+            "parameters": {
+              "allow_substitutes": false,
+              "machine_id": "BC-01",
+              "strategy": "delivery"
+            },
+            "receipt": {
+              "actions_taken": "None. Read-only demonstration; no ERP write-back or real approvals.",
+              "allocation_method": "Priority ascending, machine ID ascending. No double-booking of shared stock.",
+              "dataset": "synthetic-spares-2026-10",
+              "input_sha256": "e77f706a5c0288e6065623c13cb1ec8f7cbf85ccd052e350935d571cd35266d4",
+              "parameters": {
+                "allow_substitutes": false,
+                "machine_id": "BC-01",
+                "strategy": "delivery"
+              },
+              "ruleset": "datum-repair-v0.2.0",
+              "run_id": "8497132CA5D8335C",
+              "source_hashes": {
+                "bom.csv": "e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04",
+                "claims.csv": "9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb",
+                "machines.csv": "aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a",
+                "stock.csv": "7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593"
+              },
+              "task_rule_version": "datum-task-investigation-v0.1",
+              "unknowns": [
+                "Machine condition and labour availability are not modelled.",
+                "Supplier lead times are synthetic planning data, not delivery promises.",
+                "Conflicting compatibility claims are not reconciled automatically."
+              ]
+            },
+            "task_type": "repair_investigation",
+            "unresolved": [
+              "Machine condition and labour availability are not modelled.",
+              "Supplier lead times are synthetic planning data, not delivery promises.",
+              "Conflicting compatibility claims are not reconciled automatically.",
+              "No verified substitute mapping is modelled; enabling substitutions does not apply one.",
+              "No matching alternative claim does not establish that alternatives do not exist.",
+              "The inherited CP-09/CF-01 conflict rule is fixture-specific and is not a general compatibility rule."
+            ]
+          },
+          "evaluations": [
+            {
+              "evaluation_id": "eval-aaa3a76388a444d5b481a04848a19b3d",
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "parameters": {
+                "allow_substitutes": false,
+                "machine_id": "BC-01",
+                "strategy": "baseline"
+              },
+              "result": {
+                "alternatives": [
+                  {
+                    "claim_records": [],
+                    "explanation": "Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.",
+                    "finding": "unknown",
+                    "part_id": "PL-40"
+                  },
+                  {
+                    "claim_records": [],
+                    "explanation": "Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.",
+                    "finding": "unknown",
+                    "part_id": "GBX-200"
+                  }
+                ],
+                "conclusion": {
+                  "reasons": [
+                    "Drive pulley: need 1, available 0.",
+                    "Gearbox: need 1, available 0."
+                  ],
+                  "scope": "Synthetic stock readiness under the selected scenario, not operational repair approval.",
+                  "status": "blocked",
+                  "substitution_applied": false
+                },
+                "evidence": {
+                  "adjustments": [],
+                  "evaluation_machine": {
+                    "allocated": [],
+                    "bom_source": "bom.csv / machine=BC-01",
+                    "has_conflict": false,
+                    "id": "BC-01",
+                    "missing_bom": false,
+                    "name": "Belt conveyor",
+                    "priority": 2,
+                    "reasons": [
+                      "Drive pulley: need 1, available 0.",
+                      "Gearbox: need 1, available 0."
+                    ],
+                    "requirements": [
+                      {
+                        "available_before": 0,
+                        "eta_days": 70,
+                        "part": "PL-40",
+                        "part_name": "Drive pulley",
+                        "required": 1,
+                        "source": "stock.csv:2",
+                        "supplier_source": "Synthetic ETA from stock.csv",
+                        "total_stock": 0
+                      },
+                      {
+                        "available_before": 0,
+                        "eta_days": 98,
+                        "part": "GBX-200",
+                        "part_name": "Gearbox",
+                        "required": 1,
+                        "source": "stock.csv:3",
+                        "supplier_source": "Synthetic ETA from stock.csv",
+                        "total_stock": 0
+                      }
+                    ],
+                    "rule": "PRIORITY_ALLOCATE",
+                    "site": "North line",
+                    "status": "blocked"
+                  },
+                  "machine": {
+                    "id": "BC-01",
+                    "name": "Belt conveyor",
+                    "priority": 2,
+                    "site": "North line",
+                    "source": "machines.csv:2"
+                  },
+                  "requirements": {
+                    "known": true,
+                    "machine_id": "BC-01",
+                    "requirements": [
+                      {
+                        "name": "Drive pulley",
+                        "part_id": "PL-40",
+                        "required": 1
+                      },
+                      {
+                        "name": "Gearbox",
+                        "part_id": "GBX-200",
+                        "required": 1
+                      }
+                    ],
+                    "source": "bom.csv / machine=BC-01"
+                  },
+                  "stock": [
+                    {
+                      "eta": 70,
+                      "id": "PL-40",
+                      "name": "Drive pulley",
+                      "remaining": 0,
+                      "source": "stock.csv:2",
+                      "stock": 0
+                    },
+                    {
+                      "eta": 98,
+                      "id": "GBX-200",
+                      "name": "Gearbox",
+                      "remaining": 0,
+                      "source": "stock.csv:3",
+                      "stock": 0
+                    }
+                  ]
+                },
+                "parameters": {
+                  "allow_substitutes": false,
+                  "machine_id": "BC-01",
+                  "strategy": "baseline"
+                },
+                "receipt": {
+                  "actions_taken": "None. Read-only demonstration; no ERP write-back or real approvals.",
+                  "allocation_method": "Priority ascending, machine ID ascending. No double-booking of shared stock.",
+                  "dataset": "synthetic-spares-2026-10",
+                  "input_sha256": "87077a6e6c25c1ab93b3f5309a391783d18bcac549d83bdaf7c989705fd25e8d",
+                  "parameters": {
+                    "allow_substitutes": false,
+                    "machine_id": "BC-01",
+                    "strategy": "baseline"
+                  },
+                  "ruleset": "datum-repair-v0.2.0",
+                  "run_id": "3F1E688E4C515BC9",
+                  "source_hashes": {
+                    "bom.csv": "e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04",
+                    "claims.csv": "9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb",
+                    "machines.csv": "aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a",
+                    "stock.csv": "7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593"
+                  },
+                  "task_rule_version": "datum-task-investigation-v0.1",
+                  "unknowns": [
+                    "Machine condition and labour availability are not modelled.",
+                    "Supplier lead times are synthetic planning data, not delivery promises.",
+                    "Conflicting compatibility claims are not reconciled automatically."
+                  ]
+                },
+                "task_type": "repair_investigation",
+                "unresolved": [
+                  "Machine condition and labour availability are not modelled.",
+                  "Supplier lead times are synthetic planning data, not delivery promises.",
+                  "Conflicting compatibility claims are not reconciled automatically.",
+                  "No verified substitute mapping is modelled; enabling substitutions does not apply one.",
+                  "No matching alternative claim does not establish that alternatives do not exist.",
+                  "The inherited CP-09/CF-01 conflict rule is fixture-specific and is not a general compatibility rule."
+                ]
+              },
+              "created_at": "2026-10-28T05:40:18.149296+00:00",
+              "initiator": "agent"
+            },
+            {
+              "evaluation_id": "eval-1c1b3c8cce6a428ea75bf3c03495b7f3",
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "parameters": {
+                "allow_substitutes": false,
+                "machine_id": "BC-01",
+                "strategy": "delivery"
+              },
+              "result": {
+                "alternatives": [
+                  {
+                    "claim_records": [],
+                    "explanation": "Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.",
+                    "finding": "unknown",
+                    "part_id": "PL-40"
+                  },
+                  {
+                    "claim_records": [],
+                    "explanation": "Claims are evidence to inspect, not approved substitution or proof that no alternatives exist.",
+                    "finding": "unknown",
+                    "part_id": "GBX-200"
+                  }
+                ],
+                "conclusion": {
+                  "reasons": [
+                    "All required parts can be reserved from validated stock."
+                  ],
+                  "scope": "Synthetic stock readiness under the selected scenario, not operational repair approval.",
+                  "status": "ready",
+                  "substitution_applied": false
+                },
+                "evidence": {
+                  "adjustments": [
+                    {
+                      "delta": 1,
+                      "note": "Hypothetical receipt, not an ERP transaction",
+                      "part": "PL-40",
+                      "source": "SIM-DELIVERY-01"
+                    },
+                    {
+                      "delta": 1,
+                      "note": "Hypothetical receipt, not an ERP transaction",
+                      "part": "GBX-200",
+                      "source": "SIM-DELIVERY-01"
+                    },
+                    {
+                      "delta": 1,
+                      "note": "Hypothetical receipt, not an ERP transaction",
+                      "part": "BRG-6208",
+                      "source": "SIM-DELIVERY-01"
+                    }
+                  ],
+                  "evaluation_machine": {
+                    "allocated": [
+                      {
+                        "machine": "BC-01",
+                        "part": "PL-40",
+                        "quantity": 1
+                      },
+                      {
+                        "machine": "BC-01",
+                        "part": "GBX-200",
+                        "quantity": 1
+                      }
+                    ],
+                    "bom_source": "bom.csv / machine=BC-01",
+                    "has_conflict": false,
+                    "id": "BC-01",
+                    "missing_bom": false,
+                    "name": "Belt conveyor",
+                    "priority": 2,
+                    "reasons": [
+                      "All required parts can be reserved from validated stock."
+                    ],
+                    "requirements": [
+                      {
+                        "available_before": 1,
+                        "eta_days": 70,
+                        "part": "PL-40",
+                        "part_name": "Drive pulley",
+                        "required": 1,
+                        "source": "stock.csv:2",
+                        "supplier_source": "Synthetic ETA from stock.csv",
+                        "total_stock": 1
+                      },
+                      {
+                        "available_before": 1,
+                        "eta_days": 98,
+                        "part": "GBX-200",
+                        "part_name": "Gearbox",
+                        "required": 1,
+                        "source": "stock.csv:3",
+                        "supplier_source": "Synthetic ETA from stock.csv",
+                        "total_stock": 1
+                      }
+                    ],
+                    "rule": "PRIORITY_ALLOCATE",
+                    "site": "North line",
+                    "status": "ready"
+                  },
+                  "machine": {
+                    "id": "BC-01",
+                    "name": "Belt conveyor",
+                    "priority": 2,
+                    "site": "North line",
+                    "source": "machines.csv:2"
+                  },
+                  "requirements": {
+                    "known": true,
+                    "machine_id": "BC-01",
+                    "requirements": [
+                      {
+                        "name": "Drive pulley",
+                        "part_id": "PL-40",
+                        "required": 1
+                      },
+                      {
+                        "name": "Gearbox",
+                        "part_id": "GBX-200",
+                        "required": 1
+                      }
+                    ],
+                    "source": "bom.csv / machine=BC-01"
+                  },
+                  "stock": [
+                    {
+                      "eta": 70,
+                      "id": "PL-40",
+                      "name": "Drive pulley",
+                      "remaining": 0,
+                      "source": "stock.csv:2",
+                      "stock": 1
+                    },
+                    {
+                      "eta": 98,
+                      "id": "GBX-200",
+                      "name": "Gearbox",
+                      "remaining": 0,
+                      "source": "stock.csv:3",
+                      "stock": 1
+                    }
+                  ]
+                },
+                "parameters": {
+                  "allow_substitutes": false,
+                  "machine_id": "BC-01",
+                  "strategy": "delivery"
+                },
+                "receipt": {
+                  "actions_taken": "None. Read-only demonstration; no ERP write-back or real approvals.",
+                  "allocation_method": "Priority ascending, machine ID ascending. No double-booking of shared stock.",
+                  "dataset": "synthetic-spares-2026-10",
+                  "input_sha256": "e77f706a5c0288e6065623c13cb1ec8f7cbf85ccd052e350935d571cd35266d4",
+                  "parameters": {
+                    "allow_substitutes": false,
+                    "machine_id": "BC-01",
+                    "strategy": "delivery"
+                  },
+                  "ruleset": "datum-repair-v0.2.0",
+                  "run_id": "8497132CA5D8335C",
+                  "source_hashes": {
+                    "bom.csv": "e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04",
+                    "claims.csv": "9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb",
+                    "machines.csv": "aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a",
+                    "stock.csv": "7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593"
+                  },
+                  "task_rule_version": "datum-task-investigation-v0.1",
+                  "unknowns": [
+                    "Machine condition and labour availability are not modelled.",
+                    "Supplier lead times are synthetic planning data, not delivery promises.",
+                    "Conflicting compatibility claims are not reconciled automatically."
+                  ]
+                },
+                "task_type": "repair_investigation",
+                "unresolved": [
+                  "Machine condition and labour availability are not modelled.",
+                  "Supplier lead times are synthetic planning data, not delivery promises.",
+                  "Conflicting compatibility claims are not reconciled automatically.",
+                  "No verified substitute mapping is modelled; enabling substitutions does not apply one.",
+                  "No matching alternative claim does not establish that alternatives do not exist.",
+                  "The inherited CP-09/CF-01 conflict rule is fixture-specific and is not a general compatibility rule."
+                ]
+              },
+              "created_at": "2026-10-28T05:51:19.082996+00:00",
+              "initiator": "human"
+            }
+          ],
+          "reviews": [
+            {
+              "review_id": "review-b39bc1a2dae44cdca34046c182335f7c",
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "evaluation_id": "eval-1c1b3c8cce6a428ea75bf3c03495b7f3",
+              "decision": "needs_more_information",
+              "note": "Automated UI test: verify supporting evidence before an operational decision.",
+              "created_at": "2026-10-28T05:51:20.379296+00:00",
+              "initiator": "human"
+            }
+          ],
+          "events": [
+            {
+              "event_id": 148,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "task_created",
+              "details": {
+                "parameters": {
+                  "allow_substitutes": false,
+                  "machine_id": "BC-01",
+                  "strategy": "baseline"
+                },
+                "task_type": "repair_investigation"
+              },
+              "created_at": "2026-10-28T05:40:15.217254+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 149,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_create"
+              },
+              "created_at": "2026-10-28T05:40:15.230988+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 150,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_evaluate"
+              },
+              "created_at": "2026-10-28T05:40:18.135594+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 151,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "parameters_validated",
+              "details": {
+                "parameters": {
+                  "allow_substitutes": false,
+                  "machine_id": "BC-01",
+                  "strategy": "baseline"
+                }
+              },
+              "created_at": "2026-10-28T05:40:18.149296+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 152,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "data_sources_accessed",
+              "details": {
+                "input_sha256": "87077a6e6c25c1ab93b3f5309a391783d18bcac549d83bdaf7c989705fd25e8d",
+                "source_hashes": {
+                  "bom.csv": "e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04",
+                  "claims.csv": "9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb",
+                  "machines.csv": "aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a",
+                  "stock.csv": "7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593"
+                }
+              },
+              "created_at": "2026-10-28T05:40:18.149296+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 153,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "rule_applied",
+              "details": {
+                "ruleset": "datum-repair-v0.2.0"
+              },
+              "created_at": "2026-10-28T05:40:18.149296+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 154,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "evaluation_completed",
+              "details": {
+                "evaluation_id": "eval-aaa3a76388a444d5b481a04848a19b3d",
+                "run_id": "3F1E688E4C515BC9"
+              },
+              "created_at": "2026-10-28T05:40:18.149296+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 155,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_open"
+              },
+              "created_at": "2026-10-28T05:40:20.567996+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 156,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "task_reopened",
+              "details": {},
+              "created_at": "2026-10-28T05:40:20.579687+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 228,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_get"
+              },
+              "created_at": "2026-10-28T05:41:13.784178+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 353,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_get"
+              },
+              "created_at": "2026-10-28T05:51:17.594680+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 354,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_open"
+              },
+              "created_at": "2026-10-28T05:51:18.679915+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 355,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "task_reopened",
+              "details": {},
+              "created_at": "2026-10-28T05:51:18.692912+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 356,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_ui_evaluate"
+              },
+              "created_at": "2026-10-28T05:51:19.068995+00:00",
+              "initiator": "human"
+            },
+            {
+              "event_id": 357,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "parameters_validated",
+              "details": {
+                "parameters": {
+                  "allow_substitutes": false,
+                  "machine_id": "BC-01",
+                  "strategy": "delivery"
+                }
+              },
+              "created_at": "2026-10-28T05:51:19.082996+00:00",
+              "initiator": "human"
+            },
+            {
+              "event_id": 358,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "parameter_changed",
+              "details": {
+                "after": {
+                  "allow_substitutes": false,
+                  "machine_id": "BC-01",
+                  "strategy": "delivery"
+                },
+                "before": {
+                  "allow_substitutes": false,
+                  "machine_id": "BC-01",
+                  "strategy": "baseline"
+                }
+              },
+              "created_at": "2026-10-28T05:51:19.082996+00:00",
+              "initiator": "human"
+            },
+            {
+              "event_id": 359,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "data_sources_accessed",
+              "details": {
+                "input_sha256": "e77f706a5c0288e6065623c13cb1ec8f7cbf85ccd052e350935d571cd35266d4",
+                "source_hashes": {
+                  "bom.csv": "e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04",
+                  "claims.csv": "9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb",
+                  "machines.csv": "aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a",
+                  "stock.csv": "7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593"
+                }
+              },
+              "created_at": "2026-10-28T05:51:19.082996+00:00",
+              "initiator": "human"
+            },
+            {
+              "event_id": 360,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "rule_applied",
+              "details": {
+                "ruleset": "datum-repair-v0.2.0"
+              },
+              "created_at": "2026-10-28T05:51:19.082996+00:00",
+              "initiator": "human"
+            },
+            {
+              "event_id": 361,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "evaluation_completed",
+              "details": {
+                "evaluation_id": "eval-1c1b3c8cce6a428ea75bf3c03495b7f3",
+                "run_id": "8497132CA5D8335C"
+              },
+              "created_at": "2026-10-28T05:51:19.082996+00:00",
+              "initiator": "human"
+            },
+            {
+              "event_id": 362,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_get"
+              },
+              "created_at": "2026-10-28T05:51:20.147264+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 363,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_ui_review"
+              },
+              "created_at": "2026-10-28T05:51:20.368296+00:00",
+              "initiator": "human"
+            },
+            {
+              "event_id": 364,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "human_review_recorded",
+              "details": {
+                "authorization": false,
+                "decision": "needs_more_information",
+                "evaluation_id": "eval-1c1b3c8cce6a428ea75bf3c03495b7f3",
+                "note": "Automated UI test: verify supporting evidence before an operational decision.",
+                "review_id": "review-b39bc1a2dae44cdca34046c182335f7c"
+              },
+              "created_at": "2026-10-28T05:51:20.379296+00:00",
+              "initiator": "human"
+            },
+            {
+              "event_id": 365,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_get"
+              },
+              "created_at": "2026-10-28T05:51:21.505436+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 366,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_open"
+              },
+              "created_at": "2026-10-28T05:51:21.937576+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 367,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "task_reopened",
+              "details": {},
+              "created_at": "2026-10-28T05:51:21.950002+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 368,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_get"
+              },
+              "created_at": "2026-10-28T05:51:23.069802+00:00",
+              "initiator": "agent"
+            },
+            {
+              "event_id": 369,
+              "task_id": "task-505c37db5e974f53a60a0003871bac6c",
+              "event_type": "tool_invoked",
+              "details": {
+                "tool": "datum_task_get"
+              },
+              "created_at": "2026-10-28T05:52:07.665707+00:00",
+              "initiator": "agent"
+            }
+          ],
+          "identity_note": "Initiators are unverified labels; no business authorization is recorded."
+        },
+        "isError": false,
+        "resultType": "complete"
+      }
+    }
+  ],
+  "model_digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+  "mcp_protocol_version": "2025-11-25"
+}

@@ -1,0 +1,31 @@
+{
+  "status": "pass",
+  "database_integrity": "ok",
+  "foreign_keys": "ok",
+  "unrelated_rows": "unchanged",
+  "target_task": "task-505c37db5e974f53a60a0003871bac6c",
+  "old_receipt": "3F1E688E4C515BC9",
+  "new_receipt": "8497132CA5D8335C",
+  "old_evaluation": "eval-aaa3a76388a444d5b481a04848a19b3d",
+  "new_evaluation": "eval-1c1b3c8cce6a428ea75bf3c03495b7f3",
+  "review_id": "review-b39bc1a2dae44cdca34046c182335f7c",
+  "review_decision": "needs_more_information",
+  "initiator_label": "human",
+  "source_hashes": {
+    "bom.csv": "e70c435a1b766633ab0118b726a6b0ea5a418b59d58817364e6d4048fb948c04",
+    "claims.csv": "9c2eb148175caacc48edcc1384a78e37efc489407534a3d130e3f45cd4e7cacb",
+    "machines.csv": "aa3902d048ae0e9e362ec54042a6214e4c6ce70631ec07844dd42fdf082abc2a",
+    "stock.csv": "7d796a170e3185f86932b1e2c1421b5a5dca804ffdefb071e8655093290f5593"
+  },
+  "new_event_count": 17,
+  "new_event_types": [
+    "data_sources_accessed",
+    "evaluation_completed",
+    "human_review_recorded",
+    "parameter_changed",
+    "parameters_validated",
+    "rule_applied",
+    "task_reopened",
+    "tool_invoked"
+  ]
+}
