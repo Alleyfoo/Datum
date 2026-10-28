@@ -1,6 +1,14 @@
 # Experiment 5: Native Codex conversation test
 
-**Status, 2026-10-28: blocked at connection to the current conversation.** The server has been registered and independently responds over stdio, but this already-running Codex conversation does not know about it. No Datum tool was called by Codex, no Datum UI was rendered, and bidirectional conversation has not been demonstrated. Do not treat the diagnostic client or earlier reference-host experiments as a Codex result.
+**Status, 2026-10-28: Codex connects and can retrieve the resource; an interactive app render remains unverified.** See the continuation below. The original observations are retained as historical evidence.
+
+## Continuation: connection established
+
+On a later turn, the conversation's tool inventory exposed `datum-visual-lab-experiment5`. Codex called `datum_task_open` for the existing task and received its structured task interface successfully. A subsequent `datum_task_get` recorded the open and reopen events and confirmed revision 1, baseline parameters, the original receipt `3F1E688E4C515BC9`, one evaluation and no reviews. The synthetic result remains blocked because both required parts have zero available stock.
+
+Codex listed the server resources and explicitly read `ui://datum/task-experiment`, receiving HTML with MIME type `text/html;profile=mcp-app`. This was an explicit resource read, not evidence that the graphical host fetched or mounted it automatically. The task-opening call was made through the tool orchestration interface and returned structured data. The computer-use inventory afterward showed no open Codex MCP Apps tabs. That observation does not determine whether an inline conversation view was presented. No mounted app, host initialization payload, negotiated UI capabilities, graphical interaction, or UI-to-conversation handoff was observed; these remain untested. No UI controls were simulated through a different host.
+
+The server became available by this turn, but the observations do not establish which reload or restart caused it. The disposable database was retained, and the original evaluation and receipt were preserved.
 
 ## Environment and setup
 
