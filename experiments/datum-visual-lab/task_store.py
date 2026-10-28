@@ -144,6 +144,9 @@ class TaskStore:
                 "created_at": row["created_at"], "updated_at": row["updated_at"], "created_by": row["created_by"],
                 "current_result": evaluations[-1]["result"] if evaluations else None,
                 "evaluations": evaluations, "reviews": reviews, "events": events,
+                # Only business mutations advance this revision; communication and
+                # audit events do not make a view stale.
+                "revision": len(evaluations) + len(reviews),
                 "identity_note": "Initiators are unverified labels; no business authorization is recorded.",
             }
 
@@ -156,7 +159,8 @@ class TaskStore:
             self._require_task(db, task_id)
             self._event(db, task_id, "tool_invoked", {"tool": tool_name}, actor, _timestamp())
 
-    def evaluate(self, task_id: str, parameters: dict[str, Any], result: dict[str, Any], initiator: str) -> dict[str, Any]:
+    def evaluate(self, task_id: str, parameters: dict[str, Any], result: dict[str, Any], initiator: str,
+                 expected_revision: int | None = None) -> dict[str, Any]:
         """Append the already validated domain result and its receipt atomically."""
         actor = _initiator(initiator)
         if not isinstance(parameters, dict) or not isinstance(result, dict) or result.get("parameters") != parameters:
@@ -175,6 +179,12 @@ class TaskStore:
             # must describe the immediately preceding committed task state.
             db.execute("BEGIN IMMEDIATE")
             task = self._require_task(db, task_id)
+            if expected_revision is not None:
+                if type(expected_revision) is not int or expected_revision < 0:
+                    raise ValueError("Expected revision must be a non-negative integer")
+                revision = db.execute("SELECT (SELECT count(*) FROM evaluations WHERE task_id=?) + (SELECT count(*) FROM reviews WHERE task_id=?)", (task_id, task_id)).fetchone()[0]
+                if revision != expected_revision:
+                    raise ValueError(f"Stale task revision: expected {expected_revision}, current {revision}; refresh before evaluating")
             if result.get("task_type") != task["task_type"]:
                 raise ValueError("Evaluation task type does not match task")
             previous = json.loads(task["parameters"])

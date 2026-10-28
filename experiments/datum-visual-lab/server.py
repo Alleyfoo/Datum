@@ -19,6 +19,7 @@ from datum_engine import evaluate, summarize
 import graphics_experiment
 import interaction_lab
 import task_experiment
+import conversation_experiment
 
 APP_URI = "ui://datum/visual-lab"
 HTML_PATH = Path(__file__).with_name("app.template.html")
@@ -54,7 +55,9 @@ apps.add_html_resource(
 interaction_lab.register(apps)
 graphics_experiment.register(apps)
 task_experiment.register_apps(apps)
+conversation_experiment.register_apps(apps)
 
 mcp = MCPServer("datum-visual-lab", extensions=[apps])
 task_experiment.register_tools(mcp)
+conversation_experiment.register_tools(mcp)
 

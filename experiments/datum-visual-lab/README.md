@@ -90,3 +90,7 @@ The baseline and interaction tests temporarily edit `fixtures/machines.csv` and 
 
 [TASK_EXPERIMENT.md](TASK_EXPERIMENT.md) describes the shared domain functions, agent and app tools, generic component description, local SQLite state, scripted protocol test, reference-host test and actual local-model results. Set `DATUM_TASK_DB` to a disposable SQLite file before starting the server for tests. The local database records evaluations and human-labelled reviews; it does not modify the synthetic source CSVs or an ERP. The labels are not authenticated identities, and a review is not an approval.
 
+## Conversation synchronization experiment
+
+[CONVERSATION_EXPERIMENT.md](CONVERSATION_EXPERIMENT.md) documents the compact task view, revision-checked updates, context/message mechanisms and separate mock, reference-host and local-model results. No real conversational host was verified. Use a fresh disposable database; the host tests create synthetic tasks and evaluations.
+

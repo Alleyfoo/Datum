@@ -1,0 +1,291 @@
+{
+  "status": "pass",
+  "host": "http://localhost:8080/",
+  "repair_task": "task-25a3a05959e1457eaac05a65ca1724be",
+  "supplier_task": "task-8b5514dece6d4fcf80fc3d4b9827d885",
+  "checks": [
+    "two simultaneous views of one task and one different task",
+    "selection does not update business revision",
+    "context acknowledged and displayed by host",
+    "message capability not advertised; control disabled",
+    "app-only update, stale view and explicit refresh",
+    "scripted agent update leaves existing views unchanged until refresh",
+    "synthetic visibility event refreshes clean view and preserves draft",
+    "fullscreen and inline",
+    "host teardown request and reopening"
+  ],
+  "modelProbe": null,
+  "events": [
+    [
+      {
+        "kind": "initialized",
+        "task_id": null,
+        "revision": null
+      },
+      {
+        "kind": "render",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1
+      },
+      {
+        "kind": "selection_changed",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1
+      },
+      {
+        "kind": "request",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1,
+        "method": "ui/update-model-context",
+        "id": 4001
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1,
+        "method": "ui/update-model-context"
+      },
+      {
+        "kind": "context_ack",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1
+      },
+      {
+        "kind": "draft_changed",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1
+      },
+      {
+        "kind": "request",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1,
+        "method": "tools/call",
+        "id": 4002
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1,
+        "method": "tools/call"
+      },
+      {
+        "kind": "render",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2
+      },
+      {
+        "kind": "draft_changed",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2
+      },
+      {
+        "kind": "request",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2,
+        "method": "tools/call",
+        "id": 4003
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2,
+        "method": "tools/call"
+      },
+      {
+        "kind": "tool_error",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2,
+        "tool": "datum_conversation_evaluate"
+      },
+      {
+        "kind": "request",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2,
+        "method": "tools/call",
+        "id": 4004
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2,
+        "method": "tools/call"
+      },
+      {
+        "kind": "render",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3
+      },
+      {
+        "kind": "refresh",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3,
+        "reason": "explicit"
+      },
+      {
+        "kind": "request",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3,
+        "method": "ui/request-display-mode",
+        "id": 4005
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3,
+        "method": "ui/request-display-mode"
+      },
+      {
+        "kind": "display_mode",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3,
+        "mode": "fullscreen"
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3
+      },
+      {
+        "kind": "request",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3,
+        "method": "ui/request-display-mode",
+        "id": 4006
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3,
+        "method": "ui/request-display-mode"
+      },
+      {
+        "kind": "display_mode",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3,
+        "mode": "inline"
+      }
+    ],
+    [
+      {
+        "kind": "initialized",
+        "task_id": null,
+        "revision": null
+      },
+      {
+        "kind": "render",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1
+      },
+      {
+        "kind": "request",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1,
+        "method": "tools/call",
+        "id": 4001
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 1,
+        "method": "tools/call"
+      },
+      {
+        "kind": "render",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2
+      },
+      {
+        "kind": "refresh",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2,
+        "reason": "explicit"
+      },
+      {
+        "kind": "request",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2,
+        "method": "tools/call",
+        "id": 4002
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 2,
+        "method": "tools/call"
+      },
+      {
+        "kind": "render",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3
+      },
+      {
+        "kind": "refresh",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3,
+        "reason": "active"
+      },
+      {
+        "kind": "draft_changed",
+        "task_id": "task-25a3a05959e1457eaac05a65ca1724be",
+        "revision": 3
+      }
+    ],
+    [
+      {
+        "kind": "initialized",
+        "task_id": null,
+        "revision": null
+      },
+      {
+        "kind": "render",
+        "task_id": "task-8b5514dece6d4fcf80fc3d4b9827d885",
+        "revision": 1
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-8b5514dece6d4fcf80fc3d4b9827d885",
+        "revision": 1
+      },
+      {
+        "kind": "request",
+        "task_id": "task-8b5514dece6d4fcf80fc3d4b9827d885",
+        "revision": 1,
+        "method": "ui/update-model-context",
+        "id": 4001
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-8b5514dece6d4fcf80fc3d4b9827d885",
+        "revision": 1,
+        "method": "ui/update-model-context"
+      },
+      {
+        "kind": "context_ack",
+        "task_id": "task-8b5514dece6d4fcf80fc3d4b9827d885",
+        "revision": 1
+      }
+    ]
+  ],
+  "hostEvents": [
+    "teardown_requested"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
+}

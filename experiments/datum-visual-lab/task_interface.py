@@ -115,6 +115,10 @@ def build_interface(task: dict[str, Any], requested_components: list[str] | None
     else:
         raise ValueError("Unknown task type")
 
+    # Existing renderer forwards action arguments; protect its submitted view
+    # against other views or the agent changing the task in the meantime.
+    data["parameters"]["action"]["arguments"]["expected_revision"] = task.get(
+        "revision", len(task.get("evaluations", [])) + len(task.get("reviews", [])))
     if source_warning:
         data["parameters"]["action"].update({
             "enabled": False,

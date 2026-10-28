@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Literal
 
 from mcp.types import CallToolResult, TextContent, ToolAnnotations
-from pydantic import StrictBool
+from pydantic import StrictBool, StrictInt
 
 import task_domain as domain
 import task_interface
@@ -38,13 +38,13 @@ def _parameters(task_type: str, machine_id: str | None, strategy: Strategy | Non
 
 def _evaluate(task_id: str, machine_id: str | None, strategy: Strategy | None,
               allow_substitutes: bool | None, part_id: str | None,
-              initiator: str, tool_name: str) -> dict:
+              initiator: str, tool_name: str, expected_revision: int | None = None) -> dict:
     store = TaskStore()
     store.record_tool_invocation(task_id, tool_name, initiator)
     task = store.get(task_id)
     params = _parameters(task["task_type"], machine_id, strategy, allow_substitutes, part_id)
     result = domain.evaluate_task(task["task_type"], params)
-    return store.evaluate(task_id, params, result, initiator)
+    return store.evaluate(task_id, params, result, initiator, expected_revision=expected_revision)
 
 
 def datum_list_machines() -> CallToolResult:
@@ -119,10 +119,10 @@ def datum_task_open(task_id: str, requested_components: list[str] | None = None)
 
 def datum_task_ui_evaluate(task_id: str, machine_id: str | None = None,
                            strategy: Strategy | None = None, allow_substitutes: StrictBool | None = None,
-                           part_id: str | None = None) -> CallToolResult:
+                           part_id: str | None = None, expected_revision: StrictInt | None = None) -> CallToolResult:
     """App-only: evaluate exactly the same shared rules and update the local task."""
     try:
-        state = _evaluate(task_id, machine_id, strategy, allow_substitutes, part_id, "human", "datum_task_ui_evaluate")
+        state = _evaluate(task_id, machine_id, strategy, allow_substitutes, part_id, "human", "datum_task_ui_evaluate", expected_revision)
     except ValueError as exc:
         return CallToolResult(content=[TextContent(type="text", text=str(exc))], is_error=True)
     return _result(task_interface.build_interface(state), "Synthetic evaluation complete; no ERP write")

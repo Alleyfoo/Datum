@@ -1,0 +1,326 @@
+{
+  "status": "pass",
+  "host": "http://localhost:8080/",
+  "repair_task": "task-a6566d9917a6487cb2881cbeb25ed407",
+  "supplier_task": "task-43e7cdbd66fe450ba7d5f8619e37bd86",
+  "checks": [
+    "two simultaneous views of one task and one different task",
+    "selection does not update business revision",
+    "context acknowledged and displayed by host",
+    "message capability not advertised; control disabled",
+    "app-only update, stale view and explicit refresh",
+    "scripted agent update leaves existing views unchanged until refresh",
+    "synthetic visibility event refreshes clean view and preserves draft",
+    "fullscreen and inline",
+    "teardown and reopening"
+  ],
+  "modelProbe": {
+    "status": "model_stopped",
+    "calls": [
+      [
+        "datum_task_get",
+        false
+      ],
+      [
+        "datum_conversation_update",
+        false
+      ]
+    ],
+    "error": null,
+    "output": "evidence/conversation-qwen.json"
+  },
+  "events": [
+    [
+      {
+        "kind": "initialized",
+        "task_id": null,
+        "revision": null
+      },
+      {
+        "kind": "render",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1
+      },
+      {
+        "kind": "selection_changed",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1
+      },
+      {
+        "kind": "request",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1,
+        "method": "ui/update-model-context",
+        "id": 4001
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1,
+        "method": "ui/update-model-context"
+      },
+      {
+        "kind": "context_ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1
+      },
+      {
+        "kind": "draft_changed",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1
+      },
+      {
+        "kind": "request",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1,
+        "method": "tools/call",
+        "id": 4002
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1,
+        "method": "tools/call"
+      },
+      {
+        "kind": "render",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2
+      },
+      {
+        "kind": "draft_changed",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2
+      },
+      {
+        "kind": "request",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2,
+        "method": "tools/call",
+        "id": 4003
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2,
+        "method": "tools/call"
+      },
+      {
+        "kind": "tool_error",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2,
+        "tool": "datum_conversation_evaluate"
+      },
+      {
+        "kind": "request",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2,
+        "method": "tools/call",
+        "id": 4004
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2,
+        "method": "tools/call"
+      },
+      {
+        "kind": "render",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 3
+      },
+      {
+        "kind": "refresh",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 3,
+        "reason": "explicit"
+      },
+      {
+        "kind": "request",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 3,
+        "method": "tools/call",
+        "id": 4005
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 3,
+        "method": "tools/call"
+      },
+      {
+        "kind": "render",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4
+      },
+      {
+        "kind": "refresh",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4,
+        "reason": "explicit"
+      },
+      {
+        "kind": "request",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4,
+        "method": "ui/request-display-mode",
+        "id": 4006
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4,
+        "method": "ui/request-display-mode"
+      },
+      {
+        "kind": "display_mode",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4,
+        "mode": "fullscreen"
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4
+      },
+      {
+        "kind": "request",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4,
+        "method": "ui/request-display-mode",
+        "id": 4007
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4,
+        "method": "ui/request-display-mode"
+      },
+      {
+        "kind": "display_mode",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 4,
+        "mode": "inline"
+      }
+    ],
+    [
+      {
+        "kind": "initialized",
+        "task_id": null,
+        "revision": null
+      },
+      {
+        "kind": "render",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1
+      },
+      {
+        "kind": "request",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1,
+        "method": "tools/call",
+        "id": 4001
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 1,
+        "method": "tools/call"
+      },
+      {
+        "kind": "render",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2
+      },
+      {
+        "kind": "refresh",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2,
+        "reason": "explicit"
+      },
+      {
+        "kind": "request",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2,
+        "method": "tools/call",
+        "id": 4002
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 2,
+        "method": "tools/call"
+      },
+      {
+        "kind": "render",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 3
+      },
+      {
+        "kind": "refresh",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 3,
+        "reason": "active"
+      },
+      {
+        "kind": "draft_changed",
+        "task_id": "task-a6566d9917a6487cb2881cbeb25ed407",
+        "revision": 3
+      }
+    ],
+    [
+      {
+        "kind": "initialized",
+        "task_id": null,
+        "revision": null
+      },
+      {
+        "kind": "render",
+        "task_id": "task-43e7cdbd66fe450ba7d5f8619e37bd86",
+        "revision": 1
+      },
+      {
+        "kind": "host_context_changed",
+        "task_id": "task-43e7cdbd66fe450ba7d5f8619e37bd86",
+        "revision": 1
+      },
+      {
+        "kind": "request",
+        "task_id": "task-43e7cdbd66fe450ba7d5f8619e37bd86",
+        "revision": 1,
+        "method": "ui/update-model-context",
+        "id": 4001
+      },
+      {
+        "kind": "ack",
+        "task_id": "task-43e7cdbd66fe450ba7d5f8619e37bd86",
+        "revision": 1,
+        "method": "ui/update-model-context"
+      },
+      {
+        "kind": "context_ack",
+        "task_id": "task-43e7cdbd66fe450ba7d5f8619e37bd86",
+        "revision": 1
+      }
+    ]
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
+}
