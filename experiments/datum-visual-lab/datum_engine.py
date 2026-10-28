@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import csv
+import io
 from pathlib import Path
 from copy import deepcopy
 from typing import Any
@@ -23,8 +24,23 @@ SCENARIOS = {
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
 
-def _csv_rows(name: str) -> list[dict[str, str]]:
-    with (FIXTURE_DIR / name).open(encoding="utf-8", newline="") as handle:
+SOURCE_FILES = ("machines.csv", "bom.csv", "stock.csv", "claims.csv")
+
+
+def capture_sources() -> dict[str, bytes]:
+    """Capture the exact source bytes used by a single evaluation.
+
+    The files are read sequentially, not atomically as a group. Once captured,
+    parsing, evaluation and hashing all use the same immutable byte strings.
+    """
+    return {name: (FIXTURE_DIR / name).read_bytes() for name in SOURCE_FILES}
+
+
+def _csv_rows(name: str, sources: dict[str, bytes] | None = None) -> list[dict[str, str]]:
+    if sources is None:
+        with (FIXTURE_DIR / name).open(encoding="utf-8", newline="") as handle:
+            return list(csv.DictReader(handle))
+    with io.StringIO(sources[name].decode("utf-8"), newline="") as handle:
         return list(csv.DictReader(handle))
 
 
@@ -34,17 +50,18 @@ def _verified_quantity(value: str) -> int:
     return int(value)
 
 
-def load_fixture() -> tuple[list[dict[str, Any]], dict[str, Any], list[dict[str, Any]]]:
+def load_fixture(sources: dict[str, bytes] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any], list[dict[str, Any]]]:
     """Read independent immutable-like CSV input files; failures stop evaluation."""
+    rows = (lambda name: _csv_rows(name)) if sources is None else (lambda name: _csv_rows(name, sources))
     machines = []
-    for row in _csv_rows("machines.csv"):
+    for row in rows("machines.csv"):
         machines.append({"id": row["id"], "name": row["name"], "site": row["site"],
                          "priority": _verified_quantity(row["priority"]), "bom": None})
     by_id = {m["id"]: m for m in machines}
     if len(by_id) != len(machines):
         raise ValueError("Duplicate machine ID in machines.csv")
     bom_pairs = set()
-    for row in _csv_rows("bom.csv"):
+    for row in rows("bom.csv"):
         mid = row["machine_id"]
         if mid not in by_id:
             raise ValueError(f"Unrecognised machine in BOM: {mid}")
@@ -57,7 +74,7 @@ def load_fixture() -> tuple[list[dict[str, Any]], dict[str, Any], list[dict[str,
             m["bom"] = []
         m["bom"].append((row["part_id"], _verified_quantity(row["required"])))
     parts = {}
-    for row in _csv_rows("stock.csv"):
+    for row in rows("stock.csv"):
         pid = row["part_id"]
         if pid in parts:
             raise ValueError(f"Duplicate part ID in stock.csv: {pid}")
@@ -67,14 +84,16 @@ def load_fixture() -> tuple[list[dict[str, Any]], dict[str, Any], list[dict[str,
         if pid not in parts:
             raise ValueError(f"Unknown stock part in BOM for machine {mid}: {pid}")
     claims = []
-    for row in _csv_rows("claims.csv"):
+    for row in rows("claims.csv"):
         claims.append({**row, "accepted": row["accepted"].lower() == "true"})
     return machines, parts, claims
 
 
-def source_hashes() -> dict[str, str]:
+def source_hashes(sources: dict[str, bytes] | None = None) -> dict[str, str]:
     """True SHA-256 of the original CSV bytes, not a claim of data truth."""
-    return {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(FIXTURE_DIR.glob("*.csv"))}
+    if sources is None:
+        return {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(FIXTURE_DIR.glob("*.csv"))}
+    return {name: hashlib.sha256(data).hexdigest() for name, data in sorted(sources.items())}
 
 
 def _hash(data: Any) -> str:
@@ -82,11 +101,11 @@ def _hash(data: Any) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def evaluate(scenario: str = "baseline") -> dict[str, Any]:
+def evaluate(scenario: str = "baseline", sources: dict[str, bytes] | None = None) -> dict[str, Any]:
     """Evaluate by priority with a single shared stock pool. Never silently accept substitutions."""
     if scenario not in SCENARIOS:
         raise ValueError(f"Unknown scenario {scenario!r}; choose {', '.join(SCENARIOS)}")
-    machines, parts, claims = load_fixture()
+    machines, parts, claims = load_fixture(sources)
     stock = {pid: dict(info) for pid, info in parts.items()}
     adjustments = []
     quarantined = []
@@ -148,7 +167,7 @@ def evaluate(scenario: str = "baseline") -> dict[str, Any]:
     input_signature = _hash({"machines": machines, "stock": stock, "claims": claims, "quarantined": quarantined})
     receipt = {
         "run_id": _hash({"scenario": scenario, "input": input_signature, "rule": RULE_VERSION})[:16].upper(),
-        "input_sha256": input_signature, "source_hashes": source_hashes(), "ruleset": RULE_VERSION, "dataset": DATASET_VERSION,
+        "input_sha256": input_signature, "source_hashes": source_hashes(sources), "ruleset": RULE_VERSION, "dataset": DATASET_VERSION,
         "allocation_method": "Priority ascending, machine ID ascending. No double-booking of shared stock.",
         "actions_taken": "None. Read-only demonstration; no ERP write-back or real approvals.",
         "unknowns": ["Machine condition and labour availability are not modelled.",

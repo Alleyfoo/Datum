@@ -86,3 +86,7 @@ node tests/test_rendering_host.cjs
 
 The baseline and interaction tests temporarily edit `fixtures/machines.csv` and `interaction_menu.json`, respectively, and restore their original bytes in `finally`. Run them only in a disposable copy with no concurrent edits; abrupt process termination can prevent restoration. They capture screenshots in `screenshots/`. Set `DATUM_HOST` to override the default host URL. If your environment denies writes to the normal temporary directory, set `TEMP` and `TMP` to an existing writable local directory before running the Python tests.
 
+## Persistent task experiment
+
+[TASK_EXPERIMENT.md](TASK_EXPERIMENT.md) describes the shared domain functions, agent and app tools, generic component description, local SQLite state, scripted protocol test, reference-host test and actual local-model results. Set `DATUM_TASK_DB` to a disposable SQLite file before starting the server for tests. The local database records evaluations and human-labelled reviews; it does not modify the synthetic source CSVs or an ERP. The labels are not authenticated identities, and a review is not an approval.
+
