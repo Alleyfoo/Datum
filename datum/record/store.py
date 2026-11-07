@@ -156,6 +156,13 @@ CREATE TRIGGER IF NOT EXISTS protected_types_kept BEFORE DELETE ON protected_typ
 BEGIN SELECT RAISE(ABORT, 'a protected ticket type stays protected'); END;
 CREATE TRIGGER IF NOT EXISTS protected_types_fixed BEFORE UPDATE ON protected_types
 BEGIN SELECT RAISE(ABORT, 'a protected ticket type keeps the protection it was given'); END;
+CREATE TABLE IF NOT EXISTS ending (
+    number INTEGER PRIMARY KEY);
+CREATE TRIGGER IF NOT EXISTS items_protected_end BEFORE UPDATE OF status ON items
+WHEN NEW.status IN ('{CLOSED}', '{FINISHED}') AND OLD.status IS NOT NEW.status
+     AND EXISTS (SELECT 1 FROM protected_types WHERE type = NEW.type)
+     AND NOT EXISTS (SELECT 1 FROM ending WHERE number = NEW.number)
+BEGIN SELECT RAISE(ABORT, 'a protected ticket ends only through update(), once its protection agreed'); END;
 CREATE TABLE IF NOT EXISTS deleting (
     number INTEGER PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS closing (
@@ -182,6 +189,9 @@ BEGIN SELECT RAISE(ABORT, 'items are never deleted, but a closed ticket and its 
 # `deleting` holds the numbers the store deletes, inside the one transaction that deletes them, and is
 # empty at every other time: the two delete guards refuse every row it does not name, and any task that
 # is not closed. Only _delete fills it. AUTOINCREMENT keeps a deleted number from being used again.
+# `ending` holds a protected task the store ends, closed or finished, inside the transaction that ends it, once
+# its protection agreed, and is empty at every other time: the end guard refuses any end of a protected task it
+# does not name, so code that skips the protection (an older version of this store included) cannot end one.
 # `closing` holds the task the store closes, with who closes it and why, inside the transaction that
 # closes it, and is empty at every other time: the close guard refuses any change to `closed` it does not
 # name (the owner's decision on R6-Q4: no reasonless closure). Only update and the migration fill it.
@@ -579,10 +589,12 @@ class Store:
                 self._decided(db, number, actor, (note or {}).get("decision"))
             elif changes["status"] == CLOSED:
                 role = self._closer(db, item, actor, role, note)
-            if changes["status"] in ENDS:  # a protected type's protection may refuse the end, whatever path asks
-                protection = self.protection(db, item)
-                if protection is not None:
-                    protection.check_end(db, item, changes["status"], actor)
+        protected_end = False
+        if "status" in changes and changes["status"] in ENDS:  # a protected type's protection may refuse the end
+            protection = self.protection(db, item)
+            if protection is not None:
+                protection.check_end(db, item, changes["status"], actor)
+                protected_end = True
         if not changes and not note:
             return item
         if changes:
@@ -592,10 +604,14 @@ class Store:
             if closes:  # the close guard's mark: who closes it, and why, for this transaction only
                 db.execute("INSERT INTO closing (number, actor, reason) VALUES (?,?,?)",
                            (number, actor, note["reason"]))
+            if protected_end:  # the end guard's mark: its protection agreed, for this transaction only
+                db.execute("INSERT INTO ending (number) VALUES (?)", (number,))
             db.execute(f"UPDATE items SET {assignments}, updated_at=?, version=version+1 WHERE number=?",
                        (*columns.values(), self.now(), number))
             if closes:
                 db.execute("DELETE FROM closing WHERE number=?", (number,))
+            if protected_end:
+                db.execute("DELETE FROM ending WHERE number=?", (number,))
         details = dict(note or {})
         details.update({k: {"before": item[k], "after": v} for k, v in changes.items() if k != "data"})
         if "data" in changes:

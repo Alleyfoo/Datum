@@ -319,3 +319,37 @@ def test_a_store_written_before_protection_existed_opens_and_works(store, clock)
     reopened.claim(task, "ville")
     queue.propose(reopened, task, "ville", "import", "fits")
     assert queue.approve(reopened, task, "anna", "as before")["status"] == FINISHED
+
+
+# -- the database's own end guard ---------------------------------------------------------------------------------------------
+
+def test_the_database_refuses_an_end_the_protection_did_not_agree_to(store, flights):
+    number = _proposed(store)
+    queue.approve(store, number, "anna", "ok", attestation={"digest": "D1"})
+    _flight(store, number, "landed")
+    db = sqlite3.connect(store.path, isolation_level=None)
+    with pytest.raises(sqlite3.DatabaseError):
+        db.execute("UPDATE items SET status = 'finished' WHERE number = ?", (number,))
+    with pytest.raises(sqlite3.DatabaseError):
+        db.execute("INSERT INTO closing VALUES (?, 'ville', 'raw close')", (number,))
+        db.execute("UPDATE items SET status = 'closed' WHERE number = ?", (number,))
+    db.execute("DELETE FROM closing")
+    assert store.get(number)["status"] == "open"
+    assert store.finish(number, "anna", "verified")["status"] == FINISHED       # through the store, it ends
+
+
+def test_code_that_skips_the_protection_cannot_end_a_protected_ticket(store, flights, monkeypatch):
+    """What an older version of the store would do: never ask the protection. The database refuses."""
+    number = _proposed(store)
+    queue.approve(store, number, "anna", "ok", attestation={"digest": "D1"})
+    _flight(store, number, "landed")
+    monkeypatch.setattr(store, "protection", lambda db, item: None)
+    with pytest.raises(sqlite3.DatabaseError):
+        store.finish(number, "anna", "verified")
+    store.claim(number, "ville")
+    with pytest.raises(sqlite3.DatabaseError):
+        store.close(number, "ville", "skip it")
+    assert store.get(number)["status"] == "open"
+    plain = store.add_task("hook", "ordinary")
+    store.claim(plain, "ville")
+    assert store.close(plain, "ville", "ordinary tickets end as before")["status"] == CLOSED

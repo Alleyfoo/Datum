@@ -45,9 +45,13 @@ A **protection** is any object with:
    - `queue.approve` and `queue.reject` refuse a caller's `effect` on a protected ticket (`protected_type`).
    - Every end of a protected ticket passes `check_end`, because `update` is the one boundary every status
      change goes through.
-4. **Fail closed.** A process that has not attached the type's protection cannot approve, reject, close or
+4. **Enforced by the database too.** A protected ticket becomes `closed` or `finished` only inside
+   `update`, after its protection agreed: a trigger refuses any other end, the way the close guard refuses a
+   close without a reason. Code that skips the protection, an older version of this store included, cannot
+   end such a ticket.
+5. **Fail closed.** A process that has not attached the type's protection cannot approve, reject, close or
    finish its tickets (`protection_unavailable`). Ordinary tickets are unaffected.
-5. **Unchanged otherwise.**
+6. **Unchanged otherwise.**
    - Ticket statuses, leases and resume, self-approval by a person holding both roles, the close and finish
      guards, retention and the sweep are all as before.
    - Claims, comments, links and status changes that do not end a ticket are not guarded. So once a lease
