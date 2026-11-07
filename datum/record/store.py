@@ -49,6 +49,14 @@ From the lab's case store (desk/cases.py) come the mechanics: SQLite with short 
 `BEGIN IMMEDIATE` for writes, the claim checked in the same transaction as the write it guards,
 and every event attributed to an actor. Origin in docs/provenance.md.
 
+A ticket type may be protected (opt-in; nothing is protected unless an approver protects it): a
+type whose tickets drive governed external execution names a protection, a named object with three
+checks, and the store records that the type is protected, permanently. From then on the store asks
+that protection whenever a ticket of the type would end, `closed` or `finished`, whichever path asks
+(`update` is the one boundary), and the approval queue hands every approval and rejection of such a
+ticket to the protection instead of a caller's effect. A store opened without the protection attached
+refuses those steps rather than skipping them. See docs/governed-execution.md.
+
 Roles live on the user record (`approver`, `worker`; one person may hold both) and on every
 action, which records the role it was taken in. A service account, such as the intake hook,
 holds no role and acts as `system`. There is no authentication: names are coordination labels.
@@ -139,6 +147,22 @@ CREATE TABLE IF NOT EXISTS journal (
     action TEXT NOT NULL,
     details TEXT NOT NULL,
     at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS protected_types (
+    type TEXT PRIMARY KEY,
+    protection TEXT NOT NULL CHECK (trim(protection) != ''),
+    protected_by TEXT NOT NULL REFERENCES users(name),
+    protected_at TEXT NOT NULL);
+CREATE TRIGGER IF NOT EXISTS protected_types_kept BEFORE DELETE ON protected_types
+BEGIN SELECT RAISE(ABORT, 'a protected ticket type stays protected'); END;
+CREATE TRIGGER IF NOT EXISTS protected_types_fixed BEFORE UPDATE ON protected_types
+BEGIN SELECT RAISE(ABORT, 'a protected ticket type keeps the protection it was given'); END;
+CREATE TABLE IF NOT EXISTS ending (
+    number INTEGER PRIMARY KEY);
+CREATE TRIGGER IF NOT EXISTS items_protected_end BEFORE UPDATE OF status ON items
+WHEN NEW.status IN ('{CLOSED}', '{FINISHED}') AND OLD.status IS NOT NEW.status
+     AND EXISTS (SELECT 1 FROM protected_types WHERE type = NEW.type)
+     AND NOT EXISTS (SELECT 1 FROM ending WHERE number = NEW.number)
+BEGIN SELECT RAISE(ABORT, 'a protected ticket ends only through update(), once its protection agreed'); END;
 CREATE TABLE IF NOT EXISTS deleting (
     number INTEGER PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS closing (
@@ -165,6 +189,9 @@ BEGIN SELECT RAISE(ABORT, 'items are never deleted, but a closed ticket and its 
 # `deleting` holds the numbers the store deletes, inside the one transaction that deletes them, and is
 # empty at every other time: the two delete guards refuse every row it does not name, and any task that
 # is not closed. Only _delete fills it. AUTOINCREMENT keeps a deleted number from being used again.
+# `ending` holds a protected task the store ends, closed or finished, inside the transaction that ends it, once
+# its protection agreed, and is empty at every other time: the end guard refuses any end of a protected task it
+# does not name, so code that skips the protection (an older version of this store included) cannot end one.
 # `closing` holds the task the store closes, with who closes it and why, inside the transaction that
 # closes it, and is empty at every other time: the close guard refuses any change to `closed` it does not
 # name (the owner's decision on R6-Q4: no reasonless closure). Only update and the migration fill it.
@@ -247,6 +274,7 @@ class Store:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         self.lease = lease
+        self._protections = {}  # type -> the protection attached in this process (protect, attach_protection)
         db = self._connect()
         try:
             db.execute("PRAGMA journal_mode=WAL")  # kept by the file: readers never block the writer
@@ -561,6 +589,12 @@ class Store:
                 self._decided(db, number, actor, (note or {}).get("decision"))
             elif changes["status"] == CLOSED:
                 role = self._closer(db, item, actor, role, note)
+        protected_end = False
+        if "status" in changes and changes["status"] in ENDS:  # a protected type's protection may refuse the end
+            protection = self.protection(db, item)
+            if protection is not None:
+                protection.check_end(db, item, changes["status"], actor)
+                protected_end = True
         if not changes and not note:
             return item
         if changes:
@@ -570,10 +604,14 @@ class Store:
             if closes:  # the close guard's mark: who closes it, and why, for this transaction only
                 db.execute("INSERT INTO closing (number, actor, reason) VALUES (?,?,?)",
                            (number, actor, note["reason"]))
+            if protected_end:  # the end guard's mark: its protection agreed, for this transaction only
+                db.execute("INSERT INTO ending (number) VALUES (?)", (number,))
             db.execute(f"UPDATE items SET {assignments}, updated_at=?, version=version+1 WHERE number=?",
                        (*columns.values(), self.now(), number))
             if closes:
                 db.execute("DELETE FROM closing WHERE number=?", (number,))
+            if protected_end:
+                db.execute("DELETE FROM ending WHERE number=?", (number,))
         details = dict(note or {})
         details.update({k: {"before": item[k], "after": v} for k, v in changes.items() if k != "data"})
         if "data" in changes:
@@ -1087,6 +1125,70 @@ class Store:
                 details["replacement"] = replacement
             self.write_journal(db, dependent, approver, role, f"dependency_{resolution}", details)
             return self._item(db, dependent)
+
+    def blockers(self, number: int, *, db=None) -> List[dict]:
+        """The tasks `number` waits on: every `blocks` link whose blocker is not finished, a closed one
+        included (the owner's decision on R6-Q1, build-plan section 30), as ``{"number", "status"}``, by
+        number. The same rule as `ready`. Pass ``db`` to ask inside an open transaction, so that the
+        answer and whatever the caller does on it commit together; without it, a short read."""
+        query = ("SELECT b.number, b.status FROM links l JOIN items b ON b.number = l.source"
+                 " WHERE l.target = ? AND l.type = 'blocks' AND b.status != ? ORDER BY b.number")
+        if db is not None:
+            self._item(db, number)
+            return [{"number": r[0], "status": r[1]} for r in db.execute(query, (number, FINISHED))]
+        with self.reading() as conn:
+            self._item(conn, number)
+            return [{"number": r[0], "status": r[1]} for r in conn.execute(query, (number, FINISHED))]
+
+    # -- protected ticket types ---------------------------------------------------------------------
+
+    def protect(self, type_: str, protection, by: str) -> None:
+        """Protect a ticket type (docs/governed-execution.md): an approver's act, recorded once and kept.
+
+        `protection` is an object with a `name` and the methods `approve`, `reject` and `check_end`.
+        The store records the type and the protection's name, never code; this process attaches it. A
+        type already protected under the same name is only attached again; under another name, refused."""
+        type_ = text(type_, "type", 100)
+        name = text(getattr(protection, "name", None), "protection name", 100)
+        with self.transaction() as db:
+            role = self.approver(db, by)
+            row = db.execute("SELECT protection FROM protected_types WHERE type=?", (type_,)).fetchone()
+            if row is None:
+                db.execute("INSERT INTO protected_types VALUES (?,?,?,?)", (type_, name, by, self.now()))
+                self.write_journal(db, None, by, role, "type_protected", {"type": type_, "protection": name})
+            else:
+                require(row[0] == name, "protection_conflict",
+                        f"{type_} is protected by {row[0]}, not {name}; a protection is never replaced")
+        self._protections[type_] = protection
+
+    def attach_protection(self, type_: str, protection) -> None:
+        """Attach, in this process, the protection a type was given. It can only add checks, so it needs no
+        authority, but it must be the one recorded: an unprotected type, or another name, is refused."""
+        with self.reading() as db:
+            row = db.execute("SELECT protection FROM protected_types WHERE type=?", (type_,)).fetchone()
+        require(row is not None, "not_protected", f"{type_} is not a protected type; an approver protects it")
+        require(row[0] == getattr(protection, "name", None), "protection_conflict",
+                f"{type_} is protected by {row[0]}, not {getattr(protection, 'name', None)}")
+        self._protections[type_] = protection
+
+    def protected_types(self) -> List[dict]:
+        with self.reading() as db:
+            return [dict(r) for r in db.execute("SELECT * FROM protected_types ORDER BY type")]
+
+    def protection(self, db, item: dict):
+        """The protection a task's type answers to, inside an open transaction, or None for an ordinary
+        type. A protected type whose protection is not attached in this process is refused: the store
+        never skips a check it cannot make."""
+        if item.get("kind") != "task":
+            return None
+        row = db.execute("SELECT protection FROM protected_types WHERE type=?", (item["type"],)).fetchone()
+        if row is None:
+            return None
+        attached = self._protections.get(item["type"])
+        require(attached is not None and getattr(attached, "name", None) == row[0], "protection_unavailable",
+                f"#{item['number']} is a {item['type']} ticket, protected by {row[0]}, which is not attached here; "
+                f"nothing that ends it or decides on it is done without it")
+        return attached
 
     def ready(self, actor: Optional[str] = None) -> List[dict]:
         """Tasks someone can start: open or in progress, every blocker finished (a closed one keeps

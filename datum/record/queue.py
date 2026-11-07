@@ -10,6 +10,11 @@ answer S-finish, build-plan section 29); a rejection sends it back to the worker
 
 An approval may carry an effect: the action's own record, written in the same transaction. If the
 effect refuses, nothing changes except a journal entry that records the refusal and its reason.
+
+A ticket of a protected type (store.protect, docs/governed-execution.md) is decided by its type's
+protection, never by a caller's effect: approving or rejecting one with an effect is refused, and the
+protection runs in the effect's place, with any `attestation` the approver gives (what they were shown).
+Everything else here, self-approval by a person holding both roles included, is unchanged.
 """
 
 from __future__ import annotations
@@ -79,15 +84,28 @@ def _refused(store: Store, number: int, actor: str, verb: str, error: RecordErro
         pass
 
 
+def _protected(store: Store, db, item: dict, effect: Optional[Effect], step: Callable) -> Optional[Effect]:
+    """The effect a decision runs: the caller's for an ordinary ticket, the protection's for a protected one."""
+    protection = store.protection(db, item)
+    if protection is None:
+        return effect
+    require(effect is None, "protected_type",
+            f"#{item['number']} is a {item['type']} ticket: its protection decides, not a caller's effect")
+    return step(protection)
+
+
 def approve(store: Store, number: int, approver: str, reason: str, *, effect: Optional[Effect] = None,
-            expect: Optional[str] = None) -> dict:
+            expect: Optional[str] = None, attestation: Optional[dict] = None) -> dict:
     """Approve what a ticket waits on. Without an effect saying otherwise, the ticket is finished: the
-    approval is the approver's decision about it, with a reason (S-finish)."""
+    approval is the approver's decision about it, with a reason (S-finish). `attestation` reaches only a
+    protected type's protection."""
     reason = text(reason, "reason")
     try:
         with store.transaction() as db:
             role = store.approver(db, approver)
             item = _waiting(store, db, number, expect)
+            effect = _protected(store, db, item, effect, lambda protection: (
+                lambda db_, ticket, proposal: protection.approve(db_, ticket, proposal, approver, attestation)))
             proposal = item["data"]["proposal"]
             store.take(db, number, approver, role)
             outcome = (effect(db, item, proposal) if effect else None) or {}
@@ -132,6 +150,8 @@ def reject(store: Store, number: int, approver: str, reason: str, *, effect: Opt
         with store.transaction() as db:
             role = store.approver(db, approver)
             item = _waiting(store, db, number, expect)
+            effect = _protected(store, db, item, effect, lambda protection: (
+                lambda db_, ticket, proposal: protection.reject(db_, ticket, proposal, approver, reason)))
             proposal = item["data"]["proposal"]
             store.take(db, number, approver, role)
             outcome = (effect(db, item, proposal) if effect else None) or {}
